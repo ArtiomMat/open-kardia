@@ -26,12 +26,14 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
     return k_pickc(255, 80, 70);
     
     case NODE_SIGNAL:
-    int first = (255 * first_ion) / NODE_MAX_ION;
-    int second = (255 * second_ion) / NODE_MAX_ION;
-    return gradient(x-xi, xf-xi, 0,first,0, 0,second,0);
+    int g = (255 * first_ion) / NODE_MAX_ION;
+    int b = (130 * first_ion) / NODE_MAX_ION;
+    int G = (255 * second_ion) / NODE_MAX_ION;
+    int B = (130 * second_ion) / NODE_MAX_ION;
+    return gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
 
     case NODE_NULL:
-    return 255;
+    return k_pickc(128, 128, 128);
   }
 }
 
