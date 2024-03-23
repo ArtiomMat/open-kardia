@@ -43,12 +43,12 @@ main(int args_n, char** args)
   k_init(NULL);
   
   node_all[0].nexts_n=0;
-  node_all[0].type=NODE_SIGNAL;
+  node_all[0].type=NODE_MUSCLE;
   node_all[0].signal.ion = NODE_MAX_ION/2;
 
   node_all[1].nexts_n=1;
   node_all[1].nexts=&node_all[0];
-  node_all[1].type=NODE_SIGNAL;
+  node_all[1].type=NODE_MUSCLE;
   node_all[1].signal.ion = NODE_MAX_ION/4;
 
   node_all[1].pos[0] = itofip(29);

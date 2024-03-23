@@ -23,7 +23,7 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
   switch(type)
   {
     case NODE_MUSCLE:
-    return k_pickc(255, 0, 0);
+    return k_pickc(255, 80, 70);
     
     case NODE_SIGNAL:
     int first = (255 * first_ion) / NODE_MAX_ION;
