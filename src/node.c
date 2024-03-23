@@ -3,6 +3,35 @@
 #include "fip.h"
 #include "k.h"
 
+#include <stdlib.h>
+
+node_t node_all[NODE_MAX_NODES] = {0};
+
+// Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
+static int
+gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
+{
+  r += ((R-r) * x)/x_max;
+  g += ((G-g) * x)/x_max;
+  b += ((B-b) * x)/x_max;
+  return k_pickc(r, g, b);
+}
+
+static int
+color_for(int x, int xi, int xf, int type)
+{
+  switch(type)
+  {
+    case NODE_MUSCLE:
+    return (k_rgb_t){.r=7,.g=0,.b=0}.c;
+    
+    case NODE_SIGNAL:
+    return gradient(x-xi, xf-xi, 0,0,0, 255,0,0);
+
+    case NODE_NULL:
+    return 255;
+  }
+}
 
 // Draws line from root_node to next
 static void
@@ -16,16 +45,28 @@ draw_line(node_t* root_node, node_t* next)
   
   if (xi == xf)
   {
+    if (yi > yf)
+    {
+      int tmp = yi;
+      yi = yf;
+      yf = tmp;
+    }
     for (int y = yi; y < yf; y++)
     {
-      vid_set(255, xi + y * K_VID_SIZE);
+      vid_set(color_for(y, yi, yf, root_node->type), xi + y * K_VID_SIZE);
     }
   }
   else if (yi == yf)
   {
+    if (xi > xf)
+    {
+      int tmp = xi;
+      xi = xf;
+      xf = tmp;
+    }
     for (int x = xi; x < xf; x++)
     {
-      vid_set(255, x + yi * K_VID_SIZE);
+      vid_set(color_for(x, xi, xf, root_node->type), x + yi * K_VID_SIZE);
     }
   }
   else
@@ -40,25 +81,22 @@ draw_line(node_t* root_node, node_t* next)
     {
       for (fip_t i = 0; i <= slope; i += itofip(1))
       {
-        vid_set(255, fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
+        vid_set(color_for(x, l->pos[0], r->pos[0], root_node->type), fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
       }
     }
   }
 }
 
 void
-node_draw(node_t* root_node)
+node_draw_all()
 {
-  if (root_node == NULL)
+  for (int i = 0; i < NODE_MAX_NODES; i++)
   {
-    return;
-  }
-  
-  for (int i = 0; i < root_node->nexts_n; i++)
-  {
-    node_t* next = root_node->nexts + i;
-    
-    draw_line(root_node, next);
+    node_t* node = &node_all[i];
+    for (int j = 0; j < node->nexts_n; j++)
+    {
+      draw_line(node, &node->nexts[j]);
+    }
   }
 }
 

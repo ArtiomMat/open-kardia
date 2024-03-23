@@ -27,6 +27,9 @@ vid_def_event_handler(vid_event_t* event);
 extern void
 vid_screen_size(int* w, int* h);
 
+extern void
+vid_set_title(const char* title);
+
 /**
  * 
 */

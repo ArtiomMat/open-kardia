@@ -2,11 +2,12 @@
 #include "fip.h"
 #include "node.h"
 #include "edit.h"
+#include "clk.h"
 #include "k.h"
 
 #include <stdio.h>
 
-fip_t k_tick_time = ftofip(0.03f);
+fip_t k_tick_time;
 unsigned long long k_ticks;
 
 static unsigned char
@@ -18,7 +19,7 @@ channel_color(int value, int depth)
 }
 
 static void
-k_init()
+k_init(const char* heartfp)
 {
   for (unsigned i = 0; i < 256; i++)
   {
@@ -28,28 +29,41 @@ k_init()
     vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
   }
   
-  puts("k_init(): Kardia module initialized, Kardia is ready to beat!");
+  printf("k_init(): Kardia module initialized, %s is ready to beat!\n", heartfp);
 }
 
 int
 main(int args_n, char** args)
 {
   vid_init(K_VID_SIZE, K_VID_SIZE);
-  k_init();
+  vid_set_title("Open Kardia");
+
+  clk_init(ftofip(0.03f));
+
+  k_init(NULL);
   
-  node_t y = {.color=1,.nexts_n=0};
-  node_t x = {.color=1,.nexts_n=1,.nexts=&y};
-  y.pos[0] = itofip(29);
-  y.pos[1] = itofip(23);
-  x.pos[0] = itofip(231);
-  x.pos[1] = itofip(156);
+  node_all[0].nexts_n=0;
+  node_all[0].type=NODE_SIGNAL;
+
+  node_all[1].nexts_n=1;
+  node_all[1].nexts=&node_all[0];
+  node_all[1].type=NODE_SIGNAL;
+
+  node_all[0].pos[0] = itofip(29);
+  node_all[0].pos[1] = itofip(23);
+  node_all[1].pos[0] = itofip(231);
+  node_all[1].pos[1] = itofip(23);
   
   while(1)
   {
-    vid_wipe((k_rgb_t){.r=7,.g=0,.b=3}.c);
-    node_draw(&x);
+    clk_begin_tick();
+
+    vid_wipe(k_pickc(128,128,128));
+    node_draw_all();
     vid_refresh();
     vid_run();
+
+    clk_end_tick();
   }
   return 0;
 }

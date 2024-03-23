@@ -33,6 +33,13 @@ fip_div(fip_t a, fip_t b)
   return (a / b) SAL;
 }
 
+// Get the fraction part
+static inline int
+fip_frac(fip_t fip)
+{
+  return fip & ((1 << FIP_FRAC_BITS) - 1);
+}
+
 // Always rounds down
 static inline int
 fiptoi(fip_t fip)

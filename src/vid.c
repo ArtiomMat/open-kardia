@@ -167,7 +167,7 @@ vid_init(int _vid_w, int _vid_h)
 
   vid_colors = calloc(256, sizeof (*vid_colors));
 
-  puts("vid_init(): Video module initialized.");
+  printf("vid_init(): Video module initialized, 24 bit TrueColor.\n");
   return 1;	
 }
 
@@ -178,6 +178,12 @@ vid_screen_size(int* w, int* h)
   XGetWindowAttributes(vid_nix_dsp, DefaultRootWindow(vid_nix_dsp), &ra);
   *w = ra.width;
   *h = ra.height;
+}
+
+void
+vid_set_title(const char* title)
+{
+  XStoreName(vid_nix_dsp, vid_nix_window, title);
 }
 
 void
