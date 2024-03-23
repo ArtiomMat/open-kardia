@@ -45,10 +45,10 @@ draw_line(node_t* root_node, node_t* next)
   xf = fiptoi(next->pos[0]);
   yf = fiptoi(next->pos[1]);
   
-  node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
-  node_t* r = l == root_node ? next : root_node;
   if (xi == xf)
   {
+    node_t* b = root_node->pos[1] < next->pos[1] ? root_node : next;
+    node_t* t = b == root_node ? next : root_node;
     if (yi > yf)
     {
       int tmp = yi;
@@ -57,20 +57,26 @@ draw_line(node_t* root_node, node_t* next)
     }
     for (int y = yi; y < yf; y++)
     {
-      vid_set(color_for(l->signal.ion, r->signal.ion, y, yi, yf, root_node->type), xi + y * K_VID_SIZE);
+      vid_set(color_for(b->signal.ion, t->signal.ion, y, yi, yf, root_node->type), xi + y * K_VID_SIZE);
     }
   }
   else
   {
-    
+    node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
+    node_t* r = l == root_node ? next : root_node;
+
     fip_t slope = fip_div(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]);
     
     for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += itofip(1), y += slope)
     {
-      for (fip_t i = 0; i <= slope; i += itofip(1))
+      fip_t i = 0;
+      do
       {
         vid_set(color_for(l->signal.ion, r->signal.ion, x, l->pos[0], r->pos[0], root_node->type), fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
+        
+        i += itofip(1);
       }
+      while (i < slope);
     }
   }
 }

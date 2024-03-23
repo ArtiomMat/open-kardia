@@ -24,6 +24,10 @@ fip_mul(fip_t a, fip_t b)
 static inline int
 fip_div(fip_t a, fip_t b) 
 {
+  if (a == 0)
+  {
+    return 0;
+  }
   if (a < b)
   {
     long long A = a;

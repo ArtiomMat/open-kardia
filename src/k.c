@@ -51,10 +51,10 @@ main(int args_n, char** args)
   node_all[1].type=NODE_SIGNAL;
   node_all[1].signal.ion = NODE_MAX_ION/4;
 
+  node_all[1].pos[0] = itofip(29);
+  node_all[1].pos[1] = itofip(23);
   node_all[0].pos[0] = itofip(29);
-  node_all[0].pos[1] = itofip(23);
-  node_all[1].pos[0] = itofip(231/2);
-  node_all[1].pos[1] = itofip(356/2);
+  node_all[0].pos[1] = itofip(356/2);
   
   while(1)
   {
