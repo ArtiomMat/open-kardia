@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-node_t node_all[NODE_MAX_NODES] = {0};
+node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 
 // Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
 static int
@@ -39,7 +39,7 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
 
 // Draws line from root_node to next
 static void
-draw_line(node_t* root_node, node_t* next)
+draw_line(node_t* root_node, node_t* next, int type)
 {
   int xi, yi, xf, yf;
   xi = fiptoi(root_node->pos[0]);
@@ -59,7 +59,7 @@ draw_line(node_t* root_node, node_t* next)
     }
     for (int y = yi; y < yf; y++)
     {
-      vid_set(color_for(b->signal.ion, t->signal.ion, y, yi, yf, root_node->type), xi + y * K_VID_SIZE);
+      vid_set(color_for(b->signal.ion, t->signal.ion, y, yi, yf, type), xi + y * K_VID_SIZE);
     }
   }
   else
@@ -74,7 +74,7 @@ draw_line(node_t* root_node, node_t* next)
       fip_t i = 0;
       do
       {
-        vid_set(color_for(l->signal.ion, r->signal.ion, x, l->pos[0], r->pos[0], root_node->type), fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
+        vid_set(color_for(l->signal.ion, r->signal.ion, x, l->pos[0], r->pos[0], type), fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
         
         i += itofip(1);
       }
@@ -84,15 +84,21 @@ draw_line(node_t* root_node, node_t* next)
 }
 
 void
-node_draw_all()
+node_draw(node_t* nodes, int n, int type)
 {
-  for (int i = 0; i < NODE_MAX_NODES; i++)
+  for (int i = 0; i < n; i++)
   {
-    node_t* node = &node_all[i];
+    node_t* node = &nodes[i];
     for (int j = 0; j < node->nexts_n; j++)
     {
-      draw_line(node, &node->nexts[j]);
+      draw_line(node, &node->nexts[j], type);
     }
   }
 }
 
+void
+node_draw_all()
+{
+  node_draw(node_muscles, NODE_MAX_MUSCLE, NODE_MUSCLE);
+  node_draw(node_signals, NODE_MAX_SIGNAL, NODE_SIGNAL);
+}

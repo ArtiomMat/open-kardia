@@ -5,7 +5,8 @@
 #include "fip.h"
 
 // Drawing is recursive
-#define NODE_MAX_NODES 256
+#define NODE_MAX_MUSCLE 64
+#define NODE_MAX_SIGNAL 64
 
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
 
@@ -23,6 +24,7 @@ typedef struct node_s
   int nexts_n;
   fip_t pos[2]; // In screen space pixels
 
+  // Type is dependent on the array that is accessed
   union
   {
     struct
@@ -43,11 +45,9 @@ typedef struct node_s
       fip_t halt;
     } signal;
   };
-  
-  unsigned char type;
 } node_t;
 
-extern node_t node_all[NODE_MAX_NODES];
+extern node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 
 // Make muscle node interact with an ion node
 extern void
