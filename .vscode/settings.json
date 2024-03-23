@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.h": "c",
+    "*.asm": "asm-intel-x86-generic",
+    "compare": "c",
+    "type_traits": "c"
+  }
+}

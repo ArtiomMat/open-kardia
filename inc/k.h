@@ -8,8 +8,8 @@
 
 #define K_VID_SIZE 400
 
-#define _K_RED_DEPTH 3
-#define _K_GREEN_DEPTH 3
+#define _K_RED_DEPTH 2
+#define _K_GREEN_DEPTH 4
 #define _K_BLUE_DEPTH 2
 
 typedef union
@@ -40,8 +40,8 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
 {
   k_rgb_t rgb = {
     .r = (r>>(8-_K_RED_DEPTH)),
-    .g = (r>>(8-_K_GREEN_DEPTH)),
-    .b = (r>>(8-_K_BLUE_DEPTH)),
+    .g = (g>>(8-_K_GREEN_DEPTH)),
+    .b = (b>>(8-_K_BLUE_DEPTH)),
   };
   return rgb.c;
 }

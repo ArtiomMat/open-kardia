@@ -44,21 +44,23 @@ main(int args_n, char** args)
   
   node_all[0].nexts_n=0;
   node_all[0].type=NODE_SIGNAL;
+  node_all[0].signal.ion = NODE_MAX_ION/2;
 
   node_all[1].nexts_n=1;
   node_all[1].nexts=&node_all[0];
   node_all[1].type=NODE_SIGNAL;
+  node_all[1].signal.ion = NODE_MAX_ION/4;
 
   node_all[0].pos[0] = itofip(29);
   node_all[0].pos[1] = itofip(23);
-  node_all[1].pos[0] = itofip(231);
-  node_all[1].pos[1] = itofip(23);
+  node_all[1].pos[0] = itofip(231/2);
+  node_all[1].pos[1] = itofip(356/2);
   
   while(1)
   {
     clk_begin_tick();
 
-    vid_wipe(k_pickc(128,128,128));
+    vid_wipe(k_pickc(0,0,0));
     node_draw_all();
     vid_refresh();
     vid_run();
