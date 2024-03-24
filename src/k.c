@@ -28,8 +28,6 @@ k_init(const char* heartfp)
     vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
     vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
   }
-  
-  printf("k_init(): Kardia module initialized, %s is ready to beat!\n", heartfp);
 }
 
 int
@@ -40,19 +38,21 @@ main(int args_n, char** args)
 
   clk_init(ftofip(0.03f));
 
+  node_init(NULL);
+
   k_init(NULL);
   
-  node_signals[0].nexts_n=0;
-  node_signals[0].signal.ion = NODE_MAX_ION/3;
+  node_muscles[0].nexts_n=0;
+  node_muscles[0].signal.ion = NODE_MAX_ION/3;
 
-  node_signals[1].nexts_n=1;
-  node_signals[1].nexts=&node_signals[0];
-  node_signals[1].signal.ion = NODE_MAX_ION;
+  node_muscles[1].nexts_n=1;
+  node_muscles[1].nexts=&node_muscles[0];
+  node_muscles[1].signal.ion = NODE_MAX_ION;
 
-  node_signals[1].pos[0] = itofip(29);
-  node_signals[1].pos[1] = itofip(23);
-  node_signals[0].pos[0] = itofip(100);
-  node_signals[0].pos[1] = itofip(356/2);
+  node_muscles[1].pos[0] = itofip(29);
+  node_muscles[1].pos[1] = itofip(23);
+  node_muscles[0].pos[0] = itofip(100);
+  node_muscles[0].pos[1] = itofip(356/2);
   
   while(1)
   {

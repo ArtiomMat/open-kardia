@@ -20,6 +20,7 @@ enum
 typedef struct node_s
 {
   // Need to actually flow the ionization.
+  // TODO: Maybe make it an index, can decrease memory used by nodes by ~3 approx, or even ~7 depending on data type.
   struct node_s* nexts;
   int nexts_n;
   fip_t pos[2]; // In screen space pixels
@@ -40,6 +41,7 @@ typedef struct node_s
       // In ionization per second, how much ionization flows from this node to the next nodes, if multiple nodes the flow is halved to each one.
       fip_t flow;
       // The current ionization in this node, NODE_MAX_ION is the max.
+      // If ionization reaches beyond NODE_MAX_ION it is capped, various factors depend on NODE_MAX_ION being the maximum possible value.
       fip_t ion;
       // In seconds, after this node is emptied, how long this nodes holds on to the next node's flow before allowing it to begin flowing. This allows for delays, the heart is know to have those.
       fip_t halt;
@@ -49,10 +51,15 @@ typedef struct node_s
 
 extern node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 
-// Make muscle node interact with an ion node
+// If file is NULL then initializes the rest, node_muscles/signals are intialized to 0.
 extern void
-node_interact(node_t* muscle, node_t* signal);
-// Loops over each node in node_all and just draws a line between it and its next one, ensuring the drawing of all the shapes without any infinite loops or shit, O(1).
+node_init(const char* fp);
 extern void
-node_draw_all();
-
+node_free();
+// Quite optimized, doesn't mindlessly loop over everything.
+extern void
+node_beat();
+// Loops over each node in the arrays and just draws a line an element and its next one/s, ensuring the drawing of all the shapes without any infinite loops or shit, O(1).
+// NOTE: If pos of the node is <0(sign bit is on) then it is considered a null terminating node! If no null terminating node we just stop at NODE_MAX_MUSCLE/SIGNAL.
+extern void
+node_draw();

@@ -31,7 +31,12 @@ int vid_w, vid_h;
 void
 vid_def_event_handler(vid_event_t* e)
 {
-  
+  switch(e->type)
+  {
+    case VID_E_CLOSE:
+    exit(0);
+    break;
+  }
 }
 
 void (*vid_event_handler)() = 0;
@@ -206,8 +211,7 @@ vid_run()
         break;
       // Otherwise proceed here(most likely it wont, we overrode it, but just in case):
       case DestroyNotify:
-      vid_free();
-      exit(0);
+      vid_event_handler(VID_E_CLOSE);
       break;
       
       case KeyPress:

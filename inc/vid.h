@@ -2,9 +2,28 @@
 
 #pragma once
 
+enum
+{
+  VID_E_CLOSE, // Close event, user wants to close the application
+  VID_E_PRESS, // Press key/button
+  VID_E_RELEASE, // Release key/button
+  VID_E_MOVE, // Move mouse
+};
+
 typedef struct
 {
-  
+  int type;
+  union
+  {
+    struct
+    {
+      int code;
+    } press, release;
+    struct
+    {
+      int x, y;
+    } move;
+  };
 } vid_event_t;
 
 extern void (*vid_event_handler)(vid_event_t* event);

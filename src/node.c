@@ -3,6 +3,7 @@
 #include "fip.h"
 #include "k.h"
 
+#include <string.h>
 #include <stdlib.h>
 
 node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
@@ -28,8 +29,10 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
     case NODE_SIGNAL:
     int g = (255 * first_ion) / NODE_MAX_ION;
     int b = (130 * first_ion) / NODE_MAX_ION;
+    
     int G = (255 * second_ion) / NODE_MAX_ION;
     int B = (130 * second_ion) / NODE_MAX_ION;
+    
     return gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
 
     case NODE_NULL:
@@ -84,11 +87,31 @@ draw_line(node_t* root_node, node_t* next, int type)
 }
 
 void
-node_draw(node_t* nodes, int n, int type)
+node_init(const char* fp)
+{
+  if (fp == NULL)
+  {
+    memset(node_muscles, -1, sizeof(node_muscles));
+    memset(node_signals, -1, sizeof(node_signals));
+
+    printf("node_init(): Node module initialized, %d/%d max nodes.\n", NODE_MAX_MUSCLE, NODE_MAX_SIGNAL);
+  }
+  else
+  {
+    printf("node_init(): Node module initialized, '%s' is ready to beat!\n", fp);
+  }
+}
+
+static void
+node_draw_arr(node_t* nodes, int n, int type)
 {
   for (int i = 0; i < n; i++)
   {
     node_t* node = &nodes[i];
+    if (node->pos < 0) // Null terminating node
+    {
+      return;
+    }
     for (int j = 0; j < node->nexts_n; j++)
     {
       draw_line(node, &node->nexts[j], type);
@@ -97,8 +120,8 @@ node_draw(node_t* nodes, int n, int type)
 }
 
 void
-node_draw_all()
+node_draw()
 {
-  node_draw(node_muscles, NODE_MAX_MUSCLE, NODE_MUSCLE);
-  node_draw(node_signals, NODE_MAX_SIGNAL, NODE_SIGNAL);
+  node_draw_arr(node_muscles, NODE_MAX_MUSCLE, NODE_MUSCLE);
+  node_draw_arr(node_signals, NODE_MAX_SIGNAL, NODE_SIGNAL);
 }

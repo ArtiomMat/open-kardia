@@ -1,5 +1,4 @@
 // Kardia main module, general/utility definitions and functions
-// Contains the heart!
 
 #pragma once
 
@@ -23,13 +22,6 @@ typedef union
   };
   unsigned char c; // All bits together
 } k_rgb_t;
-
-typedef struct
-{
-  
-} k_heart_t;
-
-extern k_heart_t heart;
 
 // How long in seconds it takes for a single in Kardia, in a single tick all the nodes of the heart are updated. By default is 0.03 for 30 ticks per second
 extern fip_t k_tick_time;
