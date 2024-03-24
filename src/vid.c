@@ -194,40 +194,57 @@ vid_set_title(const char* title)
 void
 vid_run()
 {
-  XEvent e;
+  XEvent xe;
+  vid_event_t e = {.type = _VID_E_NULL};
   static int mouse = 0, mousex = 0, mousey = 0;
 
   while (XPending(vid_nix_dsp))
   {
-    XNextEvent(vid_nix_dsp, &e);
+    XNextEvent(vid_nix_dsp, &xe);
 
-    switch (e.type)
+    switch (xe.type)
     {
       case ClientMessage:
       if (!(
-        e.xclient.message_type == XInternAtom(vid_nix_dsp, "WM_PROTOCOLS", True) && 
-        (Atom)e.xclient.data.l[0] == vid_nix_wmdeletewnd_atom
+        xe.xclient.message_type == XInternAtom(vid_nix_dsp, "WM_PROTOCOLS", True) && 
+        (Atom)xe.xclient.data.l[0] == vid_nix_wmdeletewnd_atom
       ))
         break;
       // Otherwise proceed here(most likely it wont, we overrode it, but just in case):
       case DestroyNotify:
-      vid_event_handler(VID_E_CLOSE);
+      e.type = VID_E_CLOSE;
       break;
       
       case KeyPress:
+      e.type = VID_E_PRESS;
+      e.press.code = xe.xkey.keycode;
       break;
       
       case KeyRelease:
+      e.type = VID_E_RELEASE;
+      e.release.code = xe.xkey.keycode;
       break;
 
       case ButtonPress:
+      e.type = VID_E_PRESS;
+      e.press.code = xe.xbutton.button;
       break;
 
       case ButtonRelease:
+      e.type = VID_E_RELEASE;
+      e.release.code = xe.xbutton.button;
       break;
 
       case MotionNotify:
+      e.type = VID_E_MOVE;
+      e.move.x = xe.xmotion.x;
+      e.move.y = xe.xmotion.y;
       break;
+    }
+
+    if (e.type != _VID_E_NULL)
+    {
+      vid_event_handler(&e);
     }
   }
 }

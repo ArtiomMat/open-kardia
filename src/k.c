@@ -19,7 +19,7 @@ channel_color(int value, int depth)
 }
 
 static void
-k_init(const char* heartfp)
+k_init()
 {
   for (unsigned i = 0; i < 256; i++)
   {
@@ -40,7 +40,7 @@ main(int args_n, char** args)
 
   node_init(NULL);
 
-  k_init(NULL);
+  k_init();
   
   node_muscles[0].nexts_n=0;
   node_muscles[0].signal.ion = NODE_MAX_ION/3;
@@ -59,7 +59,7 @@ main(int args_n, char** args)
     clk_begin_tick();
 
     vid_wipe(k_pickc(0,0,0));
-    node_draw_all();
+    node_draw();
     vid_refresh();
     vid_run();
 

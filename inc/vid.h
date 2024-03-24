@@ -4,6 +4,7 @@
 
 enum
 {
+  _VID_E_NULL,
   VID_E_CLOSE, // Close event, user wants to close the application
   VID_E_PRESS, // Press key/button
   VID_E_RELEASE, // Release key/button
