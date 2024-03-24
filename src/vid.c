@@ -39,7 +39,7 @@ vid_def_event_handler(vid_event_t* e)
   }
 }
 
-void (*vid_event_handler)() = 0;
+void (*vid_event_handler)() = vid_def_event_handler;
 
 // TODO: It's not exactly that safe
 void
