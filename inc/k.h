@@ -38,6 +38,6 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
   return rgb.c;
 }
 
-extern fip_t
-k_now();
 
+extern int
+k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B);

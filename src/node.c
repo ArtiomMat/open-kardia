@@ -13,14 +13,7 @@ node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 fip_t node_flow[2] = {0,0};
 
 // Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
-static int
-gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
-{
-  r += ((R-r) * x)/x_max;
-  g += ((G-g) * x)/x_max;
-  b += ((B-b) * x)/x_max;
-  return k_pickc(r, g, b);
-}
+
 
 static int
 color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
@@ -28,7 +21,7 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
   switch(type)
   {
     case NODE_MUSCLE:
-    return gradient(x-xi, xf-xi, 255,80,70, 70,80,255);
+    return k_gradient(x-xi, xf-xi, 255,80,70, 70,80,255);
     // return k_pickc(255, 80, 70);
     
     case NODE_SIGNAL:
@@ -38,7 +31,7 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
     int G = (255 * second_ion) / NODE_MAX_ION;
     int B = (130 * second_ion) / NODE_MAX_ION;
     
-    return gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
+    return k_gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
 
     case NODE_NULL:
     return k_pickc(128, 128, 128);

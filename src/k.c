@@ -11,6 +11,15 @@
 fip_t k_tick_time;
 unsigned long long k_ticks;
 
+int
+k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
+{
+  r += ((R-r) * x)/x_max;
+  g += ((G-g) * x)/x_max;
+  b += ((B-b) * x)/x_max;
+  return k_pickc(r, g, b);
+}
+
 static unsigned char
 channel_color(int value, int depth)
 {
@@ -40,7 +49,7 @@ main(int args_n, char** args)
   clk_init(ftofip(0.03f));
 
   node_init(NULL);
-  ekg_init(itofip(3), K_VID_SIZE/2);
+  ekg_init(itofip(2), K_VID_SIZE/2);
 
   k_init();
   

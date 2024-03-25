@@ -3,6 +3,8 @@
 #include "node.h"
 #include "k.h"
 
+#define EKG_DRAW_RANGE (K_VID_SIZE/5)
+
 static int x;
 static fip_t sensitivty;
 
@@ -31,13 +33,18 @@ ekg_draw()
   
   buf[x] = -fiptoi(y);
   
-  for (int i = 0, last = 0; i < K_VID_SIZE; i++)
+  for (int raw_i = 0, last = 0; raw_i <= EKG_DRAW_RANGE; raw_i++)
   {
+    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,225,130); // Make it prettier
+
+    int i = x - EKG_DRAW_RANGE + raw_i;
+    if (i < 0)
+    {
+      i += K_VID_SIZE;
+    }
+
     int top = buf[i] > last ? buf[i] : last;
     int bottom = top == buf[i] ? last : buf[i];
-
-    if (i == x)
-      printf("%d %d\n", top, bottom);
 
     if (bottom + y0 <= 0)
     {
@@ -46,7 +53,7 @@ ekg_draw()
 
     for (int p = bottom; p <= top; p++)
     {
-      vid_set(k_pickc(0,255,130), i + (p + y0) * K_VID_SIZE);
+      vid_set(color, i + (p + y0) * K_VID_SIZE);
     }
 
     last = buf[i];
