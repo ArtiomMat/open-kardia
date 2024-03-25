@@ -31,7 +31,7 @@ read_into_buf()
   }
   fip_t y = fip_mul(node_flow[0], sensitivty);
   
-  buf[x] = -fiptoi(y);
+  buf[x++] = -fiptoi(y); // Negative due to y+ being down
 }
 
 void
@@ -44,21 +44,22 @@ ekg_draw()
   {
     int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,225,130);
 
-    // Setup the video i that is the x
+    // Setup the video i that is the x on the screen
     int i = x - EKG_DRAW_RANGE + raw_i;
-    if (i < 0)
+    if (i < 0) // Return to the right side if we are negative
     {
       i += K_VID_SIZE;
     }
 
+    // Determining top and bottom points in screen space
     int top = buf[i] > last ? buf[i] : last;
     int bottom = top == buf[i] ? last : buf[i];
-
     if (bottom + y0 <= 0)
     {
       bottom = -y0;
     }
 
+    // Now we just draw a vertical line
     for (int p = bottom; p <= top; p++)
     {
       vid_set(color, i + (p + y0) * K_VID_SIZE);
@@ -66,6 +67,4 @@ ekg_draw()
 
     last = buf[i];
   }
-  
-  x++;
 }

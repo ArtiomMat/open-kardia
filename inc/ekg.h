@@ -5,7 +5,7 @@
 
 #include "k.h"
 
-// yi and yf is where we are going to draw the ekg on the screen
+// Sensitivity is the factor by which the node_flow is multiplied, _y0 is the y at which EKG voltage of 0 is drawn.
 extern void
 ekg_init(fip_t sensitivty, int _y0);
 

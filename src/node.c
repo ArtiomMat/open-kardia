@@ -110,7 +110,7 @@ node_beat()
     node_t* node = &node_signals[i];
     if (node->pos[0] < 0) // Null terminating node
     {
-      printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
+      // printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
       return;
     }
 
