@@ -25,25 +25,31 @@ ekg_init(fip_t _sensitivty, int _y0)
 static void
 read_into_buf()
 {
+  x++;
   if (x >= K_VID_SIZE)
   {
     x = 0;
   }
-    
-  // for (int i = 0; i < NODE_MAX_SIGNAL; i++)
-  // {
-  //   node_t* node = &node_signals[i];
-  //   if (node->pos[0] < 0) // Null terminating node
-  //   {
-  //     // printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
-  //     return;
-  //   }
-
-  // }
-
-  fip_t y = fip_mul(node_flow[0], sensitivty);
   
-  buf[x++] = -fiptoi(y); // Negative due to y+ being down
+  int i;
+  fip_t total_voltage = 0;
+  for (i = 0; i < NODE_MAX_SIGNAL; i++)
+  {
+    node_t* node = &node_signals[i];
+    if (node->pos[0] < 0) // Null terminating node
+    {
+      break;
+    }
+
+    // calculate distance between both electrodes
+    fip_t ld = node->pos[0];
+    fip_t rd = itofip(K_VID_SIZE) - node->pos[0];
+    // Proceed to calculate "voltage"
+    total_voltage += fip_div(node->signal.ion, rd) - fip_div(node->signal.ion, ld);
+  }
+  total_voltage /= i; // Allowed to use integers
+  
+  buf[x] = fip_mul(total_voltage, sensitivty); // Negative due to y+ being down
 }
 
 void

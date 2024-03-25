@@ -49,7 +49,7 @@ main(int args_n, char** args)
   clk_init(ftofip(0.03f));
 
   node_init(NULL);
-  ekg_init(itofip(2), K_VID_SIZE/2);
+  ekg_init(itofip(1), K_VID_SIZE/2);
 
   k_init();
   
