@@ -29,6 +29,18 @@ read_into_buf()
   {
     x = 0;
   }
+    
+  // for (int i = 0; i < NODE_MAX_SIGNAL; i++)
+  // {
+  //   node_t* node = &node_signals[i];
+  //   if (node->pos[0] < 0) // Null terminating node
+  //   {
+  //     // printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
+  //     return;
+  //   }
+
+  // }
+
   fip_t y = fip_mul(node_flow[0], sensitivty);
   
   buf[x++] = -fiptoi(y); // Negative due to y+ being down
@@ -54,15 +66,22 @@ ekg_draw()
     // Determining top and bottom points in screen space
     int top = buf[i] > last ? buf[i] : last;
     int bottom = top == buf[i] ? last : buf[i];
-    if (bottom + y0 <= 0)
+    
+    bottom += y0;
+    if (bottom < 0)
     {
-      bottom = -y0;
+      bottom = 0;
+    }
+    top += y0;
+    if (top >= K_VID_SIZE)
+    {
+      top = K_VID_SIZE-1;
     }
 
     // Now we just draw a vertical line
     for (int p = bottom; p <= top; p++)
     {
-      vid_set(color, i + (p + y0) * K_VID_SIZE);
+      vid_set(color, i + p * K_VID_SIZE);
     }
 
     last = buf[i];
