@@ -3,6 +3,8 @@
 #include "node.h"
 #include "k.h"
 
+#include <stdio.h>
+
 #define EKG_DRAW_RANGE (K_VID_SIZE/5)
 
 static int x;
@@ -19,8 +21,9 @@ ekg_init(fip_t _sensitivty, int _y0)
   x = 0;
   sensitivty = _sensitivty;
 
-  puts("ekg_init(): EKG module initialized, drawing horizontally *%.3f.", fiptof(sensitivty));
+  printf("ekg_init(): EKG module initialized, drawing horizontally *%.3f.\n", fiptof(sensitivty));
 }
+
 
 static void
 read_into_buf()

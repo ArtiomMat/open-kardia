@@ -7,17 +7,35 @@
 #include "ekg.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 fip_t k_tick_time;
 unsigned long long k_ticks;
 
+int args_n;
+const char** args;
+
 int
 k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
 {
-  r += ((R-r) * x)/x_max;
-  g += ((G-g) * x)/x_max;
-  b += ((B-b) * x)/x_max;
+  r += ((R-r) * x) / x_max; // We just do a classic x*(now/max)
+  g += ((G-g) * x) / x_max;
+  b += ((B-b) * x) / x_max;
   return k_pickc(r, g, b);
+}
+
+int
+k_arg(const char* str)
+{
+  for (int i = 1; i < args_n; i++)
+  {
+    if (!strcmp(str, args[i]))
+    {
+      return i;
+    }
+  }
+  return 0;
 }
 
 static unsigned char
@@ -41,35 +59,55 @@ k_init()
 }
 
 int
-main(int args_n, char** args)
+main(int _args_n, const char** _args)
 {
+  args_n = _args_n;
+  args = _args;
   vid_init(K_VID_SIZE, K_VID_SIZE);
   vid_set_title("Open Kardia");
 
   clk_init(ftofip(0.03f));
 
   node_init(NULL);
-  ekg_init(itofip(1), K_VID_SIZE/2);
 
   k_init();
+
+  { // Testing if user wants editor
+    int index = 0;
+    if (k_arg("-e"))
+    {
+      if (index+1 < args_n) // The file path??
+      {
+        edit_main(args[index+1]);
+      }
+      else
+      {
+        edit_main(NULL);
+      }
+
+      return -1; // I mean we were not supposed to get here
+    }
+  }
+
+  ekg_init(ftofip(0.5f), K_VID_SIZE/2);
   
   node_signals[0].nexts_n=0;
   node_signals[0].signal.ion = 0;
-  node_signals[0].signal.flow = itofip(100);
+  node_signals[0].signal.flow = itofip(30);
   node_signals[0].signal.halt = 0;
   node_signals[0].signal.countdown = 0;
 
   node_signals[1].nexts_n=1;
   node_signals[1].nexts=&node_signals[0];
   node_signals[1].signal.ion = 0;
-  node_signals[1].signal.flow = itofip(100);
+  node_signals[1].signal.flow = itofip(30);
   node_signals[1].signal.halt = 0;
   node_signals[1].signal.countdown = 0;
 
   node_signals[2].nexts_n=1;
   node_signals[2].nexts=&node_signals[1];
   node_signals[2].signal.ion = NODE_MAX_ION;
-  node_signals[2].signal.flow = itofip(100);
+  node_signals[2].signal.flow = itofip(30);
   node_signals[2].signal.halt = 0;
   node_signals[2].signal.countdown = 0;
 

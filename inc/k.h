@@ -27,6 +27,10 @@ typedef union
 extern fip_t k_tick_time;
 extern unsigned long long k_ticks;
 
+// Directly from stdlib main()
+extern int args_n;
+extern const char** args;
+
 static inline int
 k_pickc(unsigned char r, unsigned char g, unsigned char b)
 {
@@ -38,6 +42,10 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
   return rgb.c;
 }
 
-
 extern int
 k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B);
+
+// Finds an argument, if found returns index, otherwise returns 0 so can use !.
+// Does not look on args[0]
+extern int
+k_arg(const char* str);
