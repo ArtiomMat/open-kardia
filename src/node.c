@@ -10,6 +10,8 @@
 
 node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 
+fip_t node_flow[2] = {0,0};
+
 // Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
 static int
 gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
@@ -108,11 +110,14 @@ node_init(const char* fp)
 void
 node_beat()
 {
+  node_flow[0] = node_flow[1] = 0;
+  
   for (int i = 0; i < NODE_MAX_SIGNAL; i++)
   {
     node_t* node = &node_signals[i];
     if (node->pos[0] < 0) // Null terminating node
     {
+      printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
       return;
     }
 
@@ -135,7 +140,7 @@ node_beat()
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
       
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
-      int real_flow = node->signal.flow;
+      int real_flow = fip_mul(node->signal.flow, clk_tick_time);
       if (real_flow >= node->signal.ion)
       {
         send_halt = 1; // Because that's it this is the one
@@ -148,6 +153,11 @@ node_beat()
       for (int j = 0; j < node->nexts_n; j++)
       {
         node->nexts[j].signal.ion += real_flow / node->nexts_n;
+
+        fip_t mag = abs(node->pos[0] - node->nexts[j].pos[0] + node->pos[1] - node->nexts[j].pos[1]);
+        
+        node_flow[0] += fip_mul((node->nexts[j].pos[0] - node->pos[0]), fip_div(node->signal.flow, NODE_MAX_FLOW));
+        node_flow[1] += fip_mul((node->nexts[j].pos[0] - node->pos[0]), fip_div(node->signal.flow, NODE_MAX_FLOW));
 
         if (send_halt)
         {

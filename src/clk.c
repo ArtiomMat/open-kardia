@@ -50,5 +50,9 @@ clk_end_tick()
   {
     clk_wait(clk_tick_time-delta);
   }
+  else
+  {
+    puts("SKIP");
+  }
 }
 

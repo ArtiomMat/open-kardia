@@ -5,5 +5,9 @@
 
 #include "k.h"
 
+// yi and yf is where we are going to draw the ekg on the screen
+extern void
+ekg_init(fip_t sensitivty, int _y0);
 
-
+extern void
+ekg_draw();

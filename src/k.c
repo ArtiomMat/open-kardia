@@ -4,6 +4,7 @@
 #include "edit.h"
 #include "clk.h"
 #include "k.h"
+#include "ekg.h"
 
 #include <stdio.h>
 
@@ -39,26 +40,27 @@ main(int args_n, char** args)
   clk_init(ftofip(0.03f));
 
   node_init(NULL);
+  ekg_init(itofip(3), K_VID_SIZE/2);
 
   k_init();
   
   node_signals[0].nexts_n=0;
   node_signals[0].signal.ion = 0;
-  node_signals[0].signal.flow = 30;
+  node_signals[0].signal.flow = itofip(50);
   node_signals[0].signal.halt = 0;
   node_signals[0].signal.countdown = 0;
 
   node_signals[1].nexts_n=1;
   node_signals[1].nexts=&node_signals[0];
   node_signals[1].signal.ion = 0;
-  node_signals[1].signal.flow = 30;
+  node_signals[1].signal.flow = itofip(50);
   node_signals[1].signal.halt = 0;
   node_signals[1].signal.countdown = 0;
 
   node_signals[2].nexts_n=1;
   node_signals[2].nexts=&node_signals[1];
   node_signals[2].signal.ion = NODE_MAX_ION;
-  node_signals[2].signal.flow = 30;
+  node_signals[2].signal.flow = itofip(50);
   node_signals[2].signal.halt = 0;
   node_signals[2].signal.countdown = 0;
 
@@ -71,6 +73,7 @@ main(int args_n, char** args)
   node_signals[0].pos[0] = itofip(230);
   node_signals[0].pos[1] = itofip(360);
   
+  fip_t time = 0;
   while(1)
   {
     clk_begin_tick();
@@ -78,11 +81,22 @@ main(int args_n, char** args)
     vid_wipe(k_pickc(0,0,0));
 
     node_draw();
+    ekg_draw();
     vid_refresh();
-    
+
     vid_run();
     node_beat();
 
+
+    if (time >= itofip(1)-100)
+    {
+      time = 0;
+      node_signals[2].signal.ion = NODE_MAX_ION;
+    }
+    else
+    {
+      time+= clk_tick_time;
+    }
     clk_end_tick();
   }
   return 0;

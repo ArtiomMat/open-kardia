@@ -9,6 +9,7 @@
 #define NODE_MAX_SIGNAL 64
 
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
+#define NODE_MAX_FLOW (NODE_MAX_ION*256)
 
 enum
 {
@@ -52,6 +53,10 @@ typedef struct node_s
 } node_t;
 
 extern node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
+
+// Direction of flow, unnormalized
+// Normalized using |x + y| not pythagorean theorem, hence use it as a rough estimate that is not really normalized
+extern fip_t node_flow[2];
 
 // If file is NULL then initializes the rest, node_muscles/signals are intialized to 0.
 extern void
