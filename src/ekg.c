@@ -22,8 +22,8 @@ ekg_init(fip_t _sensitivty, int _y0)
   puts("ekg_init(): EKG module initialized, drawing horizontally *%.3f.", fiptof(sensitivty));
 }
 
-void
-ekg_draw()
+static void
+read_into_buf()
 {
   if (x >= K_VID_SIZE)
   {
@@ -32,11 +32,19 @@ ekg_draw()
   fip_t y = fip_mul(node_flow[0], sensitivty);
   
   buf[x] = -fiptoi(y);
-  
+}
+
+void
+ekg_draw()
+{
+  read_into_buf();
+
+  // The loop actually just draws the visible portion that hasn't faded
   for (int raw_i = 0, last = 0; raw_i <= EKG_DRAW_RANGE; raw_i++)
   {
-    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,225,130); // Make it prettier
+    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,225,130);
 
+    // Setup the video i that is the x
     int i = x - EKG_DRAW_RANGE + raw_i;
     if (i < 0)
     {

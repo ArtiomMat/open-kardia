@@ -55,21 +55,21 @@ main(int args_n, char** args)
   
   node_signals[0].nexts_n=0;
   node_signals[0].signal.ion = 0;
-  node_signals[0].signal.flow = itofip(50);
+  node_signals[0].signal.flow = itofip(100);
   node_signals[0].signal.halt = 0;
   node_signals[0].signal.countdown = 0;
 
   node_signals[1].nexts_n=1;
   node_signals[1].nexts=&node_signals[0];
   node_signals[1].signal.ion = 0;
-  node_signals[1].signal.flow = itofip(50);
+  node_signals[1].signal.flow = itofip(100);
   node_signals[1].signal.halt = 0;
   node_signals[1].signal.countdown = 0;
 
   node_signals[2].nexts_n=1;
   node_signals[2].nexts=&node_signals[1];
   node_signals[2].signal.ion = NODE_MAX_ION;
-  node_signals[2].signal.flow = itofip(50);
+  node_signals[2].signal.flow = itofip(100);
   node_signals[2].signal.halt = 0;
   node_signals[2].signal.countdown = 0;
 
@@ -97,14 +97,14 @@ main(int args_n, char** args)
     node_beat();
 
 
-    if (time >= itofip(1)-100)
+    if (time >= itofip(1)-(rand()%100))
     {
       time = 0;
       node_signals[2].signal.ion = NODE_MAX_ION;
     }
     else
     {
-      time+= clk_tick_time;
+      time += clk_tick_time;
     }
     clk_end_tick();
   }
