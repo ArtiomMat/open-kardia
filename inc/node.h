@@ -45,6 +45,8 @@ typedef struct node_s
       fip_t ion;
       // In seconds, after this node is emptied, how long this nodes holds on to the next node's flow before allowing it to begin flowing. This allows for delays, the heart is know to have those.
       fip_t halt;
+      // In seconds, the halt that the parent signal node sent to this one, the node needs to decrease this value until it's zero.
+      fip_t countdown;
     } signal;
   };
 } node_t;

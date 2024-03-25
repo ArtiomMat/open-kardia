@@ -2,6 +2,7 @@
 #include "node.h"
 #include "fip.h"
 #include "k.h"
+#include "clk.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,8 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
   switch(type)
   {
     case NODE_MUSCLE:
-    return k_pickc(255, 80, 70);
+    return gradient(x-xi, xf-xi, 255,80,70, 70,80,255);
+    // return k_pickc(255, 80, 70);
     
     case NODE_SIGNAL:
     int g = (255 * first_ion) / NODE_MAX_ION;
@@ -103,13 +105,70 @@ node_init(const char* fp)
   }
 }
 
+void
+node_beat()
+{
+  for (int i = 0; i < NODE_MAX_SIGNAL; i++)
+  {
+    node_t* node = &node_signals[i];
+    if (node->pos[0] < 0) // Null terminating node
+    {
+      return;
+    }
+
+    if (node->signal.ion > 0)
+    {
+      if (node->signal.countdown > 0) // If we have a countdown we decrease it.
+      {
+        node->signal.countdown -= clk_tick_time; // The time between beats
+        
+        if (node->signal.countdown > 0) // If we overshot we can safely just begin flowing the ionization, otherwise we still wait!
+        {
+          continue;
+        }
+        else
+        {
+          node->signal.countdown = 0;
+        }
+      }
+
+      int send_halt = 0; // If we need to now send the halt, 1 when the node empties
+      
+      // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
+      int real_flow = node->signal.flow;
+      if (real_flow >= node->signal.ion)
+      {
+        send_halt = 1; // Because that's it this is the one
+        real_flow -= real_flow - node->signal.ion;
+      }
+
+      node->signal.ion -= real_flow; // Perfect decrease
+
+      // Send the ionization to the next nodes
+      for (int j = 0; j < node->nexts_n; j++)
+      {
+        node->nexts[j].signal.ion += real_flow / node->nexts_n;
+
+        if (send_halt)
+        {
+          node->nexts[j].signal.countdown = node->signal.halt;
+        }
+        else
+        {
+          node->nexts[j].signal.countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
+        }
+      }
+    }
+  }
+}
+
 static void
 node_draw_arr(node_t* nodes, int n, int type)
 {
   for (int i = 0; i < n; i++)
   {
     node_t* node = &nodes[i];
-    if (node->pos < 0) // Null terminating node
+    if (node->pos[0] < 0) // Null terminating node
     {
       return;
     }
