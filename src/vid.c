@@ -100,7 +100,7 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_visual = xvisualinfo.visual;
 
   XSetWindowAttributes attribs = {0};
-  attribs.event_mask = KeyPressMask | KeyReleaseMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask;
+  attribs.event_mask = KeyPressMask | KeyReleaseMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask | StructureNotifyMask;
   
   vid_nix_window = XCreateWindow(
     vid_nix_dsp,
@@ -233,6 +233,14 @@ vid_run()
       case ButtonRelease:
       e.type = VID_E_RELEASE;
       e.release.code = xe.xbutton.button;
+      break;
+
+      case UnmapNotify:
+      e.type = VID_E_HIDE;
+      break;
+
+      case Expose:
+      e.type = VID_E_SHOW;
       break;
 
       case MotionNotify:

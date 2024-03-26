@@ -75,8 +75,6 @@ node_draw_line(node_t* root_node, node_t* next, int type);
 // If file is NULL then initializes the rest, node_muscles/signals are intialized to 0.
 extern void
 node_init(const char* fp);
-extern void
-node_free();
 // Quite optimized, doesn't mindlessly loop over everything.
 extern void
 node_beat();

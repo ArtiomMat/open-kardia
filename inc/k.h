@@ -31,6 +31,8 @@ extern unsigned long long k_ticks;
 extern int args_n;
 extern const char** args;
 
+extern int mouse_x, mouse_y;
+
 static inline int
 k_pickc(unsigned char r, unsigned char g, unsigned char b)
 {

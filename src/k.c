@@ -10,11 +10,15 @@
 #include <string.h>
 #include <stdlib.h>
 
+static int edit_mode = 0;
+
 fip_t k_tick_time;
 unsigned long long k_ticks;
 
 int args_n;
 const char** args;
+
+int mouse_x, mouse_y;
 
 int
 k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
@@ -47,6 +51,43 @@ channel_color(int value, int depth)
 }
 
 static void
+event_handler(vid_event_t* e)
+{
+  if (e->type == VID_E_MOVE)
+  {
+    mouse_x = e->move.x;
+    mouse_y = e->move.y;
+  }
+  else if (e->type == VID_E_CLOSE)
+  {
+    edit_free();
+    vid_free();
+    exit(0);
+  }
+
+  switch (e->type)
+  {
+    case VID_E_MOVE:
+    mouse_x = e->move.x;
+    mouse_y = e->move.y;
+    break;
+
+    case VID_E_CLOSE:
+    edit_free();
+    vid_free();
+    exit(0);
+    break;
+
+    
+  }
+
+  if (edit_mode)
+  {
+    edit_event_handler(e);
+  }
+}
+
+static void
 k_init()
 {
   for (unsigned i = 0; i < 256; i++)
@@ -64,15 +105,14 @@ main(int _args_n, const char** _args)
   args_n = _args_n;
   args = _args;
 
-  static int edit_mode = 0;
-  static char* fp = NULL;
+  static const char* fp = NULL;
 
   for (int i = 0; i < args_n; i++)
   {
     // Flag
     if (args[i][0] == '-')
     {
-      char* f = args[i] + 1;
+      const char* f = args[i] + 1;
       
       if (f[0] == 'e' && !f[1])
       {
@@ -96,6 +136,7 @@ main(int _args_n, const char** _args)
 
   vid_init(K_VID_SIZE, K_VID_SIZE);
   vid_set_title("Open Kardia");
+  vid_event_handler = event_handler;
 
   clk_init(ftofip(0.03f));
 
@@ -140,25 +181,31 @@ main(int _args_n, const char** _args)
   {
     clk_begin_tick();
 
-    if (edit_mode)
     vid_wipe(k_pickc(0,0,0));
 
-    node_draw();
-    ekg_draw();
-    vid_refresh();
-
-    vid_run();
-    node_beat();
-    if (time >= itofip(2)-(rand()%100))
+    if (edit_mode)
     {
-      time = 0;
-      node_signals[2].signal.ion = NODE_MAX_ION;
+      edit_run();
     }
     else
     {
-      time += clk_tick_time;
+      node_draw();
+      ekg_draw();
+
+      node_beat();
+      if (time >= itofip(2)-(rand()%100))
+      {
+        time = 0;
+        node_signals[2].signal.ion = NODE_MAX_ION;
+      }
+      else
+      {
+        time += clk_tick_time;
+      }
     }
 
+    vid_run();
+    vid_refresh();
     clk_end_tick();
   }
   return 0;

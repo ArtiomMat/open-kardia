@@ -6,6 +6,9 @@ enum
 {
   _VID_E_NULL,
   VID_E_CLOSE, // Close event, user wants to close the application
+  VID_E_HIDE, // When the video module is hidden and cannot be seen by the user
+  VID_E_SHOW, // When the video module is shown and seen by the user(sends it on vid_init() too)
+  
   VID_E_PRESS, // Press key/button
   VID_E_RELEASE, // Release key/button
   VID_E_MOVE, // Move mouse

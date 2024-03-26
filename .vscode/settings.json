@@ -3,6 +3,8 @@
     "*.h": "c",
     "*.asm": "asm-intel-x86-generic",
     "compare": "c",
-    "type_traits": "c"
+    "type_traits": "c",
+    "limits": "c",
+    "*.tcc": "c"
   }
 }

@@ -52,7 +52,7 @@ clk_end_tick()
   }
   else
   {
-    puts("SKIP");
+    puts("clk_end_tick(): SKIP");
   }
 }
 
