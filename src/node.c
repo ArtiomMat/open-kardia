@@ -96,6 +96,12 @@ node_init(const char* fp)
   }
 }
 
+static inline node_t*
+index_node(int index, int type)
+{
+  return type == NODE_MUSCLE ? &node_muscles[index] : &node_signals[index];
+}
+
 void
 node_beat()
 {
@@ -141,20 +147,15 @@ node_beat()
       // Send the ionization to the next nodes
       for (int j = 0; j < node->nexts_n; j++)
       {
-        node->nexts[j].signal.ion += real_flow / node->nexts_n;
-
-        fip_t mag = abs(node->pos[0] - node->nexts[j].pos[0] + node->pos[1] - node->nexts[j].pos[1]);
-        
-        node_flow[0] += fip_mul((node->nexts[j].pos[0] - node->pos[0]), fip_div(node->signal.flow, NODE_MAX_FLOW));
-        node_flow[1] += fip_mul((node->nexts[j].pos[0] - node->pos[0]), fip_div(node->signal.flow, NODE_MAX_FLOW));
+        node_signals[node->nexts[j]].signal.ion += real_flow / node->nexts_n;
 
         if (send_halt)
         {
-          node->nexts[j].signal.countdown = node->signal.halt;
+          node_signals[node->nexts[j]].signal.countdown = node->signal.halt;
         }
         else
         {
-          node->nexts[j].signal.countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
+          node_signals[node->nexts[j]].signal.countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
         }
       }
     }
@@ -173,7 +174,7 @@ node_draw_arr(node_t* nodes, int n, int type)
     }
     for (int j = 0; j < node->nexts_n; j++)
     {
-      node_draw_line(node, &node->nexts[j], type);
+      node_draw_line(node, index_node(node->nexts[j], type), type);
     }
   }
 }

@@ -1,6 +1,6 @@
 cc = gcc
 flags = -O3 -Iinc
-libs = -lX11
+libs = -lX11 -lasound -lm
 
 srcs = $(wildcard src/*.c)
 objs = $(patsubst src/%.c,obj/%.o,$(srcs))

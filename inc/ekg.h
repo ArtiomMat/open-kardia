@@ -5,6 +5,9 @@
 
 #include "k.h"
 
+extern int
+ekg_bpm;
+
 // Sensitivity is the factor by which the node_flow is multiplied, _y0 is the y at which EKG voltage of 0 is drawn.
 extern void
 ekg_init(fip_t sensitivty, int _y0);

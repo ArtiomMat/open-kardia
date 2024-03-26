@@ -32,7 +32,13 @@ typedef struct node_s
 {
   // Need to actually flow the ionization.
   // TODO: Maybe make it an index, can decrease memory used by nodes by ~3 approx, or even ~7 depending on data type.
-  struct node_s* nexts;
+  // struct node_s* nexts;
+  // int nexts_n;
+  union
+  {
+    int* nexts; // Unionized with next, if more than 1 nexts
+    int next; // Unionized with nexts, if only 1 nexts
+  };
   int nexts_n;
   fip_t pos[2]; // In screen space pixels
 

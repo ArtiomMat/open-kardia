@@ -5,6 +5,7 @@
     "compare": "c",
     "type_traits": "c",
     "limits": "c",
-    "*.tcc": "c"
+    "*.tcc": "c",
+    "*.old": "c"
   }
 }

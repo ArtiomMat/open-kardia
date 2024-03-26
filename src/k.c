@@ -5,6 +5,7 @@
 #include "clk.h"
 #include "k.h"
 #include "ekg.h"
+#include "aud.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,18 +54,6 @@ channel_color(int value, int depth)
 static void
 event_handler(vid_event_t* e)
 {
-  if (e->type == VID_E_MOVE)
-  {
-    mouse_x = e->move.x;
-    mouse_y = e->move.y;
-  }
-  else if (e->type == VID_E_CLOSE)
-  {
-    edit_free();
-    vid_free();
-    exit(0);
-  }
-
   switch (e->type)
   {
     case VID_E_MOVE:
@@ -75,10 +64,9 @@ event_handler(vid_event_t* e)
     case VID_E_CLOSE:
     edit_free();
     vid_free();
+    aud_free();
     exit(0);
     break;
-
-    
   }
 
   if (edit_mode)
@@ -107,7 +95,7 @@ main(int _args_n, const char** _args)
 
   static const char* fp = NULL;
 
-  for (int i = 0; i < args_n; i++)
+  for (int i = 1; i < args_n; i++)
   {
     // Flag
     if (args[i][0] == '-')
@@ -138,6 +126,8 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_event_handler = event_handler;
 
+  aud_init(8000);
+
   clk_init(ftofip(0.03f));
 
   node_init(NULL);
@@ -145,25 +135,27 @@ main(int _args_n, const char** _args)
   k_init();
 
   edit_init(fp);
-  ekg_init(ftofip(0.5f), K_VID_SIZE/2);
+  ekg_init(itofip(100.0f), K_VID_SIZE/2);
   
+  int x=0, y=1, z=2;
+
   node_signals[0].nexts_n=0;
   node_signals[0].signal.ion = 0;
-  node_signals[0].signal.flow = itofip(30);
+  node_signals[0].signal.flow = itofip(60);
   node_signals[0].signal.halt = 0;
   node_signals[0].signal.countdown = 0;
 
   node_signals[1].nexts_n=1;
-  node_signals[1].nexts=&node_signals[0];
+  node_signals[1].nexts=&x;
   node_signals[1].signal.ion = 0;
-  node_signals[1].signal.flow = itofip(30);
+  node_signals[1].signal.flow = itofip(60);
   node_signals[1].signal.halt = 0;
   node_signals[1].signal.countdown = 0;
 
   node_signals[2].nexts_n=1;
-  node_signals[2].nexts=&node_signals[1];
+  node_signals[2].nexts=&y;
   node_signals[2].signal.ion = NODE_MAX_ION;
-  node_signals[2].signal.flow = itofip(30);
+  node_signals[2].signal.flow = itofip(60);
   node_signals[2].signal.halt = ftofip(0.1f);
   node_signals[2].signal.countdown = ftofip(0.1f);
 
@@ -175,8 +167,9 @@ main(int _args_n, const char** _args)
 
   node_signals[0].pos[0] = itofip(230);
   node_signals[0].pos[1] = itofip(360);
-  
-  fip_t time = 0;
+
+  fip_t time = 0, count = 0;
+  fip_t times[] = {ftofip(1), ftofip(0.7), ftofip(0.6), ftofip(1), ftofip(1), ftofip(1), ftofip(0.5), ftofip(0.3), ftofip(0.25), ftofip(0.25), ftofip(0.15), ftofip(0.15), ftofip(0.15)};
   while(1)
   {
     clk_begin_tick();
@@ -193,15 +186,21 @@ main(int _args_n, const char** _args)
       ekg_draw();
 
       node_beat();
-      if (time >= itofip(2)-(rand()%100))
+
+      if (count < sizeof(times))
       {
-        time = 0;
-        node_signals[2].signal.ion = NODE_MAX_ION;
+        if (time >= times[count])
+        {
+          time = 0;
+          node_signals[2].signal.ion = NODE_MAX_ION;
+          count++;
+        }
+        else
+        {
+          time += clk_tick_time;
+        }
       }
-      else
-      {
-        time += clk_tick_time;
-      }
+
     }
 
     vid_run();

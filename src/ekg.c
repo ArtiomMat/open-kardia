@@ -2,6 +2,7 @@
 #include "vid.h"
 #include "node.h"
 #include "k.h"
+#include "aud.h"
 
 #include <stdio.h>
 
@@ -12,11 +13,17 @@ static fip_t sensitivty;
 
 static fip_t y0;
 
-static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg history(on the screen)
+static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that is on the screen and wraps around it)
+
+// Always psotive but can be indicated for negative voltage peaks too
+// At what voltage the ekg will beep, changes each beat(that is detected by finding the )
+static fip_t beep_bias;
 
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
+  beep_bias = ftofip(0.2);
+
   y0 = _y0;
   x = 0;
   sensitivty = _sensitivty;
@@ -24,7 +31,7 @@ ekg_init(fip_t _sensitivty, int _y0)
   printf("ekg_init(): EKG module initialized, drawing horizontally *%.3f.\n", fiptof(sensitivty));
 }
 
-
+// Also updates beep_bias and beeps
 static void
 read_into_buf()
 {
@@ -52,7 +59,12 @@ read_into_buf()
   }
   total_voltage /= i; // Allowed to use integers
   
-  buf[x] = fip_mul(total_voltage, sensitivty); // Negative due to y+ being down
+  buf[x] = fiptoi(fip_mul(total_voltage, sensitivty)); // Negative due to y+ being down
+
+  if (abs(total_voltage) >= beep_bias)
+  {
+    aud_play(2000, 0.3f);
+  }
 }
 
 void
