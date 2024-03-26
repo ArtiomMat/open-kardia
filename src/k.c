@@ -146,7 +146,7 @@ main(int _args_n, const char** _args)
   k_init();
 
   edit_init(fp);
-  ekg_init(itofip(100.0f), K_VID_SIZE/2);
+  ekg_init(itofip(200.0f), K_VID_SIZE/2);
   
   int x=0, y=1, z=2;
 

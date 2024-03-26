@@ -118,6 +118,11 @@ node_beat()
 
     if (node->signal.ion > 0)
     {
+      if (node->signal.ion > NODE_MAX_ION) // Cap ionization
+      {
+        node->signal.ion = NODE_MAX_ION;
+      }
+
       if (node->signal.countdown > 0) // If we have a countdown we decrease it.
       {
         node->signal.countdown -= clk_tick_time; // The time between beats
