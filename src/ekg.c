@@ -5,6 +5,7 @@
 #include "aud.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define EKG_DRAW_RANGE (K_VID_SIZE/5)
 
@@ -45,9 +46,9 @@ read_into_buf()
   
   int i;
   fip_t total_voltage = 0;
-  for (i = 0; i < NODE_MAX_SIGNAL; i++)
+  for (i = 0; i < NODE_MAX; i++)
   {
-    node_t* node = &node_signals[i];
+    node_t* node = &node_all[i];
     if (node->pos[0] < 0) // Null terminating node
     {
       break;
@@ -57,7 +58,7 @@ read_into_buf()
     fip_t ld = node->pos[0];
     fip_t rd = itofip(K_VID_SIZE) - node->pos[0];
     // Proceed to calculate "voltage"
-    total_voltage += fip_div(node->signal.ion, rd) - fip_div(node->signal.ion, ld);
+    total_voltage += fip_div(node->ion, rd) - fip_div(node->ion, ld);
   }
   total_voltage /= i; // Allowed to use integers
   
@@ -85,7 +86,7 @@ ekg_draw()
   // The loop actually just draws the visible portion that hasn't faded
   for (int raw_i = 0, last = 0; raw_i <= EKG_DRAW_RANGE; raw_i++)
   {
-    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,NODE_NODE_SIGNAL1_C_G,NODE_NODE_SIGNAL1_C_B);
+    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,NODE_NODE_DEPOL_C_G,NODE_NODE_DEPOL_C_B);
 
     // Setup the video i that is the x on the screen
     int i = x - EKG_DRAW_RANGE + raw_i;

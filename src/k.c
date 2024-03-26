@@ -68,7 +68,7 @@ event_handler(vid_event_t* e)
     }
     else
     {
-      node_signals[2].signal.ion = NODE_MAX_ION;
+      node_all[2].ion = NODE_MAX_ION;
     }
     break;
 
@@ -150,34 +150,34 @@ main(int _args_n, const char** _args)
   
   int x=0, y=1, z=2;
 
-  node_signals[0].nexts_n=0;
-  node_signals[0].signal.ion = 0;
-  node_signals[0].signal.flow = itofip(60);
-  node_signals[0].signal.halt = 0;
-  node_signals[0].signal.countdown = 0;
+  node_all[0].nexts_n=0;
+  node_all[0].ion = 0;
+  node_all[0].flow = itofip(60);
+  node_all[0].halt = 0;
+  node_all[0].countdown = 0;
 
-  node_signals[1].nexts_n=1;
-  node_signals[1].nexts=&x;
-  node_signals[1].signal.ion = 0;
-  node_signals[1].signal.flow = itofip(60);
-  node_signals[1].signal.halt = 0;
-  node_signals[1].signal.countdown = 0;
+  node_all[1].nexts_n=1;
+  node_all[1].nexts=&x;
+  node_all[1].ion = 0;
+  node_all[1].flow = itofip(60);
+  node_all[1].halt = 0;
+  node_all[1].countdown = 0;
 
-  node_signals[2].nexts_n=1;
-  node_signals[2].nexts=&y;
-  node_signals[2].signal.ion = NODE_MAX_ION;
-  node_signals[2].signal.flow = itofip(60);
-  node_signals[2].signal.halt = ftofip(0.1f);
-  node_signals[2].signal.countdown = ftofip(0.1f);
+  node_all[2].nexts_n=1;
+  node_all[2].nexts=&y;
+  node_all[2].ion = NODE_MAX_ION;
+  node_all[2].flow = itofip(60);
+  node_all[2].halt = ftofip(0.1f);
+  node_all[2].countdown = ftofip(0.1f);
 
-  node_signals[2].pos[0] = itofip(10);
-  node_signals[2].pos[1] = itofip(10);
+  node_all[2].pos[0] = itofip(10);
+  node_all[2].pos[1] = itofip(10);
 
-  node_signals[1].pos[0] = itofip(330);
-  node_signals[1].pos[1] = itofip(211);
+  node_all[1].pos[0] = itofip(330);
+  node_all[1].pos[1] = itofip(211);
 
-  node_signals[0].pos[0] = itofip(230);
-  node_signals[0].pos[1] = itofip(360);
+  node_all[0].pos[0] = itofip(230);
+  node_all[0].pos[1] = itofip(360);
 
   fip_t time = 0, count = 0;
   fip_t times[] = {ftofip(1), ftofip(0.7), ftofip(0.6), ftofip(1), ftofip(1), ftofip(1), ftofip(0.5), ftofip(0.3), ftofip(0.25), ftofip(0.25), ftofip(0.15), ftofip(0.15), ftofip(0.15)};
@@ -203,7 +203,7 @@ main(int _args_n, const char** _args)
         if (time >= times[count])
         {
           time = 0;
-          node_signals[2].signal.ion = NODE_MAX_ION;
+          node_all[2].ion = NODE_MAX_ION;
           count++;
         }
         else

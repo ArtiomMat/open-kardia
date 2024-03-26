@@ -5,79 +5,50 @@
 #include "fip.h"
 
 // Drawing is recursive
-#define NODE_MAX_MUSCLE 64
-#define NODE_MAX_SIGNAL 64
+#define NODE_MAX 64
 
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
 #define NODE_MAX_FLOW (NODE_MAX_ION*256)
 
-#define NODE_MUSCLE_C_R 255
-#define NODE_MUSCLE_C_G 80
-#define NODE_MUSCLE_C_B 70
-#define NODE_MUSCLE_C k_pickc(NODE_MUSCLE_C_R,NODE_MUSCLE_C_G,NODE_MUSCLE_C_B)
+#define NODE_POL_C_R 255
+#define NODE_POL_C_G 80
+#define NODE_POL_C_B 70
+#define NODE_POL_C k_pickc(NODE_POL_C_R,NODE_POL_C_G,NODE_POL_C_B)
 
-#define NODE_NODE_SIGNAL1_C_R 0
-#define NODE_NODE_SIGNAL1_C_G 255
-#define NODE_NODE_SIGNAL1_C_B 30
-#define NODE_NODE_SIGNAL1_C k_pickc(NODE_NODE_SIGNAL1_C_R,NODE_NODE_SIGNAL1_C_G,NODE_NODE_SIGNAL1_C_B)
-
-enum
-{
-  NODE_NULL,
-  NODE_MUSCLE,
-  NODE_SIGNAL,
-};
+#define NODE_NODE_DEPOL_C_R 0
+#define NODE_NODE_DEPOL_C_G 255
+#define NODE_NODE_DEPOL_C_B 30
+#define NODE_NODE_DEPOL_C k_pickc(NODE_NODE_DEPOL_C_R,NODE_NODE_DEPOL_C_G,NODE_NODE_DEPOL_C_B)
 
 typedef struct node_s
 {
-  // Need to actually flow the ionization.
-  // TODO: Maybe make it an index, can decrease memory used by nodes by ~3 approx, or even ~7 depending on data type.
-  // struct node_s* nexts;
-  // int nexts_n;
-  union
-  {
-    int* nexts; // Unionized with next, if more than 1 nexts
-    int next; // Unionized with nexts, if only 1 nexts
-  };
+  // Need this to flow the ionization, can be NULL, signifying that ionization will just fade out here.
+  int* nexts;
   int nexts_n;
   fip_t pos[2]; // In screen space pixels
 
-  // Type is dependent on the array that is accessed
-  union
-  {
-    struct
-    {
-      fip_t relax; // In pixels per second, how fast it relaxes back
-      fip_t bias; // Ionization required for full depol
-      fip_t pol_pos[2]; // Polarized position in pixels
-      fip_t depol_pos[2]; // Depolarized positon in pixels
-    } muscle;
-    
-    struct
-    {
-      // In ionization per second, how much ionization flows from this node to the next nodes, if multiple nodes the flow is halved to each one.
-      fip_t flow;
-      // The current ionization in this node, NODE_MAX_ION is the max.
-      // If ionization reaches beyond NODE_MAX_ION it is capped, various factors depend on NODE_MAX_ION being the maximum possible value.
-      fip_t ion;
-      // In seconds, after this node is emptied, how long this nodes holds on to the next node's flow before allowing it to begin flowing. This allows for delays, the heart is know to have those.
-      fip_t halt;
-      // In seconds, the halt that the parent signal node sent to this one, the node needs to decrease this value until it's zero.
-      fip_t countdown;
-    } signal;
-  };
+  fip_t relax; // In pixels per second, how fast it relaxes back
+  fip_t bias; // Ionization required for full depol
+  fip_t pol_pos[2]; // Polarized position in pixels
+  fip_t depol_pos[2]; // Depolarized positon in pixels
+
+  // In ionization per second, how much ionization flows from this node to the next nodes, if multiple nodes the flow is halved to each one.
+  fip_t flow;
+  // The current ionization in this node, NODE_MAX_ION is the max.
+  // If ionization reaches beyond NODE_MAX_ION it is capped, various factors depend on NODE_MAX_ION being the maximum possible value.
+  fip_t ion;
+  // In seconds, after this node is emptied, how long this nodes holds on to the next node's flow before allowing it to begin flowing. This allows for delays, the heart is know to have those.
+  fip_t halt;
+  // In seconds, the halt that the parent signal node sent to this one, the node needs to decrease this value until it's zero.
+  fip_t countdown;
 } node_t;
 
-extern node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
-
-// Direction of flow, unnormalized
-// Normalized using |x + y| not pythagorean theorem, hence use it as a rough estimate that is not really normalized
-extern fip_t node_flow[2];
+extern node_t node_all[NODE_MAX];
 
 // Draws line from root_node to next, type is from the enum above.
 // For editor to also be able to use.
 extern void
-node_draw_line(node_t* root_node, node_t* next, int type);
+node_draw_line(node_t* root_node, node_t* next);
 // If file is NULL then initializes the rest, node_muscles/signals are intialized to 0.
 extern void
 node_init(const char* fp);

@@ -11,12 +11,6 @@
 
 static int hover_node_i = -1;
 
-static inline node_t*
-index_node(int index, int type)
-{
-  return type == NODE_MUSCLE ? &node_muscles[index] : &node_signals[index];
-}
-
 static void
 put_square(int color, int _x, int _y, int size)
 {
@@ -38,7 +32,7 @@ in_square(int x, int y, int s_x, int s_y,int size)
 void
 edit_event_handler(vid_event_t* e)
 {
-  
+
 }
 
 void
@@ -57,29 +51,29 @@ int
 edit_run()
 {
   hover_node_i = -1;
-  for (int i = 0; i < NODE_MAX_SIGNAL; i++)
+  for (int i = 0; i < NODE_MAX; i++)
   {
-    node_t* node = &node_signals[i];
-    node->signal.ion = NODE_MAX_ION;
+    node_t* node = &node_all[i];
+    
     if (node->pos[0] < 0) // Null terminating node
     {
       break;
     }
     for (int j = 0; j < node->nexts_n; j++)
     {
-      node_draw_line(node, index_node(node->nexts[j], NODE_SIGNAL), NODE_SIGNAL);
+      node_draw_line(node, &node_all[node->nexts[j]]);
     }
 
     int x = fiptoi(node->pos[0]), y = fiptoi(node->pos[1]);
     int c;
     if (in_square(mouse_x, mouse_y, x, y, 7))
     {
-      c = NODE_NODE_SIGNAL1_C;
+      c = NODE_NODE_DEPOL_C;
       hover_node_i = i;
     }
     else
     {
-      c = NODE_MUSCLE_C;
+      c = NODE_POL_C;
     }
     put_square(c, x, y, 7);
   }
