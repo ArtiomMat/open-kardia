@@ -9,6 +9,13 @@
     #define max(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
+static int hover_node_i = -1;
+
+static inline node_t*
+index_node(int index, int type)
+{
+  return type == NODE_MUSCLE ? &node_muscles[index] : &node_signals[index];
+}
 
 static void
 put_square(int color, int _x, int _y, int size)
@@ -49,7 +56,33 @@ edit_init(const char* fp)
 int
 edit_run()
 {
-  put_square(NODE_MUSCLE_C, 100, 100, 7);
-  if (in_square(mouse_x, mouse_y, 100, 100, 7))
-    put_square(NODE_NODE_SIGNAL1_C, 100, 100, 7);
+  hover_node_i = -1;
+  for (int i = 0; i < NODE_MAX_SIGNAL; i++)
+  {
+    node_t* node = &node_signals[i];
+    node->signal.ion = NODE_MAX_ION;
+    if (node->pos[0] < 0) // Null terminating node
+    {
+      break;
+    }
+    for (int j = 0; j < node->nexts_n; j++)
+    {
+      node_draw_line(node, index_node(node->nexts[j], NODE_SIGNAL), NODE_SIGNAL);
+    }
+
+    int x = fiptoi(node->pos[0]), y = fiptoi(node->pos[1]);
+    int c;
+    if (in_square(mouse_x, mouse_y, x, y, 7))
+    {
+      c = NODE_NODE_SIGNAL1_C;
+      hover_node_i = i;
+    }
+    else
+    {
+      c = NODE_MUSCLE_C;
+    }
+    put_square(c, x, y, 7);
+  }
+
+  
 }
