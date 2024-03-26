@@ -4,6 +4,8 @@
 
 // Assumes that all modules were initialized, should only be called by the main module.
 // Allows for NULL
-// Exits by itself
 extern void
-edit_main(const char* fp);
+edit_init(const char* fp);
+
+extern int
+edit_run();

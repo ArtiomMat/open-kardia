@@ -12,8 +12,6 @@ node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 
 fip_t node_flow[2] = {0,0};
 
-// Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
-
 
 static int
 color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
@@ -21,26 +19,24 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf, int type)
   switch(type)
   {
     case NODE_MUSCLE:
-    return k_gradient(x-xi, xf-xi, 255,80,70, 70,80,255);
-    // return k_pickc(255, 80, 70);
+    return NODE_MUSCLE_C;
     
     case NODE_SIGNAL:
-    int g = (255 * first_ion) / NODE_MAX_ION;
-    int b = (130 * first_ion) / NODE_MAX_ION;
+    int g = (NODE_NODE_SIGNAL1_C_G * first_ion) / NODE_MAX_ION;
+    int b = (NODE_NODE_SIGNAL1_C_B * first_ion) / NODE_MAX_ION;
     
-    int G = (255 * second_ion) / NODE_MAX_ION;
-    int B = (130 * second_ion) / NODE_MAX_ION;
+    int G = (NODE_NODE_SIGNAL1_C_G * second_ion) / NODE_MAX_ION;
+    int B = (NODE_NODE_SIGNAL1_C_B * second_ion) / NODE_MAX_ION;
     
     return k_gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
 
     case NODE_NULL:
-    return k_pickc(128, 128, 128);
+    return 255;
   }
 }
 
-// Draws line from root_node to next
-static void
-draw_line(node_t* root_node, node_t* next, int type)
+void
+node_draw_line(node_t* root_node, node_t* next, int type)
 {
   int xi, yi, xf, yf;
   xi = fiptoi(root_node->pos[0]);
@@ -177,7 +173,7 @@ node_draw_arr(node_t* nodes, int n, int type)
     }
     for (int j = 0; j < node->nexts_n; j++)
     {
-      draw_line(node, &node->nexts[j], type);
+      node_draw_line(node, &node->nexts[j], type);
     }
   }
 }

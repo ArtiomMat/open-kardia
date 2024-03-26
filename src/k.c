@@ -63,6 +63,37 @@ main(int _args_n, const char** _args)
 {
   args_n = _args_n;
   args = _args;
+
+  static int edit_mode = 0;
+  static char* fp = NULL;
+
+  for (int i = 0; i < args_n; i++)
+  {
+    // Flag
+    if (args[i][0] == '-')
+    {
+      char* f = args[i] + 1;
+      
+      if (f[0] == 'e' && !f[1])
+      {
+        edit_mode = 1;
+      }
+      else
+      {
+        printf("main(): Unrecognized flag '%s'.\n", f);
+        return 1;
+      }
+    }
+    else if (fp == NULL)
+    {
+      fp = args[i];
+    }
+    else
+    {
+      printf("main(): File path already specified '%s' is ignored.\n", fp);
+    }
+  }
+
   vid_init(K_VID_SIZE, K_VID_SIZE);
   vid_set_title("Open Kardia");
 
@@ -72,23 +103,7 @@ main(int _args_n, const char** _args)
 
   k_init();
 
-  { // Testing if user wants editor
-    int index = 0;
-    if (k_arg("-e"))
-    {
-      if (index+1 < args_n) // The file path??
-      {
-        edit_main(args[index+1]);
-      }
-      else
-      {
-        edit_main(NULL);
-      }
-
-      return -1; // I mean we were not supposed to get here
-    }
-  }
-
+  edit_init(fp);
   ekg_init(ftofip(0.5f), K_VID_SIZE/2);
   
   node_signals[0].nexts_n=0;
@@ -108,8 +123,8 @@ main(int _args_n, const char** _args)
   node_signals[2].nexts=&node_signals[1];
   node_signals[2].signal.ion = NODE_MAX_ION;
   node_signals[2].signal.flow = itofip(30);
-  node_signals[2].signal.halt = 0;
-  node_signals[2].signal.countdown = 0;
+  node_signals[2].signal.halt = ftofip(0.1f);
+  node_signals[2].signal.countdown = ftofip(0.1f);
 
   node_signals[2].pos[0] = itofip(10);
   node_signals[2].pos[1] = itofip(10);
@@ -125,6 +140,7 @@ main(int _args_n, const char** _args)
   {
     clk_begin_tick();
 
+    if (edit_mode)
     vid_wipe(k_pickc(0,0,0));
 
     node_draw();
@@ -133,9 +149,7 @@ main(int _args_n, const char** _args)
 
     vid_run();
     node_beat();
-
-
-    if (time >= itofip(1)-(rand()%100))
+    if (time >= itofip(2)-(rand()%100))
     {
       time = 0;
       node_signals[2].signal.ion = NODE_MAX_ION;
@@ -144,6 +158,7 @@ main(int _args_n, const char** _args)
     {
       time += clk_tick_time;
     }
+
     clk_end_tick();
   }
   return 0;

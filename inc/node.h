@@ -11,6 +11,16 @@
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
 #define NODE_MAX_FLOW (NODE_MAX_ION*256)
 
+#define NODE_MUSCLE_C_R 255
+#define NODE_MUSCLE_C_G 80
+#define NODE_MUSCLE_C_B 70
+#define NODE_MUSCLE_C k_pickc(NODE_MUSCLE_C_R,NODE_MUSCLE_C_G,NODE_MUSCLE_C_B)
+
+#define NODE_NODE_SIGNAL1_C_R 0
+#define NODE_NODE_SIGNAL1_C_G 255
+#define NODE_NODE_SIGNAL1_C_B 30
+#define NODE_NODE_SIGNAL1_C k_pickc(NODE_NODE_SIGNAL1_C_R,NODE_NODE_SIGNAL1_C_G,NODE_NODE_SIGNAL1_C_B)
+
 enum
 {
   NODE_NULL,
@@ -58,6 +68,10 @@ extern node_t node_muscles[NODE_MAX_MUSCLE], node_signals[NODE_MAX_SIGNAL];
 // Normalized using |x + y| not pythagorean theorem, hence use it as a rough estimate that is not really normalized
 extern fip_t node_flow[2];
 
+// Draws line from root_node to next, type is from the enum above.
+// For editor to also be able to use.
+extern void
+node_draw_line(node_t* root_node, node_t* next, int type);
 // If file is NULL then initializes the rest, node_muscles/signals are intialized to 0.
 extern void
 node_init(const char* fp);
