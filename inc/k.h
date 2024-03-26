@@ -44,6 +44,10 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
   return rgb.c;
 }
 
+// Puts the new values in rgb, same as k_gradient() just returns in RGB rather than in index
+extern void
+k_gradient_rgb(int x, int x_max, unsigned char* r, unsigned char* g, unsigned char* b, unsigned char R, unsigned char G, unsigned char B);
+
 // Returns an index for location x>=0 up to x_max, starts from rgb and fades into RGB
 extern int
 k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B);

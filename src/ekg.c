@@ -16,6 +16,8 @@ static fip_t y0;
 
 static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that is on the screen and wraps around it)
 
+int ekg_bpm; // TODO: Implement
+
 // Always psotive but can be indicated for negative voltage peaks too
 // At what voltage the ekg will beep, changes each beat(that is detected by finding the )
 static fip_t beep_bias;
@@ -86,7 +88,7 @@ ekg_draw()
   // The loop actually just draws the visible portion that hasn't faded
   for (int raw_i = 0, last = 0; raw_i <= EKG_DRAW_RANGE; raw_i++)
   {
-    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,NODE_NODE_DEPOL_C_G,NODE_NODE_DEPOL_C_B);
+    int color = k_gradient(raw_i, EKG_DRAW_RANGE, 0,0,0, 0,EKG_C_G,EKG_C_B);
 
     // Setup the video i that is the x on the screen
     int i = x - EKG_DRAW_RANGE + raw_i;

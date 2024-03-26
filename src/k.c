@@ -21,12 +21,18 @@ const char** args;
 
 int mouse_x, mouse_y;
 
+void
+k_gradient_rgb(int x, int x_max, unsigned char* r, unsigned char* g, unsigned char* b, unsigned char R, unsigned char G, unsigned char B)
+{
+  *r += ((R-*r) * x) / x_max; // We just do a classic x*(now/max)
+  *g += ((G-*g) * x) / x_max;
+  *b += ((B-*b) * x) / x_max;
+}
+
 int
 k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, unsigned char R, unsigned char G, unsigned char B)
 {
-  r += ((R-r) * x) / x_max; // We just do a classic x*(now/max)
-  g += ((G-g) * x) / x_max;
-  b += ((B-b) * x) / x_max;
+  k_gradient_rgb(x, x_max, &r, &g, &b, R, G, B);
   return k_pickc(r, g, b);
 }
 
@@ -146,7 +152,7 @@ main(int _args_n, const char** _args)
   k_init();
 
   edit_init(fp);
-  ekg_init(itofip(200.0f), K_VID_SIZE/2);
+  ekg_init(itofip(200.0f), K_VID_SIZE - K_VID_SIZE/10);
   
   int x=0, y=1, z=2;
 

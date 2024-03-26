@@ -30,13 +30,13 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
   //   return 255;
   // }
 
-  int g = (NODE_NODE_DEPOL_C_G * first_ion) / NODE_MAX_ION;
-  int b = (NODE_NODE_DEPOL_C_B * first_ion) / NODE_MAX_ION;
+  unsigned char r = NODE_POL_C_R,g = NODE_POL_C_G,b = NODE_POL_C_B;
+  unsigned char R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
+
+  k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+  k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
   
-  int G = (NODE_NODE_DEPOL_C_G * second_ion) / NODE_MAX_ION;
-  int B = (NODE_NODE_DEPOL_C_B * second_ion) / NODE_MAX_ION;
-  
-  return k_gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
+  return k_gradient(x-xi, xf-xi, r,g,b, R,G,B);
 }
 
 void

@@ -68,7 +68,7 @@ edit_run()
     int c;
     if (in_square(mouse_x, mouse_y, x, y, 7))
     {
-      c = NODE_NODE_DEPOL_C;
+      c = NODE_DEPOL_C;
       hover_node_i = i;
     }
     else

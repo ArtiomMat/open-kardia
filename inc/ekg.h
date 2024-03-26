@@ -5,8 +5,12 @@
 
 #include "k.h"
 
-extern int
-ekg_bpm;
+#define EKG_C_R 0
+#define EKG_C_G 255
+#define EKG_C_B 30
+#define EKG_C k_pickc(EKG_C_R,EKG_C_G,EKG_C_B)
+
+extern int ekg_bpm;
 
 // Sensitivity is the factor by which the node_flow is multiplied, _y0 is the y at which EKG voltage of 0 is drawn.
 extern void
