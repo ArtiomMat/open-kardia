@@ -35,6 +35,8 @@ ekg_init(fip_t _sensitivty, int _y0)
 static void
 read_into_buf()
 {
+  static int do_beep = 0;
+
   x++;
   if (x >= K_VID_SIZE)
   {
@@ -60,10 +62,15 @@ read_into_buf()
   total_voltage /= i; // Allowed to use integers
   
   buf[x] = fiptoi(fip_mul(total_voltage, sensitivty)); // Negative due to y+ being down
-
+  
   if (abs(total_voltage) >= beep_bias)
   {
+    do_beep = 1;
+  }
+  else if (abs(buf[x]) <= 1 && do_beep)
+  {
     aud_play(2000, 0.3f);
+    do_beep = 0;
   }
 }
 

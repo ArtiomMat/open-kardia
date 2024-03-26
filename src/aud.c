@@ -62,7 +62,9 @@ aud_init(unsigned int _sample_rate)
 void
 aud_play(short freq, float amplitude) // Rename parameter to reflect volume level
 {
-  int write_size = fiptoi(sample_rate * clk_tick_time * 2);
+  snd_pcm_prepare(pcm);
+
+  int write_size = sample_rate/15;
 
   // Set all samples to the desired level (0-127 for 8-bit signed)
   for (int i = 0; i < write_size; i++)
@@ -72,14 +74,7 @@ aud_play(short freq, float amplitude) // Rename parameter to reflect volume leve
 
   if ((err = snd_pcm_writei(pcm, buf, write_size)) != write_size)
   {
-    if (err == -EPIPE)
-    {
-      snd_pcm_prepare(pcm);
-    }
-    else
-    {
-      printf("aud_play(): Didn't write everything...\n", snd_strerror(err));
-    }
+    printf("aud_play(): Didn't write everything...\n", snd_strerror(err));
   }
 }
 
