@@ -61,6 +61,17 @@ event_handler(vid_event_t* e)
     mouse_y = e->move.y;
     break;
 
+    case VID_E_PRESS:
+    if (e->press.code == 26)
+    {
+      edit_mode = !edit_mode;
+    }
+    else
+    {
+      node_signals[2].signal.ion = NODE_MAX_ION;
+    }
+    break;
+
     case VID_E_CLOSE:
     edit_free();
     vid_free();

@@ -38,7 +38,7 @@ in_square(int x, int y, int s_x, int s_y,int size)
 void
 edit_event_handler(vid_event_t* e)
 {
-
+  
 }
 
 void
@@ -84,5 +84,5 @@ edit_run()
     put_square(c, x, y, 7);
   }
 
-  
+
 }

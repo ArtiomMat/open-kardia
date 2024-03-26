@@ -22,7 +22,7 @@ static fip_t beep_bias;
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
-  beep_bias = ftofip(0.2);
+  beep_bias = ftofip(0.15);
 
   y0 = _y0;
   x = 0;
@@ -35,7 +35,7 @@ ekg_init(fip_t _sensitivty, int _y0)
 static void
 read_into_buf()
 {
-  static int do_beep = 0;
+  static int beep = 0; // 0 means didn't do, 1 means did so wait until can for next time
 
   x++;
   if (x >= K_VID_SIZE)
@@ -65,12 +65,15 @@ read_into_buf()
   
   if (abs(total_voltage) >= beep_bias)
   {
-    do_beep = 1;
+    if (!beep) // nested if for the else below
+    {
+      aud_play(2000, 0.3f);
+      beep = 1;
+    }
   }
-  else if (abs(buf[x]) <= 1 && do_beep)
+  else
   {
-    aud_play(2000, 0.3f);
-    do_beep = 0;
+    beep = 0;
   }
 }
 
