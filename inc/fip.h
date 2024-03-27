@@ -73,14 +73,15 @@ itofip(int i)
 static inline float
 fiptof(fip_t fip)
 {
-  int frac_mask = (fip & ((1 << FIP_FRAC_BITS)-1));
-  return fiptoi(fip) + (1.0f * (fip & frac_mask) / (1 << FIP_FRAC_BITS));
+  // int frac_mask = (fip & ((1  SAL)-1));
+  // return fiptoi(fip) + (1.0f * (fip & frac_mask) / (1  SAL));
+  return (float)(fip) / (1 SAL);
 }
 // Just for debugging shouldn't be relied on
 static inline fip_t
 ftofip(float f)
 {
-  return (((int)f)<<FIP_FRAC_BITS) + (f-(int)f) * (1 << FIP_FRAC_BITS);
+  return (int)(f * (1 SAL));
 }
 
 #undef SAL
