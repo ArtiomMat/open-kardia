@@ -24,6 +24,7 @@ fip_mul(fip_t a, fip_t b)
 static inline int
 fip_div(fip_t a, fip_t b) 
 {
+  // TODO: Work on it, may be incorrect how we are doing it
   if (a == 0)
   {
     return 0;
