@@ -7,5 +7,6 @@ extern int
 aud_init(unsigned int sample_rate);
 extern void
 aud_free();
+// freq of 255 means it literally fills up every single sample with the 
 extern void
-aud_play(short freq, float amplitude);
+aud_play(unsigned char freq, unsigned char amp);

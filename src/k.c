@@ -143,7 +143,7 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_event_handler = event_handler;
 
-  aud_init(8000);
+  aud_init(16000);
 
   clk_init(ftofip(0.03f));
 
