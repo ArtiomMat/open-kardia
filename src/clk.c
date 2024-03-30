@@ -52,7 +52,7 @@ clk_end_tick()
   }
   else
   {
-    puts("clk_end_tick(): SKIP");
+    puts("clk_end_tick(): Tick took too long.");
   }
 }
 

@@ -68,7 +68,7 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
   int amp16 = amp * (__INT16_MAX__ / __UINT8_MAX__);
   int jps = 2*amp16 / spz; // How much we jump per sample
 
-  buf[0] = amp16; // We start at the top
+  buf[0] = 0; // We start at the top
   
   // Set all samples to the desired level (0-127 for 8-bit signed)
   for (int i = 1, sign = -1; i < write_size; i++)

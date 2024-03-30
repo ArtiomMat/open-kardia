@@ -70,7 +70,7 @@ read_into_buf()
   {
     if (!beep) // nested if for the else below
     {
-      aud_play(250, 100);
+      aud_play(190, 100);
       beep = 1;
     }
   }
