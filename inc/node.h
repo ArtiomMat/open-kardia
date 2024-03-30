@@ -4,9 +4,13 @@
 
 #include "fip.h"
 
-// Drawing is recursive
 #define NODE_MAX 64
 
+#if NODE_MAX > 255
+  #error NODE_MAX Cant be above 255, because of the data type used for counts and stuff
+#endif
+
+// At max ionization the muscle fully contracts
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
 #define NODE_MAX_FLOW (NODE_MAX_ION*256)
 
@@ -23,14 +27,18 @@
 typedef struct node_s
 {
   // Need this to flow the ionization, can be NULL, signifying that ionization will just fade out here.
-  int* nexts;
-  int nexts_n;
+  unsigned char next_flows[8];
+  unsigned char next_flows_n; // Max is 8
+  // What are the next nodes we are drawing? NULL for this being a node without any
+  unsigned char next_draws[8]; // Max is 8
+  unsigned char next_draws_n;
+
   fip_t pos[2]; // In screen space pixels
 
   fip_t relax; // In pixels per second, how fast it relaxes back
   fip_t bias; // Ionization required for full depol
   fip_t pol_pos[2]; // Polarized position in pixels
-  fip_t depol_pos[2]; // Depolarized positon in pixels
+  fip_t depol_off[2]; // Depolarized offset in pixels
 
   // In ionization per second, how much ionization flows from this node to the next nodes, if multiple nodes the flow is halved to each one.
   fip_t flow;

@@ -59,9 +59,9 @@ edit_run()
     {
       break;
     }
-    for (int j = 0; j < node->nexts_n; j++)
+    for (int j = 0; j < node->next_flows_n; j++)
     {
-      node_draw_line(node, &node_all[node->nexts[j]]);
+      node_draw_line(node, &node_all[node->next_flows[j]]);
     }
 
     int x = fiptoi(node->pos[0]), y = fiptoi(node->pos[1]);

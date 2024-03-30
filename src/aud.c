@@ -81,7 +81,6 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
     }
     
     buf[i] = sample;
-  printf("%f\n", 1.0f * buf[i] / __INT16_MAX__);
   }
 
   snd_pcm_prepare(pcm);

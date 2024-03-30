@@ -1,5 +1,5 @@
 cc = gcc
-flags = -O3 -Iinc
+flags = -O3 -Iinc -ggdb
 libs = -lX11 -lasound -lm
 
 srcs = $(wildcard src/*.c)

@@ -13,26 +13,10 @@ node_t node_all[NODE_MAX];
 static int
 color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
 {
-  // switch(type)
-  // {
-  //   case NODE_MUSCLE:
-  //   return NODE_MUSCLE_C;
-    
-  //   int g = (NODE_NODE_SIGNAL1_C_G * first_ion) / NODE_MAX_ION;
-  //   int b = (NODE_NODE_SIGNAL1_C_B * first_ion) / NODE_MAX_ION;
-    
-  //   int G = (NODE_NODE_SIGNAL1_C_G * second_ion) / NODE_MAX_ION;
-  //   int B = (NODE_NODE_SIGNAL1_C_B * second_ion) / NODE_MAX_ION;
-    
-  //   return k_gradient(x-xi, xf-xi, 0,g,b, 0,G,B);
-
-  //   case NODE_NULL:
-  //   return 255;
-  // }
-
   unsigned char r = NODE_POL_C_R,g = NODE_POL_C_G,b = NODE_POL_C_B;
   unsigned char R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
 
+  // Gradient from polarized to depolarized
   k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
   k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
   
@@ -105,10 +89,21 @@ node_beat()
   for (int i = 0; i < NODE_MAX; i++)
   {
     node_t* node = &node_all[i];
-    if (node->pos[0] < 0) // Null terminating node
+    if (node->pos[0] == -1) // Null terminating node
     {
       // printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
       return;
+    }
+
+    // Set the position!
+    {
+      fip_t ion = node->ion;
+      if (ion > node->bias)
+      {
+        ion = node->bias;
+      }
+      node->pos[0] = node->pol_pos[0] + (node->depol_off[0] * ion / node->bias);
+      node->pos[1] = node->pol_pos[1] + (node->depol_off[1] * ion / node->bias);
     }
 
     if (node->ion > 0)
@@ -145,17 +140,17 @@ node_beat()
       node->ion -= real_flow; // Perfect decrease
 
       // Send the ionization to the next nodes
-      for (int j = 0; j < node->nexts_n; j++)
+      for (int j = 0; j < node->next_flows_n; j++)
       {
-        node_all[node->nexts[j]].ion += real_flow / node->nexts_n;
+        node_all[node->next_flows[j]].ion += real_flow / node->next_flows_n;
 
         if (send_halt)
         {
-          node_all[node->nexts[j]].countdown = node->halt;
+          node_all[node->next_flows[j]].countdown = node->halt;
         }
         else
         {
-          node_all[node->nexts[j]].countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
+          node_all[node->next_flows[j]].countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
         }
       }
     }
@@ -172,9 +167,10 @@ node_draw()
     {
       return;
     }
-    for (int j = 0; j < node->nexts_n; j++)
+    // TODO: Test if node is out of screen, provide some safety
+    for (int j = 0; j < node->next_draws_n; j++)
     {
-      node_draw_line(node, &node_all[node->nexts[j]]);
+      node_draw_line(node, &node_all[node->next_draws[j]]);
     }
   }
 }
