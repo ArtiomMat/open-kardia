@@ -10,6 +10,7 @@
 #define EKG_C_B 30
 #define EKG_C k_pickc(EKG_C_R,EKG_C_G,EKG_C_B)
 
+// Measured each beat, rather than over multiple beats, so can be innacurate
 extern int ekg_bpm;
 
 extern unsigned char ekg_amp; // 100 by default, from 255

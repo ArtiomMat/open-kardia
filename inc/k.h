@@ -5,8 +5,12 @@
 #include "node.h"
 #include "fip.h"
 
+// For certain areas of Kardia
 #ifndef max
     #define max(a,b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef min
+    #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 #define K_VID_SIZE 400

@@ -118,6 +118,7 @@ main(int _args_n, const char** _args)
 
   static const char* fp = NULL;
 
+  // Reading the arguments
   for (int i = 1; i < args_n; i++)
   {
     // Flag

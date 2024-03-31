@@ -3,6 +3,7 @@
 #include "node.h"
 #include "k.h"
 #include "aud.h"
+#include "clk.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,7 @@ static fip_t y0;
 
 static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that is on the screen and wraps around it)
 
-int ekg_bpm; // TODO: Implement
+int ekg_bpm = 0; // TODO: Implement
 
 unsigned char ekg_amp = 100;
 
@@ -41,8 +42,11 @@ static void
 read_into_buf()
 {
   static int beep = 0; // 0 means didn't do, 1 means did so wait until can for next time
+  static int time_since_beep = 0;
 
   x++;
+  time_since_beep += clk_tick_time;
+
   if (x >= K_VID_SIZE)
   {
     x = 0;
@@ -70,10 +74,14 @@ read_into_buf()
   
   if (abs(total_voltage) >= beep_bias)
   {
-    if (!beep) // nested if for the else below
+    if (!beep) // We beep here, nested if for the else below
     {
       aud_play(240, ekg_amp);
       beep = 1;
+
+      ekg_bpm = fiptoi(fip_div(itofip(60), time_since_beep));
+
+      time_since_beep = 0;
     }
   }
   else

@@ -55,4 +55,3 @@ clk_end_tick()
     puts("clk_end_tick(): Tick took too long.");
   }
 }
-

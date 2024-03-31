@@ -144,8 +144,8 @@ node_beat()
       if (node->countdown > 0) // If we have a countdown we decrease it.
       {
         node->countdown -= clk_tick_time; // The time between beats
-        
-        if (node->countdown > 0) // If we overshot we can safely just begin flowing the ionization, otherwise we still wait!
+        // If didn't overshoot we still wait, otherwise we can safely just begin flowing the ionization!
+        if (node->countdown > 0)
         {
           continue;
         }
@@ -205,7 +205,6 @@ node_draw(int flow)
       for (int j = 0; j < node->next_flows_n; j++)
       {
         node_draw_line(node, &node_all[node->next_flows[j]]);
-        // put_square(255, fiptoi(node_all[node->next_flows[j]].pos[0]), fiptoi(node_all[node->next_flows[j]].pos[1]), 10);
       }
     }
     else
