@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 static int edit_mode = 0;
+static int flow_mode = 0;
 static int volume = 100; // out of 255
 
 fip_t k_tick_time;
@@ -72,6 +73,10 @@ event_handler(vid_event_t* e)
     if (e->press.code == 'e')
     {
       edit_mode = !edit_mode;
+    }
+    else if (e->press.code == 'm')
+    {
+      flow_mode = !flow_mode;
     }
     else
     {
@@ -234,7 +239,7 @@ main(int _args_n, const char** _args)
     else
     {
       ekg_draw();
-      node_draw(1);
+      node_draw(flow_mode);
 
       node_beat();
 
