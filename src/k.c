@@ -6,6 +6,7 @@
 #include "k.h"
 #include "ekg.h"
 #include "aud.h"
+#include "psf.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -108,6 +109,15 @@ k_init()
     vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
     vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
   }
+
+  if (k_lile16(1) == (short)1)
+  {
+    puts("k_init(): Kardia module initialized, lil endian system.");
+  }
+  else
+  {
+    puts("k_init(): Kardia module initialized, big endian system.");
+  }
 }
 
 int
@@ -117,6 +127,9 @@ main(int _args_n, const char** _args)
   args = _args;
 
   static const char* fp = NULL;
+
+  psf_font_t font;
+  psf_open(&font, "roman.psf", PSF_P_SPEED);
 
   // Reading the arguments
   for (int i = 1; i < args_n; i++)

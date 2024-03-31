@@ -5,6 +5,8 @@
 #include "node.h"
 #include "fip.h"
 
+#include "k_endian.h"
+
 // For certain areas of Kardia
 #ifndef max
     #define max(a,b) ((a) > (b) ? (a) : (b))
