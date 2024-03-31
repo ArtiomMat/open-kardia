@@ -5,6 +5,10 @@
 #include "node.h"
 #include "fip.h"
 
+#ifndef max
+    #define max(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
 #define K_VID_SIZE 400
 
 #define _K_RED_DEPTH 3

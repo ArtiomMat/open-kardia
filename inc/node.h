@@ -65,5 +65,6 @@ extern void
 node_beat();
 // Loops over each node in the arrays and just draws a line an element and its next one/s, ensuring the drawing of all the shapes without any infinite loops or shit, O(1).
 // NOTE: If pos of the node is <0(sign bit is on) then it is considered a null terminating node! If no null terminating node we just stop at NODE_MAX_MUSCLE/SIGNAL.
+// ion_flow is if to draw the ion channels or the actual muscle tissue
 extern void
-node_draw();
+node_draw(int ion_flow);

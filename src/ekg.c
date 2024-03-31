@@ -18,6 +18,8 @@ static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that 
 
 int ekg_bpm; // TODO: Implement
 
+unsigned char ekg_amp = 100;
+
 // Always psotive but can be indicated for negative voltage peaks too
 // At what voltage the ekg will beep, changes each beat(that is detected by finding the )
 static fip_t beep_bias;
@@ -70,7 +72,7 @@ read_into_buf()
   {
     if (!beep) // nested if for the else below
     {
-      aud_play(190, 100);
+      aud_play(240, ekg_amp);
       beep = 1;
     }
   }

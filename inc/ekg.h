@@ -12,6 +12,8 @@
 
 extern int ekg_bpm;
 
+extern unsigned char ekg_amp; // 100 by default, from 255
+
 // Sensitivity is the factor by which the node_flow is multiplied, _y0 is the y at which EKG voltage of 0 is drawn.
 extern void
 ekg_init(fip_t sensitivty, int _y0);

@@ -24,18 +24,9 @@ fip_mul(fip_t a, fip_t b)
 static inline int
 fip_div(fip_t a, fip_t b) 
 {
-  // TODO: Work on it, may be incorrect how we are doing it
-  if (a == 0)
-  {
-    return 0;
-  }
-  if (a < b)
-  {
-    long long A = a;
-    long long B = b;
-    return ((A SAL)|B)/B;
-  }
-  return (a / b) SAL;
+  long long A = a;
+  long long B = b;
+  return (A SAL) / B; // Same as A/B SAL, but just like in integers we first make A bigger and then divide to avoid rounding to 0.
 }
 
 // Get the fraction part

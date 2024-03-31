@@ -3,6 +3,7 @@
 #include "fip.h"
 #include "k.h"
 #include "clk.h"
+#include "ekg.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -10,15 +11,41 @@
 
 node_t node_all[NODE_MAX];
 
+static int draw_flow;
+
+static void
+put_square(int color, int _x, int _y, int size)
+{
+  for (int x = max(0, _x - size/2); x < K_VID_SIZE && x <= _x + size/2; x++)
+  {
+    for (int y = max(0, _y - size/2); y < K_VID_SIZE && y <= _y + size/2; y++)
+    {
+      vid_set(color, x + y * K_VID_SIZE);
+    }
+  }
+}
 static int
 color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
 {
-  unsigned char r = NODE_POL_C_R,g = NODE_POL_C_G,b = NODE_POL_C_B;
-  unsigned char R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
+  unsigned char r,g,b,R,G,B;
+  if (draw_flow)
+  {
+    r = 0,g = 0,b = 0;
+    R = 0,G = 0,B = 0;
 
-  // Gradient from polarized to depolarized
-  k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
-  k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+    // Gradient from polarized to depolarized
+    k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, EKG_C_R, EKG_C_G, EKG_C_B);
+    k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, EKG_C_R, EKG_C_G, EKG_C_B);
+  }
+  else
+  {
+    r = NODE_POL_C_R,g = NODE_POL_C_G,b = NODE_POL_C_B;
+    R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
+
+    // Gradient from polarized to depolarized
+    k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+    k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+  }
   
   return k_gradient(x-xi, xf-xi, r,g,b, R,G,B);
 }
@@ -26,12 +53,12 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
 void
 node_draw_line(node_t* root_node, node_t* next)
 {
+
   int xi, yi, xf, yf;
   xi = fiptoi(root_node->pos[0]);
   yi = fiptoi(root_node->pos[1]);
   xf = fiptoi(next->pos[0]);
   yf = fiptoi(next->pos[1]);
-  
   if (xi == xf)
   {
     node_t* b = root_node->pos[1] < next->pos[1] ? root_node : next;
@@ -52,14 +79,15 @@ node_draw_line(node_t* root_node, node_t* next)
     node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
     node_t* r = l == root_node ? next : root_node;
 
-    fip_t slope = fip_div(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]);
-    
+    fip_t slope = fip_div(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
+
     for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += itofip(1), y += slope)
     {
+      int c = color_for(l->ion, r->ion, x, l->pos[0], r->pos[0]);
       fip_t i = 0;
       do
       {
-        vid_set(color_for(l->ion, r->ion, x, l->pos[0], r->pos[0]), fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
+        vid_set(c, fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
         
         i += itofip(1);
       }
@@ -157,9 +185,12 @@ node_beat()
   }
 }
 
+
 void
-node_draw()
+node_draw(int flow)
 {
+  draw_flow = flow;
+  
   for (int i = 0; i < NODE_MAX; i++)
   {
     node_t* node = &node_all[i];
@@ -167,10 +198,22 @@ node_draw()
     {
       return;
     }
+
     // TODO: Test if node is out of screen, provide some safety
-    for (int j = 0; j < node->next_draws_n; j++)
+    if (draw_flow)
     {
-      node_draw_line(node, &node_all[node->next_draws[j]]);
+      for (int j = 0; j < node->next_flows_n; j++)
+      {
+        node_draw_line(node, &node_all[node->next_flows[j]]);
+        // put_square(255, fiptoi(node_all[node->next_flows[j]].pos[0]), fiptoi(node_all[node->next_flows[j]].pos[1]), 10);
+      }
+    }
+    else
+    {
+      for (int j = 0; j < node->next_draws_n; j++)
+      {
+        node_draw_line(node, &node_all[node->next_draws[j]]);
+      }
     }
   }
 }

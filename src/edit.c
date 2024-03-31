@@ -5,10 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef max
-    #define max(a,b) ((a) > (b) ? (a) : (b))
-#endif
-
 static int hover_node_i = -1;
 
 static void

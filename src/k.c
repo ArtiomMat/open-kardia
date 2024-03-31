@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 static int edit_mode = 0;
+static int volume = 100; // out of 255
 
 fip_t k_tick_time;
 unsigned long long k_ticks;
@@ -123,6 +124,17 @@ main(int _args_n, const char** _args)
       {
         edit_mode = 1;
       }
+      else if (f[0] == 'v' && !f[1])
+      {
+        i++;
+        if (i >= args_n)
+        {
+          printf("main(): Volume flag requires volume, 0 to 255.\n", f);
+        }
+        
+        ekg_amp = atoi(args[i]);
+        printf("main(): Volume set to %hhi.\n", ekg_amp);
+      }
       else
       {
         printf("main(): Unrecognized flag '%s'.\n", f);
@@ -154,31 +166,33 @@ main(int _args_n, const char** _args)
   edit_init(fp);
   ekg_init(itofip(200.0f), K_VID_SIZE - K_VID_SIZE/10);
 
-  node_all[0].next_flows_n=0;
+  node_all[0].next_flows_n=1;
+  node_all[0].next_flows[0] = 2;
   node_all[0].next_draws_n=0;
   node_all[0].ion = 0;
-  node_all[0].flow = itofip(120);
+  node_all[0].flow = itofip(50);
   node_all[0].halt = 0;
   node_all[0].countdown = 0;
-  node_all[0].bias = NODE_MAX_ION;
+  node_all[0].bias = NODE_MAX_ION/2;
 
   node_all[1].next_flows_n=1;
   node_all[1].next_flows[0] = 0;
   node_all[1].next_draws_n=1;
   node_all[1].next_draws[0] = 0;
   node_all[1].ion = 0;
-  node_all[1].flow = itofip(120);
+  node_all[1].flow = itofip(50);
   node_all[1].halt = 0;
   node_all[1].countdown = 0;
-  node_all[1].bias = NODE_MAX_ION;
+  node_all[1].bias = NODE_MAX_ION/2;
 
   node_all[2].next_flows_n=1;
   node_all[2].next_flows[0] = 1;
+  node_all[2].next_flows[1] = 0;
   node_all[2].next_draws_n=1;
   node_all[2].next_draws[0] = 1;
   node_all[2].ion = NODE_MAX_ION;
-  node_all[2].flow = itofip(120);
-  node_all[2].halt = ftofip(0.1f);
+  node_all[2].flow = itofip(50);
+  node_all[2].halt = ftofip(0.3f);
   node_all[2].countdown = ftofip(0.1f);
   node_all[2].bias = NODE_MAX_ION;
 
@@ -204,7 +218,7 @@ main(int _args_n, const char** _args)
   node_all[0].depol_off[1] = itofip(-60);
 
   fip_t time = 0, count = 0;
-  fip_t times[] = {ftofip(1), ftofip(0.7), ftofip(0.6), ftofip(1), ftofip(1), ftofip(1), ftofip(0.5), ftofip(0.3), ftofip(0.25), ftofip(0.25), ftofip(0.15), ftofip(0.15), ftofip(0.15)};
+  fip_t times[] = {0};// {ftofip(1), ftofip(0.7), ftofip(0.6), ftofip(1), ftofip(1), ftofip(1), ftofip(0.5), ftofip(0.3), ftofip(0.25), ftofip(0.25), ftofip(0.15), ftofip(0.15), ftofip(0.15)};
   
   while(1)
   {
@@ -218,8 +232,8 @@ main(int _args_n, const char** _args)
     }
     else
     {
-      node_draw();
       ekg_draw();
+      node_draw(1);
 
       node_beat();
 
