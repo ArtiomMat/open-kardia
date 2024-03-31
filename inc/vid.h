@@ -14,6 +14,22 @@ enum
   VID_E_MOVE, // Move mouse
 };
 
+enum keys {
+  KEY_ESC=-64,
+  KEY_ENTER,
+  KEY_SPACE,
+  KEY_BS,
+  KEY_TAB,
+  KEY_RALT,
+  KEY_CTRL,
+  KEY_LALT,
+  KEY_LSHIFT,
+  KEY_RSHIFT,
+  KEY_CAPSLOCK,
+  KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
+  KEY_NUMLOCK,KEY_SCROLLLOCK,
+};
+
 typedef struct
 {
   int type;

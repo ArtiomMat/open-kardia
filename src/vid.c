@@ -14,6 +14,19 @@
 // Writable frame buffer, essentially blitting:
 // https://bbs.archlinux.org/viewtopic.php?id=225741
 
+// From older project
+static const char xkeymap[256] = {
+	0,0,0,0,0,0,0,0,0, // First 9 are for some reason not mapped?
+	KEY_ESC,'1','2','3','4','5','6','7','8','9','0','-','=',KEY_BS,
+	KEY_TAB,'q','w','e','r','t','y','u','i','o','p','[',']',KEY_ENTER,
+	KEY_CTRL,'a','s','d','f','g','h','j','k','l',';','\'','`',KEY_LSHIFT,
+	'\\','z','x','c','v','b','n','m',',','.','/',KEY_RSHIFT,
+	// NOTE: *, + etc are from the numpad.
+	'*',KEY_LALT,KEY_SPACE,KEY_CAPSLOCK,
+	KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10, // KF11=95 for some reason.
+	KEY_NUMLOCK, KEY_SCROLLLOCK,
+};
+
 Display* vid_nix_dsp = 0;
 int vid_nix_scr;
 Visual* vid_nix_visual;
@@ -191,6 +204,20 @@ vid_set_title(const char* title)
   XStoreName(vid_nix_dsp, vid_nix_window, title);
 }
 
+static int
+translate_key(int code)
+{
+  if (code >= XK_A && code <= XK_Z)
+  {
+    return 'A' + (code-XK_A);
+  }
+  else if (code >= XK_a && code <= XK_z)
+  {
+    return 'A' + (code-XK_a);
+  }
+  return code;
+}
+
 void
 vid_run()
 {
@@ -217,12 +244,12 @@ vid_run()
       
       case KeyPress:
       e.type = VID_E_PRESS;
-      e.press.code = xe.xkey.keycode;
+      e.press.code = xkeymap[xe.xkey.keycode];
       break;
       
       case KeyRelease:
       e.type = VID_E_RELEASE;
-      e.release.code = xe.xkey.keycode;
+      e.release.code = xkeymap[xe.xkey.keycode];
       break;
 
       case ButtonPress:

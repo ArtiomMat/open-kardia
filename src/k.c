@@ -69,7 +69,7 @@ event_handler(vid_event_t* e)
     break;
 
     case VID_E_PRESS:
-    if (e->press.code == 26)
+    if (e->press.code == 'e')
     {
       edit_mode = !edit_mode;
     }
@@ -130,6 +130,7 @@ main(int _args_n, const char** _args)
         if (i >= args_n)
         {
           printf("main(): Volume flag requires volume, 0 to 255.\n", f);
+          return 1;
         }
         
         ekg_amp = atoi(args[i]);
