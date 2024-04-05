@@ -8,33 +8,34 @@ void
 psf_close(psf_font_t* f)
 {
   free(f->data);
+  fclose(f->fd);
 }
 
 int
 psf_open(psf_font_t* font, const char* fp, int priority)
 {
-  FILE* f = fopen(fp, "rb");
+  font->fd = fopen(fp, "rb");
   font->type = 0;
 
-  if (!f)
+  if (font->fd == NULL)
   {
     printf("psf_open(): File '%s' does not exist.\n", fp);
     return 0;
   }
 
-  fread(&font->psf1.magic, sizeof(font->psf1.magic), 1, f);
+  fread(&font->psf1.magic, sizeof(font->psf1.magic), 1, font->fd);
   if (font->psf1.magic == 0x0436)
   {
-    font->type = sizeof(struct psf1_s);
+    font->type = PSF1;
   }
   else
   {
-    rewind(f);
-    fread(&font->psf2.magic, sizeof(font->psf2.magic), 1, f);
+    rewind(font->fd);
+    fread(&font->psf2.magic, sizeof(font->psf2.magic), 1, font->fd);
    
     if (font->psf2.magic == 0x864ab572)
     {
-      font->type = sizeof(struct psf2_s);
+      font->type = PSF2;
     }
     else
     {
@@ -43,13 +44,14 @@ psf_open(psf_font_t* font, const char* fp, int priority)
     }
   }
 
-  rewind(f);
-  fread(&font->psf1, font->type, 1, f); // font->type is the size
+  // Read the correct header
+  rewind(font->fd);
+  fread(&font->psf1, font->type, 1, font->fd); // font->type is the size
 
   // Just opt for memory priority since it's the safe option
   font->p = (priority == PSF_P_AUTO) ? PSF_P_MEMORY : priority;
 
-  if (font->type == sizeof(struct psf1_s))
+  if (font->type == PSF1)
   {
     if (font->psf1.mode)
     {
@@ -57,30 +59,37 @@ psf_open(psf_font_t* font, const char* fp, int priority)
       return 0;
     }
 
-    font->row_size = font->psf1.size/8;
-    if (font->psf1.size > font->row_size*8) // Check for a rounding error and add padding
-    {
-      font->row_size++;
-    }
+    // Setup row size, psf1 width is always 8 pixels
+    font->row_size = 1;
+    font->height = font->psf1.size;
 
-    int data_size = font->row_size*font->psf1.size;
+    int char_size = font->row_size*font->psf1.size;
+    int chars_n = 1;
     // If we prioritize speed we will read all the characters, otherwise we read one for each glyph we get
     if (font->p == PSF_P_SPEED)
     {
-      data_size *= 256;
+      chars_n = 256;
+    }
+    else
+    {
+      printf("psf_open(): '%s', PSF_P_MEMORY is unfinished.", fp);
+      return 0;
     }
 
-    font->data = malloc(data_size);
+    font->data = malloc(chars_n * char_size);
 
     if (font->p == PSF_P_SPEED) // THen we already want to read
     {
       int read;
-      if ((read = fread(font->data, 0, data_size, f)) != data_size)
+      if ((read = fread(font->data, char_size, chars_n, font->fd)) != chars_n)
       {
-        printf("psf_open(): '%s' is a bad PSF file. Read %d but need %d\n", fp, read, data_size);
+        printf("psf_open(): '%s' is a bad PSF file. Read %d characters but need %d.\n", fp, read, chars_n);
+        psf_close(font);
         return 0;
       }
-      printf("%d\n\n\n", fgetc(f) == EOF);
+      // We don't need it anymore
+      fclose(font->fd);
+      font->fd = NULL;
     }
   }
   else
@@ -95,5 +104,29 @@ psf_open(psf_font_t* font, const char* fp, int priority)
     }
   }
 
+  printf("psf_open(): '%s' has been successfully opened!\n", fp);
   return 1;
 }
+
+
+void*
+psf_get_glyph(psf_font_t* font, int g)
+{
+  if (font->p == PSF_P_SPEED)
+  {
+    return &font->data[g * font->row_size * font->height];
+  }
+  else
+  {
+    // TODO: Read from the file
+    return NULL;
+  }
+}
+
+#ifdef PSF_X_KARDIA
+  void
+  psf_fdraw(psf_font_t* f, int x, int y, int i, unsigned char color)
+  {
+    
+  }
+#endif

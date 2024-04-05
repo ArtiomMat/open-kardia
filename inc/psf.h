@@ -2,8 +2,10 @@
 
 #pragma once
 
+#include <stdio.h>
+
 // For integration with Kardia's video module
-// #define PSF_X_KARDIA
+#define PSF_X_KARDIA
 
 enum
 {
@@ -24,14 +26,20 @@ enum
 typedef struct
 {
   void* data; // Depends on priority and implementation, not recommended to play with
+  FILE* fd;
+  unsigned data_size;
+  unsigned char type; // Either sizeof(psf2_s) or sizeof(psf1_s)
+  unsigned char p; // Priority
+  unsigned char row_size; // In bytes(8 pixels)
+  unsigned char height; // In actual pixels
   union
   {
     struct psf2_s
     {
       int magic; // 72 b5 4a 86
       int version;
-      int size;
-      int flags; // 
+      int size; // Header size
+      int flags;
       int length; // how many glyphs
       int glyph_size;
       int height;
@@ -45,30 +53,34 @@ typedef struct
       unsigned char size;
     } psf1;
   };
-  int data_size;
-  unsigned char type; // Either sizeof(psf2_s) or sizeof(psf1_s)
-  unsigned char p; // Priority
-  unsigned char row_size;
 } psf_font_t;
+
+enum
+{
+  PSF1 = sizeof(struct psf1_s),
+  PSF2 = sizeof(struct psf2_s),
+};
 
 // Do not forget to psf_close()
 extern int
 psf_open(psf_font_t* f, const char* fp, int priority);
 extern void
 psf_close(psf_font_t* f);
+// Returns a pointer to the glyph, it is structured in row0,row1,...
+// Note that it is in compressed bit form that needs to be expanded into a bitmap if you wish
 extern void*
-psf_get_glyph(int i);
-extern int
-psf_get_width();
-extern int
-psf_get_width();
+psf_get_glyph(psf_font_t* f, int g);
 
 #ifdef PSF_X_KARDIA
   // Requires vid_init()
-  extern void
-  psf_gdraw(int x, int y, int i, unsigned char color);
+  // Draws on a grid, x and y are in grid units based on the font dimentions.
+  static inline void
+  psf_gdraw(psf_font_t* f, int x, int y, int i, unsigned char color)
+  {
+    psf_fdraw(f, x * f->row_size * 8, y * f->height, i, color);
+  }
   // Requires vid_init()
-  // Free draw, no 
+  // Free draw, in pixels not in grid units.
   extern void
-  psf_fdraw(int x, int y, int i, unsigned char color);
+  psf_fdraw(psf_font_t* f, int x, int y, int i, unsigned char color);
 #endif

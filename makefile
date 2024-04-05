@@ -1,5 +1,5 @@
 cc = gcc
-flags = -O3 -Iinc -ggdb
+flags = -O3 -Iinc -ggdb -D PSF_X_KARDIA
 libs = -lX11 -lasound -lm
 
 srcs = $(wildcard src/*.c)
