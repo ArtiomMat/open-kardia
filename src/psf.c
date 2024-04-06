@@ -132,10 +132,8 @@ psf_get_glyph(psf_font_t* font, int g)
   void
   psf_fdraw(psf_font_t* f, int _x, int _y, int g, unsigned char color)
   {
-    if (_x < 0 || _y < 0)
-    {
-      return;
-    }
+    int add_x = _x < 0 ? -_x : 0;
+    int add_y = _y < 0 ? -_y : 0;
 
     int width = psf_get_width(f);
     char* glyph = psf_get_glyph(f, g);
@@ -143,10 +141,12 @@ psf_get_glyph(psf_font_t* font, int g)
     int padding = width % 8;
 
     // b is the bit index, it goes through glyph as a whole as if it were a bit buffer
-    int b = 0;
-    for (int y = _y; y < f->height + _y && y < vid_h; y++)
+    int b = f->row_size * add_y;
+    for (int y = _y + add_y; y < f->height + _y && y < vid_h; y++)
     {
-      for (int x = _x; x < width + _x && x < vid_w; x++, b++)
+      b += add_x;
+
+      for (int x = _x + add_x; x < width + _x && x < vid_w; x++, b++)
       {
         char byte = glyph[b >> 3];
         
@@ -159,6 +159,16 @@ psf_get_glyph(psf_font_t* font, int g)
       }
 
       b += padding;
+    }
+  }
+
+  void
+  psf_fdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color)
+  {
+    int width = psf_get_width(f);
+    while(*str)
+    {
+      
     }
   }
 #endif

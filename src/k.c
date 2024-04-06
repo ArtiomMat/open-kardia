@@ -19,6 +19,8 @@ static int volume = 100; // out of 255
 fip_t k_tick_time;
 unsigned long long k_ticks;
 
+psf_font_t* k_font;
+
 int args_n;
 const char** args;
 
@@ -129,7 +131,14 @@ main(int _args_n, const char** _args)
   static const char* fp = NULL;
 
   psf_font_t font;
-  psf_open(&font, "roman.psf", PSF_P_AUTO);
+  if (!psf_open(&font, K_FONT_REL_FP, PSF_P_AUTO))
+  {
+    k_font = NULL;
+  }
+  else
+  {
+    k_font = &font;
+  }
 
   // Reading the arguments
   for (int i = 1; i < args_n; i++)
@@ -275,6 +284,7 @@ main(int _args_n, const char** _args)
     psf_gdraw(&font, 1,1, '1', 255);
     psf_gdraw(&font, 2,1, 'a', 255);
     psf_gdraw(&font, 3,1, 'b', 255);
+      psf_fdraw(k_font, -4, 0, 'A', EKG_C);
     vid_run();
     vid_refresh();
     clk_end_tick();

@@ -4,6 +4,7 @@
 #include "k.h"
 #include "aud.h"
 #include "clk.h"
+#include "psf.h"
 
 #include <stdio.h>
 #include <stdlib.h>

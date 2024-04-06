@@ -4,8 +4,12 @@
 
 #include "node.h"
 #include "fip.h"
+#include "psf.h"
 
 #include "k_endian.h"
+
+// Relative font path
+#define K_FONT_REL_FP "roman.psf"
 
 // For certain areas of Kardia
 #ifndef max
@@ -36,6 +40,8 @@ typedef union
 // How long in seconds it takes for a single in Kardia, in a single tick all the nodes of the heart are updated. By default is 0.03 for 30 ticks per second
 extern fip_t k_tick_time;
 extern unsigned long long k_ticks;
+
+extern psf_font_t* k_font;
 
 // Directly from stdlib main()
 extern int args_n;

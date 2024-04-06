@@ -1,4 +1,4 @@
-// PC Screen Font API, intertwined with vid_
+// PC Screen Font API, also if PSF_X_KARDIA is defined during compalation doubles down as a text rendering module.
 
 #pragma once
 
@@ -84,14 +84,32 @@ psf_get_width(psf_font_t* f)
 #ifdef PSF_X_KARDIA
   // Requires vid_init()
   // Free draw, in pixels not in grid units.
-  // negative x/y are not drawn, no matter if they can show up on the screen, it breaks stuff.
+  // negative or too big x/y are still drawn partially if possible.
   extern void
   psf_fdraw(psf_font_t* f, int x, int y, int g, unsigned char color);
   
+  extern void
+  psf_fdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color);
+
   // Requires vid_init()
   // Draws on a grid, x and y are in grid units based on the font dimentions.
   static inline void
   psf_gdraw(psf_font_t* f, int x, int y, int g, unsigned char color)
+  {
+    psf_fdraw(f, x * f->row_size * 8, y * f->height, g, color);
+  }
+
+  // Requires vid_init()
+  // Draws on a grid, x and y are in grid units based on the font dimentions.
+  static inline void
+  psf_gdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color)
+  {
+    psf_fdraws(f, x * f->row_size * 8, y * f->height, str, color);
+  }
+
+  // Just like psf_gdraw() but it wraps around!
+  static inline void
+  psf_gdraw_w(psf_font_t* f, int x, int y, int g, unsigned char color)
   {
     psf_fdraw(f, x * f->row_size * 8, y * f->height, g, color);
   }
