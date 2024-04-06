@@ -27,8 +27,9 @@ enum
 
 typedef struct
 {
-  void* data; // Depends on priority and implementation, not recommended to play with
-  FILE* fd;
+  // Union because depends on priority
+  void* data; // For speed priority
+  FILE* fd; // For memory priority
   unsigned data_size;
   unsigned char type; // Either sizeof(psf2_s) or sizeof(psf1_s)
   unsigned char p; // Priority

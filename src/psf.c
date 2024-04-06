@@ -57,6 +57,8 @@ psf_open(psf_font_t* font, const char* fp, int priority)
 
   if (font->type == PSF1)
   {
+    int chars_n = 256;
+
     if (font->psf1.mode)
     {
       printf("psf_open(): Currently modes aren't supported, '%s'.\n", fp);
@@ -66,24 +68,14 @@ psf_open(psf_font_t* font, const char* fp, int priority)
     // Setup row size, psf1 width is always 8 pixels
     font->row_size = 1;
     font->height = font->psf1.size;
-
     int char_size = font->row_size*font->psf1.size;
-    int chars_n = 1;
+
     // If we prioritize speed we will read all the characters, otherwise we read one for each glyph we get
     if (font->p == PSF_P_SPEED)
     {
-      chars_n = 256;
-    }
-    else
-    {
-      printf("psf_open(): '%s', PSF_P_MEMORY is unfinished.", fp);
-      return 0;
-    }
 
-    font->data = malloc(chars_n * char_size);
+      font->data = malloc(chars_n * char_size);
 
-    if (font->p == PSF_P_SPEED) // THen we already want to read
-    {
       int read;
       if ((read = fread(font->data, char_size, chars_n, font->fd)) != chars_n)
       {
@@ -91,14 +83,20 @@ psf_open(psf_font_t* font, const char* fp, int priority)
         psf_close(font);
         return 0;
       }
+
       // We don't need it anymore
       fclose(font->fd);
       font->fd = NULL;
+    }
+    else // PSF_P_MEMORY
+    {
+      font->data = malloc(char_size);
     }
   }
   else
   {
     printf("psf_open(): PSF2 not supported currently, '%s'.\n", fp);
+    fclose(font->fd);
     return 0;
 
     // Make endian readable on this system
@@ -116,14 +114,17 @@ psf_open(psf_font_t* font, const char* fp, int priority)
 void*
 psf_get_glyph(psf_font_t* font, int g)
 {
+  int index =  g * font->row_size * font->height;
   if (font->p == PSF_P_SPEED)
   {
-    return &((char*)font->data)[g * font->row_size * font->height];
+    return &((char*)font->data)[index];
   }
   else
   {
-    // TODO: Read from the file
-    return NULL;
+    // TODO: Make it depend on flags too
+    fseek(font->fd, font->type + index, SEEK_SET);
+    fread(font->data, 1, font->row_size * font->height, font->fd);
+    return font->data;
   }
 }
 

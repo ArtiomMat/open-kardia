@@ -129,7 +129,7 @@ main(int _args_n, const char** _args)
   static const char* fp = NULL;
 
   psf_font_t font;
-  psf_open(&font, "roman.psf", PSF_P_SPEED);
+  psf_open(&font, "roman.psf", PSF_P_MEMORY);
 
   // Reading the arguments
   for (int i = 1; i < args_n; i++)
