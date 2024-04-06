@@ -137,7 +137,7 @@ psf_get_glyph(psf_font_t* font, int g)
       return;
     }
 
-    int width = f->type == PSF1 ? 8 : f->psf2.width;
+    int width = psf_get_width(f);
     char* glyph = psf_get_glyph(f, g);
 
     int padding = width % 8;

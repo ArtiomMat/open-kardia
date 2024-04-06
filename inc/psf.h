@@ -74,6 +74,13 @@ psf_close(psf_font_t* f);
 extern void*
 psf_get_glyph(psf_font_t* f, int g);
 
+// Unlike height not straight forward manually
+static inline int
+psf_get_width(psf_font_t* f)
+{
+  return f->type == PSF1 ? 8 : f->psf2.width;
+}
+
 #ifdef PSF_X_KARDIA
   // Requires vid_init()
   // Free draw, in pixels not in grid units.

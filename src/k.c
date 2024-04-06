@@ -129,7 +129,7 @@ main(int _args_n, const char** _args)
   static const char* fp = NULL;
 
   psf_font_t font;
-  psf_open(&font, "roman.psf", PSF_P_MEMORY);
+  psf_open(&font, "roman.psf", PSF_P_AUTO);
 
   // Reading the arguments
   for (int i = 1; i < args_n; i++)
@@ -272,9 +272,9 @@ main(int _args_n, const char** _args)
       }
 
     }
-    psf_gdraw(&font, 0,0, 'A', 255);
-    psf_gdraw(&font, 1,0, 'B', 255);
-    psf_gdraw(&font, 2,0, 'C', 255);
+    psf_gdraw(&font, 1,1, '1', 255);
+    psf_gdraw(&font, 2,1, 'a', 255);
+    psf_gdraw(&font, 3,1, 'b', 255);
     vid_run();
     vid_refresh();
     clk_end_tick();
