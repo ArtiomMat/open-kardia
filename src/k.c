@@ -129,16 +129,7 @@ main(int _args_n, const char** _args)
   args = _args;
 
   static const char* fp = NULL;
-
-  psf_font_t font;
-  if (!psf_open(&font, K_FONT_REL_FP, PSF_P_AUTO))
-  {
-    k_font = NULL;
-  }
-  else
-  {
-    k_font = &font;
-  }
+  const char* font_fp = K_FONT_REL_FP;
 
   // Reading the arguments
   for (int i = 1; i < args_n; i++)
@@ -163,6 +154,17 @@ main(int _args_n, const char** _args)
         
         ekg_amp = atoi(args[i]);
         printf("main(): Volume set to %hhi.\n", ekg_amp);
+      }
+      else if (f[0] == 'f' && !f[1])
+      {
+        i++;
+        if (i >= args_n)
+        {
+          printf("main(): File path for overriden font required.\n", f);
+          return 1;
+        }
+
+        font_fp = args[i];
       }
       else
       {
@@ -194,6 +196,17 @@ main(int _args_n, const char** _args)
 
   edit_init(fp);
   ekg_init(itofip(200.0f), K_VID_SIZE - K_VID_SIZE/10);
+
+
+  psf_font_t font;
+  if (!psf_open(&font, font_fp, PSF_P_AUTO))
+  {
+    k_font = NULL;
+  }
+  else
+  {
+    k_font = &font;
+  }
 
   node_all[0].next_flows_n=1;
   node_all[0].next_flows[0] = 2;
@@ -281,10 +294,12 @@ main(int _args_n, const char** _args)
       }
 
     }
-    psf_gdraw(&font, 1,1, '1', 255);
-    psf_gdraw(&font, 2,1, 'a', 255);
-    psf_gdraw(&font, 3,1, 'b', 255);
-      psf_fdraw(k_font, -4, 0, 'A', EKG_C);
+    psf_gdraw(&font, 1,1, 'F', 255);
+    psf_gdraw(&font, 2,1, 'u', 255);
+    psf_gdraw(&font, 3,1, 'c', 255);
+    psf_gdraw(&font, 4,1, 'k', 244);
+    psf_gdraw(&font, 5,1, '!', 244);
+      psf_fdraw(k_font, 3, 0, 'A', EKG_C);
     vid_run();
     vid_refresh();
     clk_end_tick();

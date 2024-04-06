@@ -9,7 +9,7 @@
 #include "k_endian.h"
 
 // Relative font path
-#define K_FONT_REL_FP "roman.psf"
+#define K_FONT_REL_FP "viewmax.psf"
 
 // For certain areas of Kardia
 #ifndef max
