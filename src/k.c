@@ -272,7 +272,9 @@ main(int _args_n, const char** _args)
       }
 
     }
-
+    psf_gdraw(&font, 0,0, 'A', 255);
+    psf_gdraw(&font, 1,0, 'B', 255);
+    psf_gdraw(&font, 2,0, 'C', 255);
     vid_run();
     vid_refresh();
     clk_end_tick();

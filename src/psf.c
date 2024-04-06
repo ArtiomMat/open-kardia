@@ -1,6 +1,10 @@
 #include "psf.h"
 #include "k.h"
 
+#ifdef PSF_X_KARDIA
+  #include "vid.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -114,7 +118,7 @@ psf_get_glyph(psf_font_t* font, int g)
 {
   if (font->p == PSF_P_SPEED)
   {
-    return &font->data[g * font->row_size * font->height];
+    return &((char*)font->data)[g * font->row_size * font->height];
   }
   else
   {
@@ -125,8 +129,35 @@ psf_get_glyph(psf_font_t* font, int g)
 
 #ifdef PSF_X_KARDIA
   void
-  psf_fdraw(psf_font_t* f, int x, int y, int i, unsigned char color)
+  psf_fdraw(psf_font_t* f, int _x, int _y, int g, unsigned char color)
   {
-    
+    if (_x < 0 || _y < 0)
+    {
+      return;
+    }
+
+    int width = f->type == PSF1 ? 8 : f->psf2.width;
+    char* glyph = psf_get_glyph(f, g);
+
+    int padding = width % 8;
+
+    // b is the bit index, it goes through glyph as a whole as if it were a bit buffer
+    int b = 0;
+    for (int y = _y; y < f->height + _y && y < vid_h; y++)
+    {
+      for (int x = _x; x < width + _x && x < vid_w; x++, b++)
+      {
+        char byte = glyph[b >> 3];
+        
+        // We just shift the byte left by b%8(to get the current bit) and just check if that lsb is on.
+        // We do it from left to right because that's how we draw
+        if ((byte << (b % 8)) & (1 << 7))
+        {
+          vid_set(color, x + y * vid_w);
+        }
+      }
+
+      b += padding;
+    }
   }
 #endif

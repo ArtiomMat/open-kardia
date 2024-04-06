@@ -5,7 +5,9 @@
 #include <stdio.h>
 
 // For integration with Kardia's video module
-#define PSF_X_KARDIA
+#ifndef PSF_X_KARDIA
+  #define PSF_X_KARDIA
+#endif
 
 enum
 {
@@ -73,14 +75,16 @@ psf_get_glyph(psf_font_t* f, int g);
 
 #ifdef PSF_X_KARDIA
   // Requires vid_init()
+  // Free draw, in pixels not in grid units.
+  // negative x/y are not drawn, no matter if they can show up on the screen, it breaks stuff.
+  extern void
+  psf_fdraw(psf_font_t* f, int x, int y, int g, unsigned char color);
+  
+  // Requires vid_init()
   // Draws on a grid, x and y are in grid units based on the font dimentions.
   static inline void
-  psf_gdraw(psf_font_t* f, int x, int y, int i, unsigned char color)
+  psf_gdraw(psf_font_t* f, int x, int y, int g, unsigned char color)
   {
-    psf_fdraw(f, x * f->row_size * 8, y * f->height, i, color);
+    psf_fdraw(f, x * f->row_size * 8, y * f->height, g, color);
   }
-  // Requires vid_init()
-  // Free draw, in pixels not in grid units.
-  extern void
-  psf_fdraw(psf_font_t* f, int x, int y, int i, unsigned char color);
 #endif
