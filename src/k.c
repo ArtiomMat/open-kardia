@@ -14,7 +14,8 @@
 
 static int edit_mode = 0;
 static int flow_mode = 0;
-static int volume = 100; // out of 255
+
+// static 
 
 fip_t k_tick_time;
 unsigned long long k_ticks;
@@ -153,7 +154,7 @@ main(int _args_n, const char** _args)
         }
         
         ekg_amp = atoi(args[i]);
-        printf("main(): Volume set to %hhi.\n", ekg_amp);
+        printf("main(): Volume set to %hhu.\n", ekg_amp);
       }
       else if (f[0] == 'f' && !f[1])
       {

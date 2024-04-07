@@ -41,7 +41,7 @@ unsigned char* vid_pixels = NULL;
 
 int vid_w, vid_h;
 
-void
+int
 vid_def_event_handler(vid_event_t* e)
 {
   switch(e->type)
@@ -50,9 +50,10 @@ vid_def_event_handler(vid_event_t* e)
     exit(0);
     break;
   }
+  return 1;
 }
 
-void (*vid_event_handler)() = vid_def_event_handler;
+int (*vid_event_handler)() = vid_def_event_handler;
 
 // TODO: It's not exactly that safe
 void
@@ -202,20 +203,6 @@ void
 vid_set_title(const char* title)
 {
   XStoreName(vid_nix_dsp, vid_nix_window, title);
-}
-
-static int
-translate_key(int code)
-{
-  if (code >= XK_A && code <= XK_Z)
-  {
-    return 'A' + (code-XK_A);
-  }
-  else if (code >= XK_a && code <= XK_z)
-  {
-    return 'A' + (code-XK_a);
-  }
-  return code;
 }
 
 void

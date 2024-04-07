@@ -46,6 +46,7 @@ typedef struct
   };
 } vid_event_t;
 
+// 1 for event handled, 0 for event not handled
 extern void (*vid_event_handler)(vid_event_t* event);
 
 /**
@@ -60,7 +61,7 @@ extern unsigned char (*vid_colors)[3];
 
 extern int vid_w, vid_h;
 
-extern void
+extern int
 vid_def_event_handler(vid_event_t* event);
 
 extern void
