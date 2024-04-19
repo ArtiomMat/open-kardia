@@ -4,9 +4,11 @@
 
 #pragma once
 
+#define FIP_DEF_FRAC_BITS 10
+
 // How many bits the fraction part has
 #ifndef FIP_FRAC_BITS
-  #define FIP_FRAC_BITS 8
+  #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
 #endif
 
 typedef int fip_t;

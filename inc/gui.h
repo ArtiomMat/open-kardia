@@ -124,7 +124,7 @@ extern void
 gui_init(psf_font_t* font);
 
 extern void
-gui_draw_line(int xi, int yi, int xf, int yf);
+gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color);
 
 // This must be called for GUI to actually handle shit from vid
 extern int

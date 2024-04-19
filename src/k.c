@@ -306,7 +306,7 @@ main(int _args_n, const char** _args)
     gui_gdraw(&font, 4,1, 'k', 244);
     gui_gdraw(&font, 5,1, '!', 244);
     gui_fdraw(k_font, 3, 0, 'A', EKG_C);
-    // gui_draw_line(0,0, 300,400);
+    gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
     vid_run();
     vid_refresh();
     clk_end_tick();

@@ -26,9 +26,8 @@ gui_on_vid(vid_event_t* e)
 }
 
 void
-gui_draw_line(int xi, int yi, int xf, int yf)
+gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
 {
-  static int const color = 255;
   // Vertical line
   if (xi == xf)
   {
@@ -54,29 +53,35 @@ gui_draw_line(int xi, int yi, int xf, int yf)
   // Angled line
   else
   {
-    // Our own little fip, 8 bits
-    int ypx = itofip(yf-yi);
-    ypx /= xf-xi;
+    #undef FIP_FRAC_BITS
+    #define FIP_FRAC_BITS 16
     
-    printf("%d\n", ypx);
+    fip_t ypx = itofip(yf-yi);
+    ypx /= xf-xi;
 
     int right = xi > xf ? xi : xf;
     int left = right == xi? xf : xi;
 
-    int y = left == xi ? yi : yf; // Depends on which one is left
-    int y_top = y == yi ? yf : yi;
+    fip_t y = left == xi ? yi : yf; // Depends on which one is left
+    y = itofip(y);
     
-    int abs_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
-    int inc = abs_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
+    fip_t absi_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
+    
+    fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
-    for (int x = left; x <= right; x++)
+    int x;
+    for (int x = left; x < right; x++)
     {
-      for (int i = 0; i < abs_ypx && y != y_top; i++)
+      fip_t i;
+      for (i = 0; i < absi_ypx; i += itofip(1))
       {
-        vid_set(color, y*vid_w + x);
-        y += inc;
+        vid_set(color, fiptoi(y + i*sign)*vid_w + x);
       }
+      y += ypx;
     }
+
+    #undef FIP_FRAC_BITS
+    #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
   }
 }
 
