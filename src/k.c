@@ -7,6 +7,7 @@
 #include "ekg.h"
 #include "aud.h"
 #include "psf.h"
+#include "gui.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -63,9 +64,12 @@ channel_color(int value, int depth)
   return value * increment;
 }
 
-static void
-event_handler(vid_event_t* e)
+static int
+on_vid(vid_event_t* e)
 {
+  // Pipe to GUI
+  gui_on_vid(e);
+
   switch (e->type)
   {
     case VID_E_MOVE:
@@ -98,8 +102,9 @@ event_handler(vid_event_t* e)
 
   if (edit_mode)
   {
-    edit_event_handler(e);
+    return edit_on_vid(e);
   }
+  return 1;
 }
 
 static void
@@ -185,7 +190,7 @@ main(int _args_n, const char** _args)
 
   vid_init(K_VID_SIZE, K_VID_SIZE);
   vid_set_title("Open Kardia");
-  vid_event_handler = event_handler;
+  vid_on = on_vid;
 
   aud_init(16000);
 
@@ -196,7 +201,7 @@ main(int _args_n, const char** _args)
   k_init();
 
   edit_init(fp);
-  ekg_init(itofip(200.0f), K_VID_SIZE - K_VID_SIZE/10);
+  ekg_init(itofip(200), K_VID_SIZE - K_VID_SIZE/10);
 
 
   psf_font_t font;
@@ -295,12 +300,13 @@ main(int _args_n, const char** _args)
       }
 
     }
-    psf_gdraw(&font, 1,1, 'F', 255);
-    psf_gdraw(&font, 2,1, 'u', 255);
-    psf_gdraw(&font, 3,1, 'c', 255);
-    psf_gdraw(&font, 4,1, 'k', 244);
-    psf_gdraw(&font, 5,1, '!', 244);
-      psf_fdraw(k_font, 3, 0, 'A', EKG_C);
+    gui_gdraw(&font, 1,1, 'F', 255);
+    gui_gdraw(&font, 2,1, 'u', 255);
+    gui_gdraw(&font, 3,1, 'c', 255);
+    gui_gdraw(&font, 4,1, 'k', 244);
+    gui_gdraw(&font, 5,1, '!', 244);
+    gui_fdraw(k_font, 3, 0, 'A', EKG_C);
+    // gui_draw_line(0,0, 300,400);
     vid_run();
     vid_refresh();
     clk_end_tick();

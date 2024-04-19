@@ -42,7 +42,7 @@ unsigned char* vid_pixels = NULL;
 int vid_w, vid_h;
 
 int
-vid_def_event_handler(vid_event_t* e)
+vid_def_on(vid_event_t* e)
 {
   switch(e->type)
   {
@@ -53,7 +53,7 @@ vid_def_event_handler(vid_event_t* e)
   return 1;
 }
 
-int (*vid_event_handler)() = vid_def_event_handler;
+int (*vid_on)(vid_event_t*) = vid_def_on;
 
 // TODO: It's not exactly that safe
 void
@@ -266,7 +266,10 @@ vid_run()
 
     if (e.type != _VID_E_NULL)
     {
-      vid_event_handler(&e);
+      if (!vid_on(&e)) // If it wasn't handled
+      {
+        vid_def_on(&e);
+      }
     }
   }
 }

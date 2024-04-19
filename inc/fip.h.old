@@ -1,0 +1,80 @@
+// Fixed point arithmetic !!!HEADER-ONLY!!! module.
+
+#pragma once
+
+// How many bits the fraction part has
+#ifndef FIP_FRAC_BITS
+  #define FIP_FRAC_BITS 8
+#endif
+
+#ifdef __GNUC__
+  #define SAL <<FIP_FRAC_BITS
+  #define SAR >>FIP_FRAC_BITS
+#else
+  #define SAL *(1<<FIP_FRAC_BITS)
+  #define SAR /(1<<FIP_FRAC_BITS)
+#endif
+
+typedef int fip_t;
+
+static inline int
+fip_mul(fip_t a, fip_t b)
+{
+  return (a * b) SAR; // Not 100% sure why only shifting right works, my math is bad...
+}
+
+static inline int
+fip_div(fip_t a, fip_t b) 
+{
+  long long A = a;
+  long long B = b;
+  return (A SAL) / B; // Same as A/B SAL, but just like in integers we first make A bigger and then divide to avoid rounding to 0.
+}
+
+// Get the fraction part
+static inline int
+fip_frac(fip_t fip)
+{
+  return fip & ((1 << FIP_FRAC_BITS) - 1);
+}
+
+// Always rounds down
+static inline int
+fiptoi(fip_t fip)
+{
+  return fip SAR;
+}
+
+// Unlike fiptoi it rounds it to bigger or lower value, a tiny itsy bit more expensive
+static inline int
+fip_round(fip_t fip)
+{
+  // The last bit of the fraction bits is always just above half, all we need is test if it's on.
+  int add = fip & (1 << (FIP_FRAC_BITS-1));
+  
+  return fiptoi(fip) + add;
+}
+
+static inline fip_t
+itofip(int i)
+{
+  return i SAL;
+}
+
+// Just for debugging shouldn't be relied on
+static inline float
+fiptof(fip_t fip)
+{
+  // int frac_mask = (fip & ((1  SAL)-1));
+  // return fiptoi(fip) + (1.0f * (fip & frac_mask) / (1  SAL));
+  return (float)(fip) / (1 SAL);
+}
+// Just for debugging shouldn't be relied on
+static inline fip_t
+ftofip(float f)
+{
+  return (int)(f * (1 SAL));
+}
+
+#undef SAL
+#undef SAR

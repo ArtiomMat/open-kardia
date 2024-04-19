@@ -47,12 +47,14 @@ typedef struct
 } vid_event_t;
 
 // 1 for event handled, 0 for event not handled
-extern void (*vid_event_handler)(vid_event_t* event);
+extern int (*vid_on)(vid_event_t*);
 
 /**
  * An array of 256 colors with 3 channels.
  * First index is the color itself, second index is the channel(RGB).
  * Is actually a single buffer, vid_colors itself is structured in RGBRGBRGB... 256 times.
+ *
+ * malloc()-ed when vid_init() with , if you know what you are doing you may swap it with your own(making sure you avoid leaks), as long as yours adheres to the specification.
 */
 extern unsigned char (*vid_colors)[3];
 
@@ -62,7 +64,7 @@ extern unsigned char (*vid_colors)[3];
 extern int vid_w, vid_h;
 
 extern int
-vid_def_event_handler(vid_event_t* event);
+vid_def_on(vid_event_t* event);
 
 extern void
 vid_screen_size(int* w, int* h);

@@ -25,10 +25,10 @@ in_square(int x, int y, int s_x, int s_y,int size)
   return (x >= s_x - size/2) && (x <= s_x + size/2) && (y >= s_y - size/2) && (y <= s_y + size/2);
 }
 
-void
-edit_event_handler(vid_event_t* e)
+int
+edit_on_vid(vid_event_t* e)
 {
-
+  return 0;
 }
 
 void

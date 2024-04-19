@@ -13,8 +13,8 @@ extern void
 edit_free();
 
 // Piped from Kardia event handler
-extern void
-edit_event_handler(vid_event_t* e);
+extern int
+edit_on_vid(vid_event_t* e);
 
 extern int
 edit_run();
