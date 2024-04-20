@@ -62,8 +62,8 @@ extern int (*vid_on)(vid_event_t*);
 */
 extern unsigned char (*vid_colors)[3];
 
-// BGRX form, X is nothing, because initially was for x11 24 bit depth 32 bit aligned.
-// extern unsigned char* vid_pixels;
+// This is platform specific so it should not be really accessed unless you know what you are doing
+extern unsigned char* vid_pixels;
 
 extern int vid_w, vid_h;
 
