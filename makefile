@@ -1,6 +1,6 @@
 cc = gcc
 flags = -O3 -Iinc -ggdb -D PSF_X_KARDIA
-libs = -lX11 -lasound -lm
+libs = -lX11 -lXrandr -lasound -lm
 
 srcs = $(wildcard src/*.c)
 objs = $(patsubst src/%.c,obj/%.o,$(srcs))

@@ -6,7 +6,7 @@
 #include "vid.h"
 
 // The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
-#define GUI_BORDER_WH (6 * 2)
+#define GUI_BORDER_WH (10 * 2)
 
 enum
 {
@@ -26,6 +26,8 @@ enum
   GUI_WND_RESIZABLE = 0b10, // The window itself becomes completely invisible
   GUI_WND_HIDE = 0b100, // The window is hidden and not drawn! including things!
   GUI_WND_FOLDED = 0b1000, // Only the title bar is visible, until unfolded
+
+  GUI_WND_MOVING = 0b10000, // The window is currently being moved, for internal use
 };
 
 enum
@@ -93,8 +95,12 @@ typedef struct gui_window_s
   const char* title;
   gui_thing_t* things;
   int flags;
-  unsigned short w, h;
-  unsigned short x, y;
+  short w, h;
+  short x, y;
+
+  // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
+  // For internal use
+  int mouse_x_rel, mouse_y_rel;
 } gui_window_t;
 
 typedef struct

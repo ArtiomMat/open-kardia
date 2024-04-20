@@ -11,6 +11,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 
+#include <X11/extensions/Xrandr.h>
+
 // Writable frame buffer, essentially blitting:
 // https://bbs.archlinux.org/viewtopic.php?id=225741
 
@@ -26,6 +28,11 @@ static const char xkeymap[256] = {
 	KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10, // KF11=95 for some reason.
 	KEY_NUMLOCK, KEY_SCROLLLOCK,
 };
+
+// bit array of all the key states that were pressed.
+// bit that is 1 means the key has been aleady pressed, bit that is 0 means the key is released.
+// This array is to avoid sending duplicate signals about a key being pressed
+// static const char xkeys[32];
 
 static const char xbuttonmap[4] = {-1, KEY_LMOUSE, KEY_MMOUSE,KEY_RMOUSE};
 
@@ -188,7 +195,21 @@ vid_init(int _vid_w, int _vid_h)
 
   vid_colors = calloc(256, sizeof (*vid_colors));
 
-  printf("vid_init(): Video module initialized, 24 bit TrueColor.\n");
+  XRRScreenConfiguration* screen_info = XRRGetScreenInfo(vid_nix_dsp, vid_nix_window);
+  if (screen_info == NULL)
+  {
+    puts("vid_init(): Could not get screen info, extra screen information not available.");
+  }
+
+  int sizes_n;
+  int rates_n;
+  XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
+
+  short* rates = XRRConfigRates(screen_info, 0, &rates_n);
+  
+
+
+  printf("vid_init(): Video module initialized, Screen refresh rate %hd.\n", rates[0]);
   return 1;	
 }
 

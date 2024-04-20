@@ -95,20 +95,40 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE)
     {
-      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.y + gui_title_h))
+      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h))
       {
-        puts("Lol");
+        gui_window.flags |= GUI_WND_MOVING;
+        gui_window.mouse_x_rel = mouse_x - gui_window.x;
+        gui_window.mouse_y_rel = mouse_y - gui_window.y;
       }
+    }
+    break;
+    
+    case VID_E_RELEASE:
+    if (e->release.code == KEY_LMOUSE)
+    {
+      gui_window.flags &= ~GUI_WND_MOVING;
     }
     break;
   }
   return 0;
 }
 
-
 void
 gui_draw_window()
 {
+  // Move the window if necessary and other logic to keep track of movement
+  if (gui_window.flags & GUI_WND_MOVING)
+  {
+    gui_window.x = mouse_x-gui_window.mouse_x_rel;
+    gui_window.y = mouse_y-gui_window.mouse_y_rel;
+
+
+    gui_window.x = min(max(gui_window.x, 0), vid_w-gui_window.w-1);
+    gui_window.y = min(max(gui_window.y, 0), vid_h-gui_window.h-1);
+
+  }
+
   int color0 = k_pickc(40,40,0);
   int color1 = k_pickc(90,90,0);
   int color2 = k_pickc(120,120,0);
@@ -118,7 +138,7 @@ gui_draw_window()
   // Inner border
   draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color1);
   // Line from the borderto the 
-  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.y + gui_title_h, color0, color2);
+  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h, color0, color2);
 }
 
 void
