@@ -209,7 +209,7 @@ main(int _args_n, const char** _args)
 
   aud_init(16000);
 
-  clk_init(FTOFIP(0.05f));
+  clk_init(FTOFIP(0.016f));
 
   node_init(NULL);
 

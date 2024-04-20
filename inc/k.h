@@ -25,7 +25,7 @@
    _a < _b ? _a : _b; })
 #endif
 
-#define K_VID_SIZE 400
+#define K_VID_SIZE 500
 
 #define _K_RED_DEPTH 3
 #define _K_GREEN_DEPTH 3

@@ -100,6 +100,7 @@ gui_on_vid(vid_event_t* e)
         gui_window.flags |= GUI_WND_MOVING;
         gui_window.mouse_x_rel = mouse_x - gui_window.x;
         gui_window.mouse_y_rel = mouse_y - gui_window.y;
+        return 1;
       }
     }
     break;
