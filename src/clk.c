@@ -22,8 +22,8 @@ void
 clk_wait(fip_t secs)
 {
   struct timespec req, rem;
-  req.tv_sec = fiptoi(secs);
-  req.tv_nsec = fip_frac(secs) * 1000000000L / (1 << FIP_FRAC_BITS);
+  req.tv_sec = FIPTOI(secs);
+  req.tv_nsec = FIP_FRAC(secs) * 1000000000L / (1 << FIP_FRAC_BITS);
   nanosleep(&req, &rem);
 }
 
@@ -32,7 +32,7 @@ clk_now()
 {
   struct timespec tp;
   clock_gettime(CLOCK_BOOTTIME, &tp);
-  return itofip(tp.tv_sec) + (tp.tv_nsec * (1 << FIP_FRAC_BITS) / 1000000000L);
+  return ITOFIP(tp.tv_sec) + (tp.tv_nsec * (1 << FIP_FRAC_BITS) / 1000000000L);
 }
 
 void

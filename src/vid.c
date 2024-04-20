@@ -27,6 +27,8 @@ static const char xkeymap[256] = {
 	KEY_NUMLOCK, KEY_SCROLLLOCK,
 };
 
+static const char xbuttonmap[4] = {-1, KEY_LMOUSE, KEY_MMOUSE,KEY_RMOUSE};
+
 Display* vid_nix_dsp = 0;
 int vid_nix_scr;
 Visual* vid_nix_visual;
@@ -241,12 +243,12 @@ vid_run()
 
       case ButtonPress:
       e.type = VID_E_PRESS;
-      e.press.code = xe.xbutton.button;
+      e.press.code = xbuttonmap[xe.xbutton.button];
       break;
 
       case ButtonRelease:
       e.type = VID_E_RELEASE;
-      e.release.code = xe.xbutton.button;
+      e.release.code = xbuttonmap[xe.xbutton.button];
       break;
 
       case UnmapNotify:

@@ -67,8 +67,11 @@ channel_color(int value, int depth)
 static int
 on_vid(vid_event_t* e)
 {
-  // Pipe to GUI
-  gui_on_vid(e);
+  // Pipe to GUI, and if eaten return 1
+  if (gui_on_vid(e))
+  {
+    return 1;
+  }
 
   switch (e->type)
   {
@@ -188,22 +191,6 @@ main(int _args_n, const char** _args)
     }
   }
 
-  vid_init(K_VID_SIZE, K_VID_SIZE);
-  vid_set_title("Open Kardia");
-  vid_on = on_vid;
-
-  aud_init(16000);
-
-  clk_init(ftofip(0.03f));
-
-  node_init(NULL);
-
-  k_init();
-
-  edit_init(fp);
-  ekg_init(itofip(200), K_VID_SIZE - K_VID_SIZE/10);
-
-
   psf_font_t font;
   if (!psf_open(&font, font_fp, PSF_P_AUTO))
   {
@@ -214,11 +201,28 @@ main(int _args_n, const char** _args)
     k_font = &font;
   }
 
+  vid_init(K_VID_SIZE, K_VID_SIZE);
+  vid_set_title("Open Kardia");
+  vid_on = on_vid;
+
+  gui_init(100, 100, "Settings", k_font);
+
+  aud_init(16000);
+
+  clk_init(FTOFIP(0.03f));
+
+  node_init(NULL);
+
+  k_init();
+
+  edit_init(fp);
+  ekg_init(ITOFIP(200), K_VID_SIZE - K_VID_SIZE/10);
+
   node_all[0].next_flows_n=1;
   node_all[0].next_flows[0] = 2;
   node_all[0].next_draws_n=0;
   node_all[0].ion = 0;
-  node_all[0].flow = itofip(50);
+  node_all[0].flow = ITOFIP(50);
   node_all[0].halt = 0;
   node_all[0].countdown = 0;
   node_all[0].bias = NODE_MAX_ION/2;
@@ -228,7 +232,7 @@ main(int _args_n, const char** _args)
   node_all[1].next_draws_n=1;
   node_all[1].next_draws[0] = 0;
   node_all[1].ion = 0;
-  node_all[1].flow = itofip(50);
+  node_all[1].flow = ITOFIP(50);
   node_all[1].halt = 0;
   node_all[1].countdown = 0;
   node_all[1].bias = NODE_MAX_ION/2;
@@ -239,34 +243,34 @@ main(int _args_n, const char** _args)
   node_all[2].next_draws_n=1;
   node_all[2].next_draws[0] = 1;
   node_all[2].ion = NODE_MAX_ION;
-  node_all[2].flow = itofip(50);
-  node_all[2].halt = ftofip(0.3f);
-  node_all[2].countdown = ftofip(0.1f);
+  node_all[2].flow = ITOFIP(50);
+  node_all[2].halt = FTOFIP(0.3f);
+  node_all[2].countdown = FTOFIP(0.1f);
   node_all[2].bias = NODE_MAX_ION;
 
-  node_all[2].pol_pos[0] = itofip(10);
-  node_all[2].pol_pos[1] = itofip(10);
-  node_all[2].pos[0] = itofip(10);
-  node_all[2].pos[1] = itofip(10);
-  node_all[2].depol_off[0] = itofip(5);
-  node_all[2].depol_off[1] = itofip(15);
+  node_all[2].pol_pos[0] = ITOFIP(10);
+  node_all[2].pol_pos[1] = ITOFIP(10);
+  node_all[2].pos[0] = ITOFIP(10);
+  node_all[2].pos[1] = ITOFIP(10);
+  node_all[2].depol_off[0] = ITOFIP(5);
+  node_all[2].depol_off[1] = ITOFIP(15);
 
-  node_all[1].pol_pos[0] = itofip(330);
-  node_all[1].pol_pos[1] = itofip(211);
-  node_all[1].pos[0] = itofip(10);
-  node_all[1].pos[1] = itofip(10);
-  node_all[1].depol_off[0] = itofip(-30);
-  node_all[1].depol_off[1] = itofip(-11);
+  node_all[1].pol_pos[0] = ITOFIP(330);
+  node_all[1].pol_pos[1] = ITOFIP(211);
+  node_all[1].pos[0] = ITOFIP(10);
+  node_all[1].pos[1] = ITOFIP(10);
+  node_all[1].depol_off[0] = ITOFIP(-30);
+  node_all[1].depol_off[1] = ITOFIP(-11);
 
-  node_all[0].pol_pos[0] = itofip(230);
-  node_all[0].pol_pos[1] = itofip(360);
-  node_all[0].pos[0] = itofip(10);
-  node_all[0].pos[1] = itofip(10);
-  node_all[0].depol_off[0] = itofip(-30);
-  node_all[0].depol_off[1] = itofip(-60);
+  node_all[0].pol_pos[0] = ITOFIP(230);
+  node_all[0].pol_pos[1] = ITOFIP(360);
+  node_all[0].pos[0] = ITOFIP(10);
+  node_all[0].pos[1] = ITOFIP(10);
+  node_all[0].depol_off[0] = ITOFIP(-30);
+  node_all[0].depol_off[1] = ITOFIP(-60);
 
   fip_t time = 0, count = 0;
-  fip_t times[] = {0};// {ftofip(1), ftofip(0.7), ftofip(0.6), ftofip(1), ftofip(1), ftofip(1), ftofip(0.5), ftofip(0.3), ftofip(0.25), ftofip(0.25), ftofip(0.15), ftofip(0.15), ftofip(0.15)};
+  fip_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
   
   while(1)
   {
@@ -285,6 +289,8 @@ main(int _args_n, const char** _args)
 
       node_beat();
 
+      gui_draw_window();
+
       if (count < sizeof(times))
       {
         if (time >= times[count])
@@ -300,13 +306,13 @@ main(int _args_n, const char** _args)
       }
 
     }
-    gui_gdraw(&font, 1,1, 'F', 255);
-    gui_gdraw(&font, 2,1, 'u', 255);
-    gui_gdraw(&font, 3,1, 'c', 255);
-    gui_gdraw(&font, 4,1, 'k', 244);
-    gui_gdraw(&font, 5,1, '!', 244);
-    gui_fdraw(k_font, 3, 0, 'A', EKG_C);
-    gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
+    // gui_draw_fontg(&font, 1,1, 'F', 255);
+    // gui_draw_fontg(&font, 2,1, 'u', 255);
+    // gui_draw_fontg(&font, 3,1, 'c', 255);
+    // gui_draw_fontg(&font, 4,1, 'k', 244);
+    // gui_draw_fontg(&font, 5,1, '!', 244);
+    // gui_draw_font(k_font, 3, 0, 'A', EKG_C);
+    // gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
     vid_run();
     vid_refresh();
     clk_end_tick();

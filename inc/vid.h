@@ -28,6 +28,10 @@ enum keys {
   KEY_CAPSLOCK,
   KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
   KEY_NUMLOCK,KEY_SCROLLLOCK,
+
+  KEY_LMOUSE, // Left mouse
+  KEY_MMOUSE, // Middle mouse
+  KEY_RMOUSE, // Right mouse
 };
 
 typedef struct

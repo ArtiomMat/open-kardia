@@ -5,12 +5,16 @@
 #include "psf.h"
 #include "vid.h"
 
+// The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
+#define GUI_BORDER_WH (6 * 2)
+
 enum
 {
   _GUI_E_NULL,
   GUI_E_HOVER,
   GUI_E_PRESS,
-  GUI_E_
+  GUI_E_RELEASE,
+  GUI_E_RELOCATE, // The user is moving a window
 };
 
 
@@ -18,9 +22,9 @@ enum
 {
   // FLAGS
 
-  GUI_WND_INVISIBLE = 0b1, // The window itself becomes completely invisible
+  GUI_WND_INVISIBLE = 0b1, // The window itself becomes completely invisible and non interactable, things are still drawn
   GUI_WND_RESIZABLE = 0b10, // The window itself becomes completely invisible
-  GUI_WND_HIDE = 0b100, // The window itself becomes completely invisible
+  GUI_WND_HIDE = 0b100, // The window is hidden and not drawn! including things!
   GUI_WND_FOLDED = 0b1000, // Only the title bar is visible, until unfolded
 };
 
@@ -43,22 +47,6 @@ enum
   GUI_T_DISABLED = 0b1000, // Only the title bar is visible, until unfolded
 };
 
-typedef struct
-{
-  int type;
-  union
-  {
-    struct
-    {
-      int code;
-    } press, release;
-    struct
-    {
-      int x, y;
-    } move;
-  };
-} gui_event_t;
-
 typedef struct gui_thing_s
 {
   struct gui_thing_s* next;
@@ -72,6 +60,7 @@ typedef struct gui_thing_s
     struct gui_text
     {
       char* str;
+      unsigned char color;
     } text;
     struct gui_image
     {
@@ -85,7 +74,7 @@ typedef struct gui_thing_s
     } image, video;
     struct gui_button
     {
-      char* str;
+      struct gui_text text;
     } button;
     struct gui_tick
     {
@@ -98,17 +87,35 @@ typedef struct gui_thing_s
   };
 } gui_thing_t;
 
-// The container for all the elements
-typedef struct
+// The container for things!
+typedef struct gui_window_s
 {
+  const char* title;
   gui_thing_t* things;
   int flags;
   unsigned short w, h;
   unsigned short x, y;
 } gui_window_t;
 
+typedef struct
+{
+  int type;
+  gui_window_t* window;
+  gui_thing_t* thing;
+  union
+  {
+    struct
+    {
+      int code;
+    } press, release;
+    struct
+    {
+      int x, y;
+    } move;
+  };
+} gui_event_t;
+
 // It's a bad idea to completely override it because nothing would work then, a better idea is to override it if you need to but also make sure that you call gui_def_event_handler() in the end.
-// Returns 1 for event eaten, means that the program should not handle the vid event in general situations, otherwise it returns 0 for either partially handling the event(the program should too) or not at all.
 extern int (*gui_on)(gui_event_t* event);
 
 // The initial window, currently only one window can work.
@@ -116,16 +123,24 @@ extern gui_window_t gui_window;
 
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
-// The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
-extern int gui_border_wh;
 
 // Requires vid_init()
 extern void
-gui_init(psf_font_t* font);
+gui_init(int w, int h, const char* title, psf_font_t* font);
+
+extern void
+gui_draw_window();
+
+extern void
+gui_show();
+
+extern void
+gui_hide();
 
 extern void
 gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color);
 
+// Returns 1 for event eaten, means that the program should not handle the vid event in general situations, otherwise it returns 0 for either partially handling the event(the program should too) or not at all.
 // This must be called for GUI to actually handle shit from vid
 extern int
 gui_on_vid(vid_event_t* event);
@@ -133,28 +148,11 @@ gui_on_vid(vid_event_t* event);
 // Free draw, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
 extern void
-gui_fdraw(psf_font_t* f, int x, int y, int g, unsigned char color);
-
-extern void
-gui_fdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color);
+gui_draw_font(psf_font_t* f, int x, int y, int g, unsigned char color);
 
 // Draws on a grid, x and y are in grid units based on the font dimentions.
 static inline void
-gui_gdraw(psf_font_t* f, int x, int y, int g, unsigned char color)
+gui_draw_fontg(psf_font_t* f, int x, int y, int g, unsigned char color)
 {
-  gui_fdraw(f, x * f->row_size * 8, y * f->height, g, color);
-}
-
-// Draws on a grid, x and y are in grid units based on the font dimentions.
-static inline void
-gui_gdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color)
-{
-  gui_fdraws(f, x * f->row_size * 8, y * f->height, str, color);
-}
-
-// Just like psf_gdraw() but it wraps around!
-static inline void
-gui_gdraw_w(psf_font_t* f, int x, int y, int g, unsigned char color)
-{
-  gui_fdraw(f, x * f->row_size * 8, y * f->height, g, color);
+  gui_draw_font(f, x * f->row_size * 8, y * f->height, g, color);
 }

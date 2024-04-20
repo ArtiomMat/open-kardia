@@ -1,28 +1,90 @@
 #include "gui.h"
 #include "fip.h"
+#include "k.h"
+
+#include <stdlib.h>
+#include <stddef.h>
 
 psf_font_t* font;
 
-gui_window_t gui_window;
+gui_window_t gui_window = {0};
 
-int gui_title_h;
-int gui_border_wh;
+int gui_title_h = 0;
 
 void
-gui_init(psf_font_t* _font)
+gui_init(int w, int h, const char* title, psf_font_t* _font)
 {
   font = _font;
-  
+
+  gui_window.things = NULL;
+
+  gui_window.title = title;
+
+  gui_window.w = w;
+  gui_window.h = h;
+
+  gui_window.x = gui_window.y = 0;
+
+  gui_title_h = font->height + 2;
+
+  puts("gui_init(): GUI module initialized, Motif-like!");
 }
 
 int
 gui_on_vid(vid_event_t* e)
 {
-  switch (e->type == VID_E_MOVE)
+  switch (e->type == VID_E_PRESS)
   {
-
+    // if (e->type)
+    
   }
   return 0;
+}
+
+static inline void
+draw_xline(int xi, int xf, int y, int color)
+{
+  int right = xi > xf ? xi : xf;
+  int left = right == xi? xf : xi;
+
+  for (int x = max(left, 0); x <= min(right, vid_w-1); x++)
+  {
+    vid_set(color, y*vid_w + x);
+  }
+}
+
+static inline void
+draw_yline(int yi, int yf, int x, int color)
+{
+  int top = yi > yf ? yi : yf;
+  int bottom = top == yi? yf : yi;
+
+  for (int y = max(bottom, 0); y <= min(top, vid_h-1); y++)
+  {
+  vid_set(color, y*vid_w + x);
+  }
+}
+
+static inline void
+draw_rect(int x, int y, int w, int h, int color)
+{
+  draw_xline(x, x+w-1, y, color);
+  draw_xline(x, x+w-1, y+h-1, color);
+  
+  draw_yline(y, y+h-1, x, color);
+  draw_yline(y, y+h-1, x+w-1, color);
+}
+
+void
+gui_draw_window()
+{
+  int bthick = GUI_BORDER_WH>>1;
+  int color0 = k_pickc(120,120,120);
+
+  draw_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color0);
+  draw_rect(gui_window.x+bthick-1, gui_window.y+bthick-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0);
+
+  draw_xline(gui_window.x+bthick-1, gui_window.x+gui_window.w-bthick, gui_window.y + bthick + gui_title_h, color0);
 }
 
 void
@@ -31,24 +93,12 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
   // Vertical line
   if (xi == xf)
   {
-    int top = yi > yf ? yi : yf;
-    int bottom = top == yi? yf : yi;
-
-    for (int y = bottom; y <= top; y++)
-    {
-      vid_set(color, y*vid_w + xi);
-    }
+    draw_yline(yi, yf, xi, color);
   }
   // Horizontal line
   else if (yi == yf)
   {
-    int right = xi > xf ? xi : xf;
-    int left = right == xi? xf : xi;
-
-    for (int x = left; x <= right; x++)
-    {
-      vid_set(color, yi*vid_w + x);
-    }
+    draw_xline(xi, xf, yi, color);
   }
   // Angled line
   else
@@ -56,26 +106,32 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
     #undef FIP_FRAC_BITS
     #define FIP_FRAC_BITS 16
     
-    fip_t ypx = itofip(yf-yi);
+    fip_t ypx = ITOFIP(yf-yi);
     ypx /= xf-xi;
 
     int right = xi > xf ? xi : xf;
     int left = right == xi? xf : xi;
 
     fip_t y = left == xi ? yi : yf; // Depends on which one is left
-    y = itofip(y);
+    y = max(y, 0); // Just limit it
+    y = ITOFIP(y);
     
     fip_t absi_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
     
     fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
     int x;
-    for (int x = left; x < right; x++)
+    for (int x = max(left, 0); x < min(right, vid_w); x++)
     {
       fip_t i;
-      for (i = 0; i < absi_ypx; i += itofip(1))
+      for (i = 0; i < absi_ypx; i += ITOFIP(1))
       {
-        vid_set(color, fiptoi(y + i*sign)*vid_w + x);
+        fip_t set_y = FIPTOI(y + i*sign);
+        if (set_y >= vid_h)
+        {
+          return; // Nothing happens after the loop anyway
+        }
+        vid_set(color, set_y*vid_w + x);
       }
       y += ypx;
     }
@@ -86,7 +142,7 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
 }
 
 void
-gui_fdraw(psf_font_t* f, int _x, int _y, int g, unsigned char color)
+gui_draw_font(psf_font_t* f, int _x, int _y, int g, unsigned char color)
 {
   int add_x = _x < 0 ? -_x : 0;
   int add_y = _y < 0 ? -_y : 0;
@@ -115,15 +171,5 @@ gui_fdraw(psf_font_t* f, int _x, int _y, int g, unsigned char color)
     }
 
     b += padding;
-  }
-}
-
-void
-gui_fdraws(psf_font_t* f, int x, int y, const char* str, unsigned char color)
-{
-  int width = psf_get_width(f);
-  while(*str)
-  {
-    
   }
 }

@@ -55,10 +55,10 @@ node_draw_line(node_t* root_node, node_t* next)
 {
 
   int xi, yi, xf, yf;
-  xi = fiptoi(root_node->pos[0]);
-  yi = fiptoi(root_node->pos[1]);
-  xf = fiptoi(next->pos[0]);
-  yf = fiptoi(next->pos[1]);
+  xi = FIPTOI(root_node->pos[0]);
+  yi = FIPTOI(root_node->pos[1]);
+  xf = FIPTOI(next->pos[0]);
+  yf = FIPTOI(next->pos[1]);
   if (xi == xf)
   {
     node_t* b = root_node->pos[1] < next->pos[1] ? root_node : next;
@@ -79,17 +79,17 @@ node_draw_line(node_t* root_node, node_t* next)
     node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
     node_t* r = l == root_node ? next : root_node;
 
-    fip_t slope = fip_div(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
+    fip_t slope = FIP_DIV(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
 
-    for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += itofip(1), y += slope)
+    for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += ITOFIP(1), y += slope)
     {
       int c = color_for(l->ion, r->ion, x, l->pos[0], r->pos[0]);
       fip_t i = 0;
       do
       {
-        vid_set(c, fiptoi(x) + fiptoi(y + i) * K_VID_SIZE);
+        vid_set(c, FIPTOI(x) + FIPTOI(y + i) * K_VID_SIZE);
         
-        i += itofip(1);
+        i += ITOFIP(1);
       }
       while (i < slope);
     }
@@ -119,7 +119,7 @@ node_beat()
     node_t* node = &node_all[i];
     if (node->pos[0] == -1) // Null terminating node
     {
-      // printf("%f\n", fiptof(node_flow[0]), fiptof(node_flow[1]));
+      // printf("%f\n", FIPTOF(node_flow[0]), FIPTOF(node_flow[1]));
       return;
     }
 
@@ -158,7 +158,7 @@ node_beat()
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
       
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
-      int real_flow = fip_mul(node->flow, clk_tick_time);
+      int real_flow = FIP_MUL(node->flow, clk_tick_time);
       if (real_flow >= node->ion)
       {
         send_halt = 1; // Because that's it this is the one

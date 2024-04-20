@@ -29,13 +29,13 @@ static fip_t beep_bias;
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
-  beep_bias = ftofip(0.15);
+  beep_bias = FTOFIP(0.15);
 
   y0 = _y0;
   x = 0;
   sensitivty = _sensitivty;
 
-  printf("ekg_init(): EKG module initialized, drawing horizontally *%.3f.\n", fiptof(sensitivty));
+  printf("ekg_init(): EKG module initialized, drawing horizontally *%.3f.\n", FIPTOF(sensitivty));
 }
 
 // Also updates beep_bias and beeps
@@ -65,13 +65,13 @@ read_into_buf()
 
     // calculate distance between both electrodes
     fip_t ld = node->pos[0];
-    fip_t rd = itofip(K_VID_SIZE) - node->pos[0];
+    fip_t rd = ITOFIP(K_VID_SIZE) - node->pos[0];
     // Proceed to calculate "voltage"
-    total_voltage += fip_div(node->ion, rd) - fip_div(node->ion, ld);
+    total_voltage += FIP_DIV(node->ion, rd) - FIP_DIV(node->ion, ld);
   }
   total_voltage /= i; // Allowed to use integers
   
-  buf[x] = fiptoi(fip_mul(total_voltage, sensitivty)); // Negative due to y+ being down
+  buf[x] = FIPTOI(FIP_MUL(total_voltage, sensitivty)); // Negative due to y+ being down
   
   if (abs(total_voltage) >= beep_bias)
   {
@@ -80,7 +80,7 @@ read_into_buf()
       aud_play(240, ekg_amp);
       beep = 1;
 
-      ekg_bpm = fiptoi(fip_div(itofip(60), time_since_beep));
+      ekg_bpm = FIPTOI(FIP_DIV(ITOFIP(60), time_since_beep));
 
       time_since_beep = 0;
     }

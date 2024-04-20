@@ -60,7 +60,7 @@ edit_run()
       node_draw_line(node, &node_all[node->next_flows[j]]);
     }
 
-    int x = fiptoi(node->pos[0]), y = fiptoi(node->pos[1]);
+    int x = FIPTOI(node->pos[0]), y = FIPTOI(node->pos[1]);
     int c;
     if (in_square(mouse_x, mouse_y, x, y, 7))
     {

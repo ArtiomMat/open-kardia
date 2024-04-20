@@ -1,6 +1,6 @@
 // ! YOUR COMPILER MUST SUPPORT ARITHMETIC SHIFT! CHECK IF IT DOES OR YOU GET UNEXPRECTED RESULTS !
 // Fixed point arithmetic HEADER-ONLY module.
-// Entirely defined through macros, which allows one to dynamically change the bits through their source files
+// Entirely defined through macros, which allows you to dynamically change the fraction bits number through your source files for different purposes
 
 // NOTE TO SELF: AVOID DOUBLE EVALUATION!!!!!
 
@@ -13,24 +13,24 @@
   #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
 #endif
 
-typedef int fip_t;
+#define FIP_MUL(a,b) (((fip_t)(a)*(fip_t)(b)) >> FIP_FRAC_BITS)
 
-#define fip_mul(a,b) (((fip_t)(a)*(fip_t)(b)) >> FIP_FRAC_BITS)
+#define FIP_DIV(A,B) ((fip_t)((((long long)(A)) << FIP_FRAC_BITS) / ((long long)(B))))
 
-#define fip_div(A,B) ((fip_t)((((long long)(A)) << FIP_FRAC_BITS) / ((long long)(B))))
+#define FIP_FRAC(fip) ((fip_t)(fip) & ((1 << FIP_FRAC_BITS) - 1))
 
-#define fip_frac(fip) ((fip_t)(fip) & ((1 << FIP_FRAC_BITS) - 1))
+#define ITOFIP(i) ((fip_t)(i) << FIP_FRAC_BITS)
 
-#define itofip(i) ((fip_t)(i) << FIP_FRAC_BITS)
-
-#define fiptoi(fip) ((fip_t)(fip) >> FIP_FRAC_BITS)
+#define FIPTOI(fip) ((fip_t)(fip) >> FIP_FRAC_BITS)
 
 // Rounding too
-#define fiptoi_r(fip) \
+#define FIPTOI_R(fip) \
   ({ fip_t __fip__ = fip; /* Avoid double evaluation */\
-    fiptoi(__fip__) + ((__fip__ & (1 << (FIP_FRAC_BITS-1))) ? 1 : 0); \
+    FIPTOI(__fip__) + ((__fip__ & (1 << (FIP_FRAC_BITS-1))) ? 1 : 0); \
   })
 
-#define fiptof(fip) ((float)(fip) / (1 << FIP_FRAC_BITS))
+#define FIPTOF(fip) ((float)(fip) / (1 << FIP_FRAC_BITS))
 
-#define ftofip(f) ((fip_t)((f) * (1 << FIP_FRAC_BITS)))
+#define FTOFIP(f) ((fip_t)((f) * (1 << FIP_FRAC_BITS)))
+
+typedef int fip_t;
