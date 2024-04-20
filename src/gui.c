@@ -5,11 +5,68 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+#define BTHICK (GUI_BORDER_WH>>1)
+
 psf_font_t* font;
 
 gui_window_t gui_window = {0};
 
 int gui_title_h = 0;
+
+static inline void
+draw_xline(int xi, int xf, int y, int color)
+{
+  int right = xi > xf ? xi : xf;
+  int left = right == xi? xf : xi;
+
+  for (int x = max(left, 0); x <= min(right, vid_w-1); x++)
+  {
+    vid_set(color, y*vid_w + x);
+  }
+}
+
+static inline void
+draw_yline(int yi, int yf, int x, int color)
+{
+  int top = yi > yf ? yi : yf;
+  int bottom = top == yi? yf : yi;
+
+  for (int y = max(bottom, 0); y <= min(top, vid_h-1); y++)
+  {
+    vid_set(color, y*vid_w + x);
+  }
+}
+
+static inline int
+in_rect(int x_test, int y_test, int x, int y, int w, int h)
+{
+  return x_test < x+w && x_test >= x && y_test < y+h && y_test >= y;
+}
+
+static inline void
+draw_rect(int x, int y, int w, int h, int color)
+{
+  draw_xline(x, x+w-1, y, color);
+  draw_xline(x, x+w-1, y+h-1, color);
+  
+  draw_yline(y, y+h-1, x, color);
+  draw_yline(y, y+h-1, x+w-1, color);
+}
+
+static inline void
+draw_filled_rect(int x, int y, int w, int h, int color, int fill)
+{
+  draw_rect(x, y, w, h, color);
+
+  for (int _x = x+1; _x < x+w-1; _x++)
+  {
+    for (int _y = y+1; _y < y+h-1; _y++)
+    {
+      vid_set(fill, _y*vid_w + _x);
+    }
+  }
+}
+
 
 void
 gui_init(int w, int h, const char* title, psf_font_t* _font)
@@ -33,58 +90,35 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
 int
 gui_on_vid(vid_event_t* e)
 {
-  switch (e->type == VID_E_PRESS)
+  switch (e->type)
   {
-    // if (e->type)
-    
+    case VID_E_PRESS:
+    if (e->press.code == KEY_LMOUSE)
+    {
+      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.y + gui_title_h))
+      {
+        puts("Lol");
+      }
+    }
+    break;
   }
   return 0;
 }
 
-static inline void
-draw_xline(int xi, int xf, int y, int color)
-{
-  int right = xi > xf ? xi : xf;
-  int left = right == xi? xf : xi;
-
-  for (int x = max(left, 0); x <= min(right, vid_w-1); x++)
-  {
-    vid_set(color, y*vid_w + x);
-  }
-}
-
-static inline void
-draw_yline(int yi, int yf, int x, int color)
-{
-  int top = yi > yf ? yi : yf;
-  int bottom = top == yi? yf : yi;
-
-  for (int y = max(bottom, 0); y <= min(top, vid_h-1); y++)
-  {
-  vid_set(color, y*vid_w + x);
-  }
-}
-
-static inline void
-draw_rect(int x, int y, int w, int h, int color)
-{
-  draw_xline(x, x+w-1, y, color);
-  draw_xline(x, x+w-1, y+h-1, color);
-  
-  draw_yline(y, y+h-1, x, color);
-  draw_yline(y, y+h-1, x+w-1, color);
-}
 
 void
 gui_draw_window()
 {
-  int bthick = GUI_BORDER_WH>>1;
-  int color0 = k_pickc(120,120,120);
+  int color0 = k_pickc(40,40,0);
+  int color1 = k_pickc(90,90,0);
+  int color2 = k_pickc(120,120,0);
 
-  draw_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color0);
-  draw_rect(gui_window.x+bthick-1, gui_window.y+bthick-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0);
-
-  draw_xline(gui_window.x+bthick-1, gui_window.x+gui_window.w-bthick, gui_window.y + bthick + gui_title_h, color0);
+  // Outer border
+  draw_filled_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color0, color2);
+  // Inner border
+  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color1);
+  // Line from the borderto the 
+  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.y + gui_title_h, color0, color2);
 }
 
 void
