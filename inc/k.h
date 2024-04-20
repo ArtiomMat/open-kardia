@@ -12,14 +12,14 @@
 #define K_FONT_REL_FP "viewmax.psf"
 
 // For certain areas of Kardia, thanks to stack overflow, avoids double evaluation
-#ifndef max
-  #define max(a,b) \
+#ifndef MIN
+  #define MAX(a,b) \
    ({ __typeof__ (a) _a = (a); \
     __typeof__ (b) _b = (b); \
    _a > _b ? _a : _b; })
 #endif
-#ifndef min
-  #define min(a,b) \
+#ifndef MIN
+  #define MIN(a,b) \
    ({ __typeof__ (a) _a = (a); \
     __typeof__ (b) _b = (b); \
    _a < _b ? _a : _b; })

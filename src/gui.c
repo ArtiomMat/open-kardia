@@ -19,7 +19,7 @@ draw_xline(int xi, int xf, int y, int color)
   int right = xi > xf ? xi : xf;
   int left = right == xi? xf : xi;
 
-  for (int x = max(left, 0); x <= min(right, vid_w-1); x++)
+  for (int x = MAX(left, 0); x <= MIN(right, vid_w-1); x++)
   {
     vid_set(color, y*vid_w + x);
   }
@@ -31,7 +31,7 @@ draw_yline(int yi, int yf, int x, int color)
   int top = yi > yf ? yi : yf;
   int bottom = top == yi? yf : yi;
 
-  for (int y = max(bottom, 0); y <= min(top, vid_h-1); y++)
+  for (int y = MAX(bottom, 0); y <= MIN(top, vid_h-1); y++)
   {
     vid_set(color, y*vid_w + x);
   }
@@ -124,8 +124,8 @@ gui_draw_window()
     gui_window.y = mouse_y-gui_window.mouse_y_rel;
 
 
-    gui_window.x = min(max(gui_window.x, 0), vid_w-gui_window.w-1);
-    gui_window.y = min(max(gui_window.y, 0), vid_h-gui_window.h-1);
+    gui_window.x = MIN(MAX(gui_window.x, 0), vid_w-gui_window.w-1);
+    gui_window.y = MIN(MAX(gui_window.y, 0), vid_h-gui_window.h-1);
 
   }
 
@@ -167,7 +167,7 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
     int left = right == xi? xf : xi;
 
     fip_t y = left == xi ? yi : yf; // Depends on which one is left
-    y = max(y, 0); // Just limit it
+    y = MAX(y, 0); // Just limit it
     y = ITOFIP(y);
     
     fip_t absi_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
@@ -175,7 +175,7 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
     fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
     int x;
-    for (int x = max(left, 0); x < min(right, vid_w); x++)
+    for (int x = MAX(left, 0); x < MIN(right, vid_w); x++)
     {
       fip_t i;
       for (i = 0; i < absi_ypx; i += ITOFIP(1))

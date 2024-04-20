@@ -10,9 +10,9 @@ static int hover_node_i = -1;
 static void
 put_square(int color, int _x, int _y, int size)
 {
-  for (int x = max(0, _x - size/2); x < K_VID_SIZE && x <= _x + size/2; x++)
+  for (int x = MAX(0, _x - size/2); x < K_VID_SIZE && x <= _x + size/2; x++)
   {
-    for (int y = max(0, _y - size/2); y < K_VID_SIZE && y <= _y + size/2; y++)
+    for (int y = MAX(0, _y - size/2); y < K_VID_SIZE && y <= _y + size/2; y++)
     {
       vid_set(color, x + y * K_VID_SIZE);
     }
