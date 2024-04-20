@@ -201,7 +201,7 @@ main(int _args_n, const char** _args)
     k_font = &font;
   }
 
-  vid_init(K_VID_SIZE, K_VID_SIZE);
+  int screen_rate = vid_init(K_VID_SIZE, K_VID_SIZE);
   vid_set_title("Open Kardia");
   vid_on = on_vid;
 
@@ -209,7 +209,7 @@ main(int _args_n, const char** _args)
 
   aud_init(16000);
 
-  clk_init(FTOFIP(0.07f));
+  clk_init(ITOFIP(1) / screen_rate);
 
   node_init(NULL);
 

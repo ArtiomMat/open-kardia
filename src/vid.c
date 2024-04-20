@@ -206,11 +206,14 @@ vid_init(int _vid_w, int _vid_h)
   XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
 
   short* rates = XRRConfigRates(screen_info, 0, &rates_n);
+  if (screen_info == NULL)
+  {
+    puts("vid_init(): Video module initialized, but could not find refresh rate!");
+    return 30; // A safe refresh rate
+  }
   
-
-
-  printf("vid_init(): Video module initialized, Screen refresh rate %hd.\n", rates[0]);
-  return 1;	
+  printf("vid_init(): Video module initialized, Screen refresh rate %hdHz.\n", rates[0]);
+  return rates[0];
 }
 
 void

@@ -77,7 +77,7 @@ extern void
 vid_set_title(const char* title);
 
 /**
- * 
+ * Returns 0 if fails, returns main refresh rate of screen if succeeds!
 */
 extern int
 vid_init(int w, int h);
