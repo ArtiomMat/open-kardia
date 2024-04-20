@@ -76,13 +76,17 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
   gui_window.things = NULL;
 
   gui_window.title = title;
+  if (gui_window.title == NULL)
+  {
+    gui_window.title = "NULL";
+  }
 
   gui_window.w = w;
   gui_window.h = h;
 
   gui_window.x = gui_window.y = 0;
 
-  gui_title_h = font->height + 2;
+  gui_title_h = font->height + 3;
 
   puts("gui_init(): GUI module initialized, Motif-like!");
 }
@@ -95,7 +99,7 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE)
     {
-      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h))
+      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1))
       {
         gui_window.flags |= GUI_WND_MOVING;
         gui_window.mouse_x_rel = mouse_x - gui_window.x;
@@ -125,8 +129,8 @@ gui_draw_window()
     gui_window.y = mouse_y-gui_window.mouse_y_rel;
 
 
-    gui_window.x = MIN(MAX(gui_window.x, 0), vid_w-gui_window.w-1);
-    gui_window.y = MIN(MAX(gui_window.y, 0), vid_h-gui_window.h-1);
+    gui_window.x = MIN(MAX(gui_window.x, 0), vid_w-gui_window.w);
+    gui_window.y = MIN(MAX(gui_window.y, 0), vid_h-gui_window.h);
 
   }
 
@@ -139,7 +143,17 @@ gui_draw_window()
   // Inner border
   draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color1);
   // Line from the borderto the 
-  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h, color0, color2);
+  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1, color0, color2);
+
+  if (gui_window.title != NULL)
+  {
+    int x = 1;
+    int width = psf_get_width(font);
+    for (int i = 0; gui_window.title[i] && x+width < gui_window.w-GUI_BORDER_WH+1; i++, x+=width)
+    {
+      gui_draw_font(font, x + gui_window.x+BTHICK, gui_window.y+BTHICK, gui_window.title[i], 255);
+    }
+  }
 }
 
 void

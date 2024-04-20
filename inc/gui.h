@@ -6,7 +6,7 @@
 #include "vid.h"
 
 // The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
-#define GUI_BORDER_WH (10 * 2)
+#define GUI_BORDER_WH (8 * 2)
 
 enum
 {

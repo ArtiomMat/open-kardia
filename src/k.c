@@ -205,7 +205,7 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_on = on_vid;
 
-  gui_init(100, 100, "Settings", k_font);
+  gui_init(100, 100, "Settingsasdads", k_font);
 
   aud_init(16000);
 
