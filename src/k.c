@@ -209,7 +209,7 @@ main(int _args_n, const char** _args)
 
   aud_init(16000);
 
-  clk_init(FTOFIP(0.016f));
+  clk_init(FTOFIP(0.07f));
 
   node_init(NULL);
 
@@ -272,40 +272,16 @@ main(int _args_n, const char** _args)
   fip_t time = 0, count = 0;
   fip_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
   
+  int skip_draw = 0;
   while(1)
   {
     clk_begin_tick();
 
+    vid_run();
+    node_beat();
+
     vid_wipe(k_pickc(0,0,0));
 
-    if (edit_mode)
-    {
-      edit_run();
-    }
-    else
-    {
-      ekg_draw();
-      node_draw(flow_mode);
-
-      node_beat();
-
-      gui_draw_window();
-
-      if (count < sizeof(times))
-      {
-        if (time >= times[count])
-        {
-          time = 0;
-          node_all[2].ion = NODE_MAX_ION;
-          count++;
-        }
-        else
-        {
-          time += clk_tick_time;
-        }
-      }
-
-    }
     // gui_draw_fontg(&font, 1,1, 'F', 255);
     // gui_draw_fontg(&font, 2,1, 'u', 255);
     // gui_draw_fontg(&font, 3,1, 'c', 255);
@@ -313,9 +289,29 @@ main(int _args_n, const char** _args)
     // gui_draw_fontg(&font, 5,1, '!', 244);
     // gui_draw_font(k_font, 3, 0, 'A', EKG_C);
     // gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
-    vid_run();
+    ekg_draw();
+    node_draw(flow_mode);
+
+
+    gui_draw_window();
+
+    // if (count < sizeof(times))
+    // {
+    //   if (time >= times[count])
+    //   {
+    //     time = 0;
+    //     node_all[2].ion = NODE_MAX_ION;
+    //     count++;
+    //   }
+    //   else
+    //   {
+    //     time += clk_tick_time;
+    //   }
+    // }
+
     vid_refresh();
-    clk_end_tick();
+
+    skip_draw = clk_end_tick();
   }
   return 0;
 }
