@@ -28,6 +28,9 @@ gui_window_t gui_window = {0};
 
 int gui_title_h = 0;
 
+// The 5 shades of the window
+static unsigned char shades[5];
+
 static inline void
 draw_xline(int xi, int xf, int y, int color)
 {
@@ -53,29 +56,29 @@ draw_yline(int yi, int yf, int x, int color)
 }
 
 static inline int
-in_rect(int x_test, int y_test, int x, int y, int w, int h)
+in_rect(int x_test, int y_test, int left, int top, int right, int bottom)
 {
-  return x_test < x+w && x_test >= x && y_test < y+h && y_test >= y;
+  return x_test <= right && x_test >= left && y_test <= bottom && y_test >= top;
 }
 
 static inline void
-draw_rect(int x, int y, int w, int h, int lcolor, int dcolor)
+draw_rect(int left, int top, int right, int bottom, int light, int dark)
 {
-  draw_xline(x, x+w-1, y, lcolor);
-  draw_xline(x, x+w-1, y+h-1, dcolor);
+  draw_xline(left, right, top, light);
+  draw_xline(left, right, bottom, dark);
   
-  draw_yline(y, y+h-1, x, lcolor);
-  draw_yline(y, y+h-1, x+w-1, dcolor);
+  draw_yline(top, bottom, left, light);
+  draw_yline(top, bottom, right, dark);
 }
 
 static inline void
-draw_filled_rect(int x, int y, int w, int h, int lcolor, int dcolor, int fill)
+draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, int fill)
 {
-  draw_rect(x, y, w, h, lcolor, dcolor);
+  draw_rect(left, top, right, bottom, light, dark);
   // Fill the mf now
-  for (int _x = x+1; _x < x+w-1; _x++)
+  for (int _x = left+1; _x < right; _x++)
   {
-    for (int _y = y+1; _y < y+h-1; _y++)
+    for (int _y = top+1; _y < bottom; _y++)
     {
       vid_set(fill, _y*vid_w + _x);
     }
@@ -103,6 +106,12 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
 
   gui_title_h = font->height + 3;
 
+  shades[0] = k_pickc(40,40,0);
+  shades[1] = k_pickc(90,90,0);
+  shades[2] = k_pickc(120,120,0);
+  shades[3] = k_pickc(180,180,0);
+  shades[4] = k_pickc(220,220,0);
+
   puts("gui_init(): GUI module initialized, Motif-like!");
 }
 
@@ -114,7 +123,7 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE || e->press.code == KEY_MMOUSE)
     {
-      if (in_rect(mouse_x, mouse_y, gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1))
+      if (in_rect(mouse_x, mouse_y, TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
         if (e->press.code == KEY_LMOUSE)
         {
@@ -160,26 +169,30 @@ gui_draw_window()
 
   }
 
-  int color0 = k_pickc(40,40,0);
-  int color1 = k_pickc(90,90,0);
-  int color2 = k_pickc(120,120,0);
-  int color3 = k_pickc(180,180,0);
-  int color4 = k_pickc(220,220,0);
 
   // Outer border
-  draw_filled_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color3, color1, color2);
-  // Inner border
-  draw_filled_rect(gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color3, color1);
-  // Line from the borderto the 
-  draw_filled_rect(gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1, color3, color0, color2);
+  draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1], shades[2]);
+  draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, shades[0], shades[3], shades[1]);
+  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[0], shades[2]);
 
   if (gui_window.title != NULL)
   {
-    int x = 1;
+    int x = TITLE_LEFT+2;
     int width = psf_get_width(font);
-    for (int i = 0; gui_window.title[i] && x+width < gui_window.w-GUI_BORDER_WH+1; i++, x+=width)
+    for (int i = 0; gui_window.title[i]; i++, x+=width)
     {
-      gui_draw_font(font, x + gui_window.x+BORDER_THICKNESS, gui_window.y+BORDER_THICKNESS, gui_window.title[i], color4);
+      // Adds ... if the title is too long
+      // Very hardcoded rn, gotta improve code
+      if (x+width*4 > TITLE_RIGHT+1)
+      {
+        for (int j = 0; j < 3; j++, x+=width)
+        {
+          gui_draw_font(font, x, TITLE_TOP+1, '.', shades[4]);
+        }
+        break;
+      }
+
+      gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], shades[4]);
     }
   }
 }
