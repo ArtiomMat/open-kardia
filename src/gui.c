@@ -5,7 +5,22 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#define BTHICK (GUI_BORDER_WH>>1)
+#define BORDER_THICKNESS (GUI_BORDER_WH>>1)
+
+#define BORDER_RIGHT (gui_window.x + gui_window.w - 1)
+#define BORDER_LEFT (gui_window.x)
+#define BORDER_TOP (gui_window.y)
+#define BORDER_BOTTOM (gui_window.y + gui_window.h - 1)
+
+#define TITLE_RIGHT (BORDER_RIGHT - BORDER_THICKNESS)
+#define TITLE_LEFT (BORDER_LEFT + BORDER_THICKNESS)
+#define TITLE_TOP (BORDER_TOP + BORDER_THICKNESS)
+#define TITLE_BOTTOM (TITLE_TOP + gui_title_h - 1)
+
+#define CONTENT_RIGHT TITLE_RIGHT
+#define CONTENT_LEFT TITLE_LEFT
+#define CONTENT_TOP TITLE_TOP
+#define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
 psf_font_t* font;
 
@@ -44,20 +59,20 @@ in_rect(int x_test, int y_test, int x, int y, int w, int h)
 }
 
 static inline void
-draw_rect(int x, int y, int w, int h, int color)
+draw_rect(int x, int y, int w, int h, int lcolor, int dcolor)
 {
-  draw_xline(x, x+w-1, y, color);
-  draw_xline(x, x+w-1, y+h-1, color);
+  draw_xline(x, x+w-1, y, lcolor);
+  draw_xline(x, x+w-1, y+h-1, dcolor);
   
-  draw_yline(y, y+h-1, x, color);
-  draw_yline(y, y+h-1, x+w-1, color);
+  draw_yline(y, y+h-1, x, lcolor);
+  draw_yline(y, y+h-1, x+w-1, dcolor);
 }
 
 static inline void
-draw_filled_rect(int x, int y, int w, int h, int color, int fill)
+draw_filled_rect(int x, int y, int w, int h, int lcolor, int dcolor, int fill)
 {
-  draw_rect(x, y, w, h, color);
-
+  draw_rect(x, y, w, h, lcolor, dcolor);
+  // Fill the mf now
   for (int _x = x+1; _x < x+w-1; _x++)
   {
     for (int _y = y+1; _y < y+h-1; _y++)
@@ -97,13 +112,20 @@ gui_on_vid(vid_event_t* e)
   switch (e->type)
   {
     case VID_E_PRESS:
-    if (e->press.code == KEY_LMOUSE)
+    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_MMOUSE)
     {
-      if (in_rect(mouse_x, mouse_y, gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1))
+      if (in_rect(mouse_x, mouse_y, gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1))
       {
-        gui_window.flags |= GUI_WND_MOVING;
-        gui_window.mouse_x_rel = mouse_x - gui_window.x;
-        gui_window.mouse_y_rel = mouse_y - gui_window.y;
+        if (e->press.code == KEY_LMOUSE)
+        {
+          gui_window.flags |= GUI_WND_MOVING;
+          gui_window.mouse_x_rel = mouse_x - gui_window.x;
+          gui_window.mouse_y_rel = mouse_y - gui_window.y;
+        }
+        else
+        {
+          gui_window.flags |= GUI_WND_HIDE;
+        }
         return 1;
       }
     }
@@ -122,6 +144,10 @@ gui_on_vid(vid_event_t* e)
 void
 gui_draw_window()
 {
+  if (gui_window.flags & GUI_WND_HIDE)
+  {
+    return;
+  }
   // Move the window if necessary and other logic to keep track of movement
   if (gui_window.flags & GUI_WND_MOVING)
   {
@@ -137,13 +163,15 @@ gui_draw_window()
   int color0 = k_pickc(40,40,0);
   int color1 = k_pickc(90,90,0);
   int color2 = k_pickc(120,120,0);
+  int color3 = k_pickc(180,180,0);
+  int color4 = k_pickc(220,220,0);
 
   // Outer border
-  draw_filled_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color0, color2);
+  draw_filled_rect(gui_window.x, gui_window.y, gui_window.w, gui_window.h, color3, color1, color2);
   // Inner border
-  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color1);
+  draw_filled_rect(gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_window.h-GUI_BORDER_WH+2, color0, color3, color1);
   // Line from the borderto the 
-  draw_filled_rect(gui_window.x+BTHICK-1, gui_window.y+BTHICK-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1, color0, color2);
+  draw_filled_rect(gui_window.x+BORDER_THICKNESS-1, gui_window.y+BORDER_THICKNESS-1, gui_window.w-GUI_BORDER_WH+2, gui_title_h-1, color3, color0, color2);
 
   if (gui_window.title != NULL)
   {
@@ -151,7 +179,7 @@ gui_draw_window()
     int width = psf_get_width(font);
     for (int i = 0; gui_window.title[i] && x+width < gui_window.w-GUI_BORDER_WH+1; i++, x+=width)
     {
-      gui_draw_font(font, x + gui_window.x+BTHICK, gui_window.y+BTHICK, gui_window.title[i], 255);
+      gui_draw_font(font, x + gui_window.x+BORDER_THICKNESS, gui_window.y+BORDER_THICKNESS, gui_window.title[i], color4);
     }
   }
 }
