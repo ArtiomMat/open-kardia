@@ -23,11 +23,12 @@ enum
   // FLAGS
 
   GUI_WND_INVISIBLE = 0b1, // The window itself becomes completely invisible and non interactable, things are still drawn
-  GUI_WND_RESIZABLE = 0b10, // The window itself becomes completely invisible
+  GUI_WND_FIX_SIZE = 0b10, // The window cannot be resized
   GUI_WND_HIDE = 0b100, // The window is hidden and not drawn! including things!
   GUI_WND_FOLDED = 0b1000, // Only the title bar is visible, until unfolded
 
   GUI_WND_MOVING = 0b10000, // The window is currently being moved, for internal use
+  GUI_WND_RESIZING = 0b100000, // The window is currently being moved, for internal use
 };
 
 enum
@@ -96,6 +97,7 @@ typedef struct gui_window_s
   gui_thing_t* things;
   int flags;
   short w, h;
+  short min_w, min_h;
   short x, y;
 
   // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
