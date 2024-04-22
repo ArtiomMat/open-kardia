@@ -26,7 +26,7 @@ psf_font_t* k_font;
 int args_n;
 const char** args;
 
-int mouse_x, mouse_y;
+int mouse_pos[2];
 
 void
 k_gradient_rgb(int x, int x_max, unsigned char* r, unsigned char* g, unsigned char* b, unsigned char R, unsigned char G, unsigned char B)
@@ -76,8 +76,8 @@ on_vid(vid_event_t* e)
   switch (e->type)
   {
     case VID_E_MOVE:
-    mouse_x = e->move.x;
-    mouse_y = e->move.y;
+    mouse_pos[0] = e->move.x;
+    mouse_pos[1] = e->move.y;
     break;
 
     case VID_E_PRESS:

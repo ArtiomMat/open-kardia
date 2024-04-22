@@ -86,8 +86,8 @@ x_error_handler(Display * d, XErrorEvent * e)
 int
 vid_init(int _vid_w, int _vid_h)
 {
-  vid_w = _vid_w;
-  vid_h = _vid_h;
+  vid_size[0] = _vid_w;
+  vid_size[1] = _vid_h;
 
   XSetErrorHandler(x_error_handler);
 
@@ -120,7 +120,7 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_window = XCreateWindow(
     vid_nix_dsp,
     RootWindow(vid_nix_dsp, vid_nix_scr),
-    0, 0, vid_w, vid_h,
+    0, 0, vid_size[0], vid_size[1],
     0, // border width
     24, // bit depth
     InputOutput,
@@ -147,7 +147,7 @@ vid_init(int _vid_w, int _vid_h)
   XFlush(vid_nix_dsp); // Wait until window is visible.
 
   // Image creation
-  char* data = malloc(vid_w*32/8 * vid_h); // 32 because of padding >:(
+  char* data = malloc(vid_size[0]*32/8 * vid_size[1]); // 32 because of padding >:(
   if (!data)
   {
     puts("vid_init(): Failed to allocate image data.");
@@ -162,9 +162,9 @@ vid_init(int _vid_w, int _vid_h)
     ZPixmap,
     0,
     data,
-    vid_w, vid_h,
+    vid_size[0], vid_size[1],
     32, // bitmap_pad, no clue, 32 is "if unsure".
-    vid_w*32/8
+    vid_size[0]*32/8
   ); // bytes per scanline, since we have padding of 32, we use 32 instead of 24.
 
   if (!vid_nix_image)
@@ -179,10 +179,10 @@ vid_init(int _vid_w, int _vid_h)
   // Limit window size
   XSizeHints size_hints;
   size_hints.flags = PMinSize | PMaxSize;
-  size_hints.min_width = vid_w;
-  size_hints.max_width = vid_w;
-  size_hints.min_height = vid_h;
-  size_hints.max_height = vid_h;
+  size_hints.min_width = vid_size[0];
+  size_hints.max_width = vid_size[0];
+  size_hints.min_height = vid_size[1];
+  size_hints.max_height = vid_size[1];
   XSetWMNormalHints(vid_nix_dsp, vid_nix_window, &size_hints);
 
   vid_colors = calloc(256, sizeof (*vid_colors));
@@ -303,6 +303,6 @@ vid_refresh()
     vid_nix_image,
     0, 0,
     0, 0,
-    vid_w, vid_h
+    vid_size[0], vid_size[1]
   );
 }

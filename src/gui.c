@@ -7,10 +7,10 @@
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
-#define BORDER_RIGHT (gui_window.x + gui_window.w - 1)
-#define BORDER_LEFT (gui_window.x)
-#define BORDER_TOP (gui_window.y)
-#define BORDER_BOTTOM (gui_window.y + gui_window.h - 1)
+#define BORDER_RIGHT (gui_window.pos[0] + gui_window.size[0] - 1)
+#define BORDER_LEFT (gui_window.pos[0])
+#define BORDER_TOP (gui_window.pos[1])
+#define BORDER_BOTTOM (gui_window.pos[1] + gui_window.size[1] - 1)
 
 #define TITLE_RIGHT (BORDER_RIGHT - BORDER_THICKNESS)
 #define TITLE_LEFT (BORDER_LEFT + BORDER_THICKNESS)
@@ -37,9 +37,9 @@ draw_xline(int xi, int xf, int y, int color)
   int right = xi > xf ? xi : xf;
   int left = right == xi? xf : xi;
 
-  for (int x = MAX(left, 0); x <= MIN(right, vid_w-1); x++)
+  for (int x = MAX(left, 0); x <= MIN(right, vid_size[0]-1); x++)
   {
-    vid_set(color, y*vid_w + x);
+    vid_set(color, y*vid_size[0] + x);
   }
 }
 
@@ -49,9 +49,9 @@ draw_yline(int yi, int yf, int x, int color)
   int top = yi > yf ? yi : yf;
   int bottom = top == yi? yf : yi;
 
-  for (int y = MAX(bottom, 0); y <= MIN(top, vid_h-1); y++)
+  for (int y = MAX(bottom, 0); y <= MIN(top, vid_size[1]-1); y++)
   {
-    vid_set(color, y*vid_w + x);
+    vid_set(color, y*vid_size[0] + x);
   }
 }
 
@@ -80,7 +80,7 @@ draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, 
   {
     for (int _y = top+1; _y < bottom; _y++)
     {
-      vid_set(fill, _y*vid_w + _x);
+      vid_set(fill, _y*vid_size[0] + _x);
     }
   }
 }
@@ -99,12 +99,12 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
     gui_window.title = "NULL";
   }
 
-  gui_window.min_w = gui_window.min_h = 0;
+  gui_window.min_size[0] = gui_window.min_size[1] = 64;
 
-  gui_window.w = w;
-  gui_window.h = h;
+  gui_window.size[0] = w;
+  gui_window.size[1] = h;
 
-  gui_window.x = gui_window.y = 0;
+  gui_window.pos[0] = gui_window.pos[1] = 0;
 
   gui_title_h = font->height + 3;
 
@@ -120,8 +120,11 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
 static void
 save_mouse_rel()
 {
-  gui_window.mouse_x_rel = mouse_x - gui_window.x;
-  gui_window.mouse_y_rel = mouse_y - gui_window.y;
+  int mouse_x = MIN(MAX(mouse_pos[0], 0), vid_size[0]-1);
+  int mouse_y = MIN(MAX(mouse_pos[1], 0), vid_size[1]-1);
+
+  gui_window.mouse_rel[0] = mouse_x - gui_window.pos[0];
+  gui_window.mouse_rel[1] = mouse_y - gui_window.pos[1];
 }
 
 int
@@ -133,7 +136,7 @@ gui_on_vid(vid_event_t* e)
     if (e->press.code == KEY_LMOUSE || e->press.code == KEY_MMOUSE)
     {
       // Inside of the title bar
-      if (in_rect(mouse_x, mouse_y, TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
+      if (in_rect(mouse_pos[0], mouse_pos[1], TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
         if (e->press.code == KEY_LMOUSE)
         {
@@ -147,7 +150,7 @@ gui_on_vid(vid_event_t* e)
         return 1;
       }
       // Inside of the content zone
-      else if (in_rect(mouse_x, mouse_y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
+      else if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
         return 1;
       }
@@ -155,20 +158,20 @@ gui_on_vid(vid_event_t* e)
       else
       {
         // Right and left
-        if (in_rect(mouse_x, mouse_y, CONTENT_RIGHT+1, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
+        if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
         {
           gui_window.flags |= GUI_WND_RESIZING_R;
         }
-        else if (in_rect(mouse_x, mouse_y, BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1, BORDER_BOTTOM))
+        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1, BORDER_BOTTOM))
         {
           gui_window.flags |= GUI_WND_RESIZING_L;
         }
         // Top and bottom
-        if (in_rect(mouse_x, mouse_y, BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1))
+        if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1))
         {
           gui_window.flags |= GUI_WND_RESIZING_T;
         }
-        else if (in_rect(mouse_x, mouse_y, BORDER_LEFT, CONTENT_BOTTOM+1, BORDER_RIGHT, BORDER_BOTTOM))
+        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, CONTENT_BOTTOM+1, BORDER_RIGHT, BORDER_BOTTOM))
         {
           gui_window.flags |= GUI_WND_RESIZING_B;
         }
@@ -189,6 +192,32 @@ gui_on_vid(vid_event_t* e)
   return 0;
 }
 
+void resize_right(int i)
+{
+  gui_window.size[i] += mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+  gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), vid_size[i] - gui_window.pos[i]);
+}
+
+void resize_left(int i)
+{
+  int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+
+  gui_window.pos[i] += mouse_delta;
+  // Avoids both drawing outside and also sliding of window when resizing out of bound
+  if (gui_window.pos[i] < i)
+  {
+    mouse_delta -= gui_window.pos[i];
+    gui_window.pos[i] = i;
+  }
+  gui_window.size[i] -= mouse_delta;
+  // Avoids sliding the window to the right when reaching gui_window.size[i] and also going under it
+  if (gui_window.size[i] < gui_window.size[i])
+  {
+    gui_window.pos[i] -= gui_window.size[i] - gui_window.size[i];
+    gui_window.size[i] = gui_window.size[i];
+  }
+}
+
 void
 gui_draw_window()
 {
@@ -199,74 +228,40 @@ gui_draw_window()
   // Move the window if necessary and other logic to keep track of movement
   if (gui_window.flags & GUI_WND_MOVING)
   {
-    gui_window.x = mouse_x-gui_window.mouse_x_rel;
-    gui_window.y = mouse_y-gui_window.mouse_y_rel;
+    gui_window.pos[0] = mouse_pos[0]-gui_window.mouse_rel[0];
+    gui_window.pos[1] = mouse_pos[1]-gui_window.mouse_rel[1];
 
-    gui_window.x = MIN(MAX(gui_window.x, 0), vid_w-gui_window.w);
-    gui_window.y = MIN(MAX(gui_window.y, 0), vid_h-gui_window.h);
+    gui_window.pos[0] = MIN(MAX(gui_window.pos[0], 0), vid_size[0]-gui_window.size[0]);
+    gui_window.pos[1] = MIN(MAX(gui_window.pos[1], 0), vid_size[1]-gui_window.size[1]);
   }
   // Resize the window and keep track of resizing too
   else if (gui_window.flags & GUI_WND_RESIZING)
   {
     int flag = gui_window.flags & GUI_WND_RESIZING;
-    int min_w = min_w ? min_w : 64;
-    int min_h = min_h ? min_h : 64;
+    int min_w = gui_window.min_size[0];
+    int min_h = gui_window.min_size[1];
 
-    int delta_x = mouse_x - (gui_window.mouse_x_rel + gui_window.x);
 
     if (flag & GUI_WND_RESIZING_R)
     {
-      gui_window.w += mouse_x - (gui_window.mouse_x_rel + gui_window.x);
-      gui_window.w = MIN(MAX(gui_window.w, min_w), vid_w - gui_window.x);
+      resize_right(0);
     }
     else if (flag & GUI_WND_RESIZING_L)
     {
-      gui_window.x += delta_x;
-      // Avoids both drawing outside and also sliding of window when resizing out of bound
-      if (gui_window.x < 0)
-      {
-        delta_x -= gui_window.x;
-        gui_window.x = 0;
-      }
-      gui_window.w -= delta_x;
-      // Avoids sliding the window to the right when reaching min_w and also going under min_w
-      if (gui_window.w < min_w)
-      {
-        gui_window.x -= min_w - gui_window.w;
-        gui_window.w = min_w;
-      }
+      resize_left(0);
     }
 
-    int delta_y = mouse_y - (gui_window.mouse_y_rel + gui_window.y);
 
     if (flag & GUI_WND_RESIZING_B)
     {
-      gui_window.h += mouse_y - (gui_window.mouse_y_rel + gui_window.y);
-      gui_window.h = MIN(MAX(gui_window.h, min_h), vid_h - gui_window.y);
+      resize_right(1);
     }
-    // TODO: Duplicate code from x, gotta do something about it );, putting in a function is boringggg
     else if (flag & GUI_WND_RESIZING_T)
     {
-      gui_window.y += delta_y;
-      // Avoids both drawing outside and also sliding of window when resizing out of bound
-      if (gui_window.y < 0)
-      {
-        delta_y -= gui_window.y;
-        gui_window.y = 0;
-      }
-      gui_window.h -= delta_y;
-      // Avoids sliding the window to the right when reaching min_h and also going under min_h
-      if (gui_window.h < min_h)
-      {
-        gui_window.y -= min_h - gui_window.h;
-        gui_window.h = min_h;
-      }
+      resize_left(1);
     }
-    
-    if (in_rect(mouse_x, mouse_y, 0, 0, vid_w-1, vid_h-1))
-    {
-      save_mouse_rel();
-    }
+
+    save_mouse_rel();
   }
 
 
@@ -331,17 +326,17 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
     fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
     int x;
-    for (int x = MAX(left, 0); x < MIN(right, vid_w); x++)
+    for (int x = MAX(left, 0); x < MIN(right, vid_size[0]); x++)
     {
       fip_t i;
       for (i = 0; i < absi_ypx; i += ITOFIP(1))
       {
         fip_t set_y = FIPTOI(y + i*sign);
-        if (set_y >= vid_h)
+        if (set_y >= vid_size[1])
         {
           return; // Nothing happens after the loop anyway
         }
-        vid_set(color, set_y*vid_w + x);
+        vid_set(color, set_y*vid_size[0] + x);
       }
       y += ypx;
     }
@@ -364,11 +359,11 @@ gui_draw_font(psf_font_t* f, int _x, int _y, int g, unsigned char color)
 
   // b is the bit index, it goes through glyph as a whole as if it were a bit buffer
   int b = f->row_size * add_y;
-  for (int y = _y + add_y; y < f->height + _y && y < vid_h; y++)
+  for (int y = _y + add_y; y < f->height + _y && y < vid_size[1]; y++)
   {
     b += add_x;
 
-    for (int x = _x + add_x; x < width + _x && x < vid_w; x++, b++)
+    for (int x = _x + add_x; x < width + _x && x < vid_size[0]; x++, b++)
     {
       char byte = glyph[b >> 3];
       
@@ -376,7 +371,7 @@ gui_draw_font(psf_font_t* f, int _x, int _y, int g, unsigned char color)
       // We do it from left to right because that's how we draw
       if ((byte << (b % 8)) & (1 << 7))
       {
-        vid_set(color, x + y * vid_w);
+        vid_set(color, x + y * vid_size[0]);
       }
     }
 

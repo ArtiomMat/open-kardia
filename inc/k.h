@@ -53,7 +53,7 @@ extern psf_font_t* k_font;
 extern int args_n;
 extern const char** args;
 
-extern int mouse_x, mouse_y;
+extern int mouse_pos[2];
 
 static inline int
 k_pickc(unsigned char r, unsigned char g, unsigned char b)

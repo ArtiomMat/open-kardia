@@ -65,7 +65,7 @@ extern unsigned char (*vid_colors)[3];
 // This is platform specific so it should not be really accessed unless you know what you are doing
 extern unsigned char* vid_pixels;
 
-extern int vid_w, vid_h;
+extern int vid_size[2];
 
 extern int
 vid_def_on(vid_event_t* event);

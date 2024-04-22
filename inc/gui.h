@@ -102,13 +102,13 @@ typedef struct gui_window_s
   const char* title;
   gui_thing_t* things;
   int flags;
-  short w, h;
-  short min_w, min_h;
-  short x, y;
+  short size[2];
+  short min_size[2];
+  short pos[2];
 
   // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
   // For internal use
-  int mouse_x_rel, mouse_y_rel;
+  int mouse_rel[2];
 } gui_window_t;
 
 typedef struct
