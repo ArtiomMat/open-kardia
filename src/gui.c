@@ -265,28 +265,21 @@ gui_draw_window()
   }
 
 
-  // Outer border
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1], shades[2]);
   draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, shades[0], shades[3], shades[1]);
   draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[0], shades[2]);
+
+  draw_rect(CONTENT_RIGHT, CONTENT_BOTTOM, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1]);
+  draw_rect(BORDER_LEFT, CONTENT_BOTTOM, CONTENT_LEFT, BORDER_BOTTOM, shades[3], shades[1]);
+  draw_rect(BORDER_LEFT, BORDER_TOP, CONTENT_LEFT, TITLE_TOP, shades[3], shades[1]);
+  draw_rect(CONTENT_RIGHT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP, shades[3], shades[1]);
 
   if (gui_window.title != NULL)
   {
     int x = TITLE_LEFT+2;
     int width = psf_get_width(font);
-    for (int i = 0; gui_window.title[i]; i++, x+=width)
+    for (int i = 0; gui_window.title[i] && x+width < TITLE_RIGHT; i++, x+=width)
     {
-      // Adds ... if the title is too long
-      // Very hardcoded rn, gotta improve code
-      if (x+width*4 > TITLE_RIGHT+1)
-      {
-        for (int j = 0; j < 3; j++, x+=width)
-        {
-          gui_draw_font(font, x, TITLE_TOP+1, '.', shades[4]);
-        }
-        break;
-      }
-
       gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], shades[4]);
     }
   }
