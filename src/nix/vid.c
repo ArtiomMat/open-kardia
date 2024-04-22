@@ -44,18 +44,6 @@ GC vid_nix_gc;
 Window vid_nix_window;
 XImage* vid_nix_image;
 
-int
-vid_def_on(vid_event_t* e)
-{
-  switch(e->type)
-  {
-    case VID_E_CLOSE:
-    exit(0);
-    break;
-  }
-  return 1;
-}
-
 // TODO: It's not exactly that safe
 void
 vid_free()
@@ -284,7 +272,7 @@ vid_run()
 
     if (e.type != _VID_E_NULL)
     {
-      if (!vid_on(&e)) // If it wasn't handled
+      if (vid_on != NULL && !vid_on(&e)) // If it wasn't handled
       {
         vid_def_on(&e);
       }

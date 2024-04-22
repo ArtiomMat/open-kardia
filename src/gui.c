@@ -31,6 +31,17 @@ int gui_title_h = 0;
 // The 5 shades of the window
 static unsigned char shades[5];
 
+int (*gui_on)(gui_event_t* event) = NULL;
+
+static void
+send_event(gui_event_t* e)
+{
+  if (gui_on != NULL && !gui_on(e))
+  {
+    puts("FUCK!");
+  }
+}
+
 static inline void
 draw_xline(int xi, int xf, int y, int color)
 {
@@ -202,7 +213,8 @@ gui_on_vid(vid_event_t* e)
   return 0;
 }
 
-void resize_right(int i)
+static void
+resize_right(int i)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
 
@@ -210,7 +222,8 @@ void resize_right(int i)
   gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), vid_size[i] - gui_window.pos[i]);
 }
 
-void resize_left(int i)
+static void
+resize_left(int i)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
 
@@ -244,11 +257,13 @@ gui_draw_window()
   // Move the window if necessary and other logic to keep track of movement
   if (gui_window.flags & GUI_WND_MOVING)
   {
-    gui_window.pos[0] = mouse_pos[0]-gui_window.mouse_rel[0];
-    gui_window.pos[1] = mouse_pos[1]-gui_window.mouse_rel[1];
+    gui_event_t e;
+    gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.mouse_rel[0];
+    gui_window.pos[1] = e.relocate.delta[1] = mouse_pos[1]-gui_window.mouse_rel[1];
 
-    gui_window.pos[0] = MIN(MAX(gui_window.pos[0], 0), vid_size[0]-gui_window.size[0]);
-    gui_window.pos[1] = MIN(MAX(gui_window.pos[1], 0), vid_size[1]-gui_window.size[1]);
+    gui_window.pos[0] = e.relocate.normalized[0] = MIN(MAX(gui_window.pos[0], 0), vid_size[0]-gui_window.size[0]);
+    gui_window.pos[1] = e.relocate.normalized[1] = MIN(MAX(gui_window.pos[1], 0), vid_size[1]-gui_window.size[1]);
+    send_event(&e);
   }
   // Resize the window and keep track of resizing too
   else if (gui_window.flags & GUI_WND_RESIZING)

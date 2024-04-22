@@ -11,9 +11,10 @@
 enum
 {
   _GUI_E_NULL,
-  GUI_E_HOVER,
-  GUI_E_PRESS,
-  GUI_E_RELEASE,
+  GUI_E_HOVER, // Buttons
+  GUI_E_PRESS, // Buttons
+  GUI_E_RELEASE, // Buttons
+  
   GUI_E_RELOCATE, // The user is moving a window
 };
 
@@ -126,8 +127,9 @@ typedef struct
     } press, release;
     struct
     {
-      int x, y;
-    } move;
+      int delta[2]; // The intended move(without clamping to vid_size)
+      int normalized[2]; // Normalized move(clamped to the vid_size)
+    } relocate;
   };
 } gui_event_t;
 
