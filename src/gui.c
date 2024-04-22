@@ -230,7 +230,7 @@ void resize_left(int i)
     gui_window.size[i] = gui_window.min_size[i];
   }
 
-  // My brain just stopped working honestly I need to brush up my math, but it works
+  // So that in the next call to resize_left(), the size[i] does not return to be size_0(old). Since the X keeps updating, we need to shift the width with it, so that mouse_delta keeps being current. I know this is not really a good explanation, but just run this on a fucking paper, just shift the window do all the operations without this line, you will understand what I mean.
   gui_window.size_0[i] = gui_window.size[i];
 }
 
