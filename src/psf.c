@@ -114,6 +114,12 @@ psf_open(psf_font_t* font, const char* fp, int priority)
 void*
 psf_get_glyph(psf_font_t* font, int g)
 {
+  // TODO: This is hard coded to strictly work with ascii, gotta improve.
+  if (g < 0)
+  {
+    g = 256 + g;
+  }
+
   int index =  g * font->row_size * font->height;
   if (font->p == PSF_P_SPEED)
   {

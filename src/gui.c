@@ -91,6 +91,10 @@ draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, 
   {
     for (int _y = top+1; _y < bottom; _y++)
     {
+      // if ((gui_window.flags & GUI_WND_XRAY) && in_rect(_x, _y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
+      // {
+      //   continue;
+      // }
       vid_set(fill, _y*vid_size[0] + _x);
     }
   }
@@ -107,7 +111,7 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
   gui_window.title = title;
   if (gui_window.title == NULL)
   {
-    gui_window.title = "NULL";
+    gui_window.title = "\xFF\xFF\xFF";
   }
 
   gui_window.min_size[0] = gui_window.min_size[1] = 64;
@@ -144,24 +148,28 @@ gui_on_vid(vid_event_t* e)
   switch (e->type)
   {
     case VID_E_PRESS:
-    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_MMOUSE)
+    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
     {
       // Inside of the title bar
       if (in_rect(mouse_pos[0], mouse_pos[1], TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
         if (e->press.code == KEY_LMOUSE)
         {
-          gui_window.flags |= GUI_WND_MOVING;
+          gui_window.flags |= GUI_WND_RELOCATING;
           save_mouse_rel();
         }
-        else
+        else if (e->press.code == KEY_MMOUSE)
         {
           gui_window.flags |= GUI_WND_HIDE;
+        }
+        else if (e->press.code == KEY_RMOUSE)
+        {
+          gui_window.flags ^= GUI_WND_XRAY; // Toggle!
         }
         return 1;
       }
       // Inside of the content zone
-      else if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
+      else if (!(gui_window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
         return 1;
       }
@@ -205,7 +213,7 @@ gui_on_vid(vid_event_t* e)
     case VID_E_RELEASE:
     if (e->release.code == KEY_LMOUSE)
     {
-      gui_window.flags &= ~GUI_WND_MOVING;
+      gui_window.flags &= ~GUI_WND_RELOCATING;
       gui_window.flags &= ~GUI_WND_RESIZING;
     }
     break;
@@ -255,7 +263,7 @@ gui_draw_window()
     return;
   }
   // Move the window if necessary and other logic to keep track of movement
-  if (gui_window.flags & GUI_WND_MOVING)
+  if (gui_window.flags & GUI_WND_RELOCATING)
   {
     gui_event_t e;
     gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.mouse_rel[0];
@@ -297,11 +305,6 @@ gui_draw_window()
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1], shades[2]);
   draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[1], shades[2]);
   draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, shades[0], shades[3], shades[1]);
-
-  // draw_rect(CONTENT_RIGHT, CONTENT_BOTTOM, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1]);
-  // draw_rect(BORDER_LEFT, CONTENT_BOTTOM, CONTENT_LEFT, BORDER_BOTTOM, shades[3], shades[1]);
-  // draw_rect(BORDER_LEFT, BORDER_TOP, CONTENT_LEFT, TITLE_TOP, shades[3], shades[1]);
-  // draw_rect(CONTENT_RIGHT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP, shades[3], shades[1]);
 
   if (gui_window.title != NULL)
   {

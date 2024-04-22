@@ -205,11 +205,11 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_on = on_vid;
 
-  gui_init(100, 100, "Open Kardia", k_font);
+  gui_init(100, 100, NULL, k_font);
 
   aud_init(16000);
 
-  clk_init(ITOFIP(1) / screen_rate);
+  clk_init(ITOFIP(1) / (screen_rate/2));
 
   node_init(NULL);
 
