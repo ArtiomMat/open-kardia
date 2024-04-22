@@ -19,7 +19,7 @@
 
 #define CONTENT_RIGHT TITLE_RIGHT
 #define CONTENT_LEFT TITLE_LEFT
-#define CONTENT_TOP TITLE_TOP
+#define CONTENT_TOP TITLE_BOTTOM
 #define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
 psf_font_t* font;
@@ -157,6 +157,8 @@ gui_on_vid(vid_event_t* e)
       // We are 100% either in border or outside the window alltogether
       else
       {
+        int flags_tmp = gui_window.flags;
+
         // Right and left
         if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
         {
@@ -166,6 +168,7 @@ gui_on_vid(vid_event_t* e)
         {
           gui_window.flags |= GUI_WND_RESIZING_L;
         }
+
         // Top and bottom
         if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1))
         {
@@ -176,7 +179,14 @@ gui_on_vid(vid_event_t* e)
           gui_window.flags |= GUI_WND_RESIZING_B;
         }
 
-        save_mouse_rel();
+        // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
+        if (gui_window.flags != flags_tmp)
+        {
+          gui_window.size_0[0] = gui_window.size[0];
+          gui_window.size_0[1] = gui_window.size[1];
+
+          save_mouse_rel();
+        }
       }
     }
     break;
@@ -194,7 +204,9 @@ gui_on_vid(vid_event_t* e)
 
 void resize_right(int i)
 {
-  gui_window.size[i] += mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+  int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+
+  gui_window.size[i] = gui_window.size_0[i] + mouse_delta;
   gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), vid_size[i] - gui_window.pos[i]);
 }
 
@@ -203,19 +215,23 @@ void resize_left(int i)
   int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
 
   gui_window.pos[i] += mouse_delta;
-  // Avoids both drawing outside and also sliding of window when resizing out of bound
-  if (gui_window.pos[i] < i)
+
+  if (gui_window.pos[i] < 0)
   {
     mouse_delta -= gui_window.pos[i];
-    gui_window.pos[i] = i;
+    gui_window.pos[i] = 0;
   }
-  gui_window.size[i] -= mouse_delta;
-  // Avoids sliding the window to the right when reaching gui_window.size[i] and also going under it
-  if (gui_window.size[i] < gui_window.size[i])
+
+  gui_window.size[i] = gui_window.size_0[i] - mouse_delta;
+
+  if (gui_window.size[i] < gui_window.min_size[i])
   {
-    gui_window.pos[i] -= gui_window.size[i] - gui_window.size[i];
-    gui_window.size[i] = gui_window.size[i];
+    gui_window.pos[i] -= gui_window.min_size[i] - gui_window.size[i];
+    gui_window.size[i] = gui_window.min_size[i];
   }
+
+  // My brain just stopped working honestly I need to brush up my math, but it works
+  gui_window.size_0[i] = gui_window.size[i];
 }
 
 void
@@ -260,19 +276,17 @@ gui_draw_window()
     {
       resize_left(1);
     }
-
-    save_mouse_rel();
   }
 
 
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1], shades[2]);
+  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[1], shades[2]);
   draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, shades[0], shades[3], shades[1]);
-  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[0], shades[2]);
 
-  draw_rect(CONTENT_RIGHT, CONTENT_BOTTOM, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1]);
-  draw_rect(BORDER_LEFT, CONTENT_BOTTOM, CONTENT_LEFT, BORDER_BOTTOM, shades[3], shades[1]);
-  draw_rect(BORDER_LEFT, BORDER_TOP, CONTENT_LEFT, TITLE_TOP, shades[3], shades[1]);
-  draw_rect(CONTENT_RIGHT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP, shades[3], shades[1]);
+  // draw_rect(CONTENT_RIGHT, CONTENT_BOTTOM, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1]);
+  // draw_rect(BORDER_LEFT, CONTENT_BOTTOM, CONTENT_LEFT, BORDER_BOTTOM, shades[3], shades[1]);
+  // draw_rect(BORDER_LEFT, BORDER_TOP, CONTENT_LEFT, TITLE_TOP, shades[3], shades[1]);
+  // draw_rect(CONTENT_RIGHT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP, shades[3], shades[1]);
 
   if (gui_window.title != NULL)
   {

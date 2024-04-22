@@ -109,6 +109,8 @@ typedef struct gui_window_s
   // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
   // For internal use
   int mouse_rel[2];
+  // The size before we began resizing, for internal use, crucial for calculating resizing for good UX 
+  int size_0[2];
 } gui_window_t;
 
 typedef struct

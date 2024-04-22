@@ -1,3 +1,5 @@
+// NOTE: UNUSED!
+
 // Event manager, because I have too many modules that need to interact through events, yep.
 
 #pragma once

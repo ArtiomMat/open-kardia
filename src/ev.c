@@ -1,3 +1,5 @@
+// NOTE: UNUSED!
+
 #include "ev.h"
 
 #include <stdlib.h>
