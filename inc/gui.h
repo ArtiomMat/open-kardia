@@ -28,7 +28,13 @@ enum
   GUI_WND_FOLDED = 0b1000, // Only the title bar is visible, until unfolded
 
   GUI_WND_MOVING = 0b10000, // The window is currently being moved, for internal use
-  GUI_WND_RESIZING = 0b100000, // The window is currently being moved, for internal use
+
+  GUI_WND_RESIZING = 0b111100000, // The window is currently being moved, for internal use
+
+  GUI_WND_RESIZING_L = 0b100000000,
+  GUI_WND_RESIZING_R = 0b010000000,
+  GUI_WND_RESIZING_T = 0b001000000,
+  GUI_WND_RESIZING_B = 0b000100000,
 };
 
 enum

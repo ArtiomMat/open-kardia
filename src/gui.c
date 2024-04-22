@@ -132,6 +132,7 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE || e->press.code == KEY_MMOUSE)
     {
+      // Inside of the title bar
       if (in_rect(mouse_x, mouse_y, TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
         if (e->press.code == KEY_LMOUSE)
@@ -145,10 +146,33 @@ gui_on_vid(vid_event_t* e)
         }
         return 1;
       }
-      // Note that it also takes into account MMOUSE, gotta do something about it
-      else if (!(gui_window.flags & GUI_WND_FIX_SIZE) && in_rect(mouse_x, mouse_y, CONTENT_RIGHT+1, CONTENT_BOTTOM+1, BORDER_RIGHT, BORDER_BOTTOM))
+      // Inside of the content zone
+      else if (in_rect(mouse_x, mouse_y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
-        gui_window.flags |= GUI_WND_RESIZING;
+        return 1;
+      }
+      // We are 100% either in border or outside the window alltogether
+      else
+      {
+        // Right and left
+        if (in_rect(mouse_x, mouse_y, CONTENT_RIGHT+1, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
+        {
+          gui_window.flags |= GUI_WND_RESIZING_R;
+        }
+        else if (in_rect(mouse_x, mouse_y, BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1, BORDER_BOTTOM))
+        {
+          gui_window.flags |= GUI_WND_RESIZING_L;
+        }
+        // Top and bottom
+        if (in_rect(mouse_x, mouse_y, BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1))
+        {
+          gui_window.flags |= GUI_WND_RESIZING_T;
+        }
+        else if (in_rect(mouse_x, mouse_y, BORDER_LEFT, CONTENT_BOTTOM+1, BORDER_RIGHT, BORDER_BOTTOM))
+        {
+          gui_window.flags |= GUI_WND_RESIZING_B;
+        }
+
         save_mouse_rel();
       }
     }
@@ -178,23 +202,71 @@ gui_draw_window()
     gui_window.x = mouse_x-gui_window.mouse_x_rel;
     gui_window.y = mouse_y-gui_window.mouse_y_rel;
 
-
     gui_window.x = MIN(MAX(gui_window.x, 0), vid_w-gui_window.w);
     gui_window.y = MIN(MAX(gui_window.y, 0), vid_h-gui_window.h);
-
   }
   // Resize the window and keep track of resizing too
   else if (gui_window.flags & GUI_WND_RESIZING)
   {
-    gui_window.w += mouse_x - (gui_window.mouse_x_rel + gui_window.x);
-    gui_window.h += mouse_y - (gui_window.mouse_y_rel + gui_window.y);
-    save_mouse_rel();
-
+    int flag = gui_window.flags & GUI_WND_RESIZING;
     int min_w = min_w ? min_w : 64;
     int min_h = min_h ? min_h : 64;
-    // Limit window to the vid_w/h and also limit it to min_w/h
-    gui_window.w = MIN(MAX(gui_window.w, min_w), vid_w - gui_window.x - 1);
-    gui_window.h = MIN(MAX(gui_window.h, min_h), vid_h - gui_window.y - 1);
+
+    int delta_x = mouse_x - (gui_window.mouse_x_rel + gui_window.x);
+
+    if (flag & GUI_WND_RESIZING_R)
+    {
+      gui_window.w += mouse_x - (gui_window.mouse_x_rel + gui_window.x);
+      gui_window.w = MIN(MAX(gui_window.w, min_w), vid_w - gui_window.x);
+    }
+    else if (flag & GUI_WND_RESIZING_L)
+    {
+      gui_window.x += delta_x;
+      // Avoids both drawing outside and also sliding of window when resizing out of bound
+      if (gui_window.x < 0)
+      {
+        delta_x -= gui_window.x;
+        gui_window.x = 0;
+      }
+      gui_window.w -= delta_x;
+      // Avoids sliding the window to the right when reaching min_w and also going under min_w
+      if (gui_window.w < min_w)
+      {
+        gui_window.x -= min_w - gui_window.w;
+        gui_window.w = min_w;
+      }
+    }
+
+    int delta_y = mouse_y - (gui_window.mouse_y_rel + gui_window.y);
+
+    if (flag & GUI_WND_RESIZING_B)
+    {
+      gui_window.h += mouse_y - (gui_window.mouse_y_rel + gui_window.y);
+      gui_window.h = MIN(MAX(gui_window.h, min_h), vid_h - gui_window.y);
+    }
+    // TODO: Duplicate code from x, gotta do something about it );, putting in a function is boringggg
+    else if (flag & GUI_WND_RESIZING_T)
+    {
+      gui_window.y += delta_y;
+      // Avoids both drawing outside and also sliding of window when resizing out of bound
+      if (gui_window.y < 0)
+      {
+        delta_y -= gui_window.y;
+        gui_window.y = 0;
+      }
+      gui_window.h -= delta_y;
+      // Avoids sliding the window to the right when reaching min_h and also going under min_h
+      if (gui_window.h < min_h)
+      {
+        gui_window.y -= min_h - gui_window.h;
+        gui_window.h = min_h;
+      }
+    }
+    
+    if (in_rect(mouse_x, mouse_y, 0, 0, vid_w-1, vid_h-1))
+    {
+      save_mouse_rel();
+    }
   }
 
 
