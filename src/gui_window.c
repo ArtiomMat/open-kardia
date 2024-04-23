@@ -222,6 +222,8 @@ save_mouse_rel()
 int
 gui_on_vid(vid_event_t* e)
 {
+  gui_event_t gui_e = {.type = _GUI_E_NULL};
+
   switch (e->type)
   {
     case VID_E_PRESS:
@@ -238,22 +240,30 @@ gui_on_vid(vid_event_t* e)
         else if (e->press.code == KEY_MMOUSE)
         {
           gui_set_flag(GUI_WND_HIDE, 1);
+          gui_set_flag(GUI_WND_UNFOCUSED, 1); // Also we unfocus so the user can interact again
+          
+          gui_e.type = GUI_E_HIDE;
+          send_event(&gui_e);
+          break;
         }
         else if (e->press.code == KEY_RMOUSE)
         {
           gui_toggle_flag(GUI_WND_XRAY); // Toggle!
         }
 
+        // We need to automatically focus back the window regardless, we don't reach this is middle clicked
         gui_window.flags &= ~GUI_WND_UNFOCUSED;
 
         gui_set_flag(GUI_WND_UNFOCUSED, 0);
-        return 1;
+        gui_e.type = GUI_E_UNFOCUS;
+        break;
       }
       // Inside of the content zone
       else if (!(gui_window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
         gui_set_flag(GUI_WND_UNFOCUSED, 0);
-        return 1;
+        gui_e.type = GUI_E_HIDE;
+        break;
       }
       // We are 100% either in border or outside the window alltogether
       else
@@ -288,13 +298,15 @@ gui_on_vid(vid_event_t* e)
 
           save_mouse_rel();
           gui_set_flag(GUI_WND_UNFOCUSED, 0);
-          return 1;
+          gui_e.type = GUI_E_FOCUS;
+          break;
         }
-        // 100% outside the window, if not already set we set and return 1 for eaten
+        // 100% outside the window, if not already set we set and put the event for eaten
         else if (!(gui_window.flags & GUI_WND_UNFOCUSED))
         {
           gui_set_flag(GUI_WND_UNFOCUSED, 1);
-          return 1;
+          gui_e.type = GUI_E_UNFOCUS;
+          break;
         }
         // Otherwise it's not eaten anymore
       }
@@ -309,7 +321,14 @@ gui_on_vid(vid_event_t* e)
     }
     break;
   }
-  return 0;
+  
+  // Decide if we ate or not!
+  if (gui_e.type == _GUI_E_NULL)
+  {
+    return 0;
+  }
+  send_event(&gui_e);
+  return 1;
 }
 
 static void

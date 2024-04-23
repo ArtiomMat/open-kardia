@@ -12,11 +12,17 @@
 
 enum
 {
+  _GUI_E_NULL, // For internal use
+
   GUI_E_HOVER, // Buttons
   GUI_E_PRESS, // Buttons
   GUI_E_RELEASE, // Buttons
   
   GUI_E_RELOCATE, // The user is moving a window
+  GUI_E_HIDE, // The user hid the window
+  GUI_E_SHOW, // The user opened/showed the window
+  GUI_E_FOCUS, // The user focused the window
+  GUI_E_UNFOCUS, // The user unfocused the window
 };
 
 

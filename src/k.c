@@ -142,6 +142,8 @@ main(int _args_n, const char** _args)
   static const char* fp = NULL;
   const char* font_fp = K_FONT_REL_FP;
 
+  int fps = -1;
+
   // Reading the arguments
   for (int i = 1; i < args_n; i++)
   {
@@ -165,6 +167,18 @@ main(int _args_n, const char** _args)
         
         ekg_amp = atoi(args[i]);
         printf("main(): Volume set to %hhu.\n", ekg_amp);
+      }
+      else if (f[0] == 'f' && f[1] == 'r' && !f[2])
+      {
+        i++;
+        if (i >= args_n)
+        {
+          printf("main(): Need frame rate.\n", f);
+          return 1;
+        }
+        
+        fps = atoi(args[i]);
+        printf("main(): Frame rate overriden to %i.\n", fps);
       }
       else if (f[0] == 'f' && !f[1])
       {
@@ -214,7 +228,8 @@ main(int _args_n, const char** _args)
 
   aud_init(16000);
 
-  clk_init(ITOFIP(1) / (screen_rate/2));
+  // Set clk rate to fps if it was initialized by user otherwise screen rate
+  clk_init(ITOFIP(1) / (fps == -1 ? screen_rate : fps));
 
   node_init(NULL);
 
