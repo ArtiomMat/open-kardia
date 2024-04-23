@@ -44,7 +44,7 @@ static void
 read_into_buf()
 {
   static int beep = 0; // 0 means didn't do, 1 means did so wait until can for next time
-  static int time_since_beep = 0;
+  static fip_t time_since_beep = 0;
 
   x++;
   time_since_beep += clk_tick_time;
