@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
@@ -19,7 +20,7 @@
 
 #define CONTENT_RIGHT TITLE_RIGHT
 #define CONTENT_LEFT TITLE_LEFT
-#define CONTENT_TOP TITLE_BOTTOM
+#define CONTENT_TOP (TITLE_BOTTOM+0)
 #define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
 psf_font_t* font;
@@ -28,8 +29,18 @@ gui_window_t gui_window = {0};
 
 int gui_title_h = 0;
 
-// The 5 shades of the window
+// The 5 shades of the window, [4]==[5] because we shift it when unfocused to darker tones.
 static unsigned char shades[5];
+
+unsigned char get_shade(int i)
+{
+  // Return darker shade if unfocused
+  if (gui_window.flags & GUI_WND_UNFOCUSED)
+  {
+    return shades[MAX(i - 1, 0)];
+  }
+  return shades[i];
+}
 
 int (*gui_on)(gui_event_t* event) = NULL;
 
@@ -82,6 +93,23 @@ draw_rect(int left, int top, int right, int bottom, int light, int dark)
   draw_yline(top, bottom, right, dark);
 }
 
+void
+gui_set_flag(int flag, int yes)
+{
+  if (yes)
+  {
+    gui_window.flags |= flag;
+    return;
+  }
+  gui_window.flags &= ~flag;
+}
+
+void
+gui_toggle_flag(int flag)
+{
+  gui_window.flags ^= flag;
+}
+
 static inline void
 draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, int fill)
 {
@@ -91,18 +119,55 @@ draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, 
   {
     for (int _y = top+1; _y < bottom; _y++)
     {
-      // if ((gui_window.flags & GUI_WND_XRAY) && in_rect(_x, _y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
-      // {
-      //   continue;
-      // }
+      if ((gui_window.flags & GUI_WND_XRAY) && in_rect(_x, _y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
+      {
+        continue;
+      }
       vid_set(fill, _y*vid_size[0] + _x);
     }
   }
 }
 
+static void
+get_thing_width(gui_thing_t* t, short out[2])
+{
+  switch (t->type)
+  {
+    case GUI_T_TEXT: ;
+    int lines = 0; // How many lines in total
+    int max_line_n = 0, line_n = 0; // max and current line length
+    int text_len, c;
+
+    for (text_len = 0; c = t->str[text_len]; text_len++, line_n++)
+    {
+      if (c == '\n')
+      {
+
+        lines++;
+      }
+      else if (text_len % t->text.line_size)
+      {
+
+      }
+    }
+    
+    return;
+  }
+}
 
 void
-gui_init(int w, int h, const char* title, psf_font_t* _font)
+gui_recache_all()
+{
+  gui_window.content_cache_size[0] = gui_window.content_cache_size[1] = 0;
+  short size[2] = {0}; // For storring current sizes of this line
+  for (int i = 0; i < gui_window.things_n; i++)
+  {
+    gui_thing_t* t = gui_window.things+i;
+  }
+}
+
+void
+gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, psf_font_t* _font)
 {
   font = _font;
 
@@ -129,7 +194,18 @@ gui_init(int w, int h, const char* title, psf_font_t* _font)
   shades[3] = k_pickc(180,180,0);
   shades[4] = k_pickc(220,220,0);
 
-  puts("gui_init(): GUI module initialized, Motif-like!");
+  gui_window.things = things;
+  gui_window.things_n = things_n;
+
+  gui_window.content_cache = NULL;
+
+  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.title);
+}
+
+void
+gui_free()
+{
+  free(gui_window.content_cache);
 }
 
 static void
@@ -155,22 +231,27 @@ gui_on_vid(vid_event_t* e)
       {
         if (e->press.code == KEY_LMOUSE)
         {
-          gui_window.flags |= GUI_WND_RELOCATING;
+          gui_set_flag(GUI_WND_RELOCATING, 1);
           save_mouse_rel();
         }
         else if (e->press.code == KEY_MMOUSE)
         {
-          gui_window.flags |= GUI_WND_HIDE;
+          gui_set_flag(GUI_WND_HIDE, 1);
         }
         else if (e->press.code == KEY_RMOUSE)
         {
-          gui_window.flags ^= GUI_WND_XRAY; // Toggle!
+          gui_toggle_flag(GUI_WND_XRAY); // Toggle!
         }
+
+        gui_window.flags &= ~GUI_WND_UNFOCUSED;
+
+        gui_set_flag(GUI_WND_UNFOCUSED, 0);
         return 1;
       }
       // Inside of the content zone
       else if (!(gui_window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
+        gui_set_flag(GUI_WND_UNFOCUSED, 0);
         return 1;
       }
       // We are 100% either in border or outside the window alltogether
@@ -179,23 +260,23 @@ gui_on_vid(vid_event_t* e)
         int flags_tmp = gui_window.flags;
 
         // Right and left
-        if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
+        if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1 - GUI_RESIZE_BLEED, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
         {
-          gui_window.flags |= GUI_WND_RESIZING_R;
+          gui_set_flag(GUI_WND_RESIZING_R, 1);
         }
-        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1, BORDER_BOTTOM))
+        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1 + GUI_RESIZE_BLEED, BORDER_BOTTOM))
         {
-          gui_window.flags |= GUI_WND_RESIZING_L;
+          gui_set_flag(GUI_WND_RESIZING_L, 1);
         }
 
         // Top and bottom
-        if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1))
+        if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1 + GUI_RESIZE_BLEED))
         {
-          gui_window.flags |= GUI_WND_RESIZING_T;
+          gui_set_flag(GUI_WND_RESIZING_T, 1);
         }
-        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, CONTENT_BOTTOM+1, BORDER_RIGHT, BORDER_BOTTOM))
+        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, CONTENT_BOTTOM+1 - GUI_RESIZE_BLEED, BORDER_RIGHT, BORDER_BOTTOM))
         {
-          gui_window.flags |= GUI_WND_RESIZING_B;
+          gui_set_flag(GUI_WND_RESIZING_B, 1);
         }
 
         // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
@@ -205,16 +286,25 @@ gui_on_vid(vid_event_t* e)
           gui_window.size_0[1] = gui_window.size[1];
 
           save_mouse_rel();
+          gui_set_flag(GUI_WND_UNFOCUSED, 0);
+          return 1;
         }
+        // 100% outside the window, if not already set we set and return 1 for eaten
+        else if (!(gui_window.flags & GUI_WND_UNFOCUSED))
+        {
+          gui_set_flag(GUI_WND_UNFOCUSED, 1);
+          return 1;
+        }
+        // Otherwise it's not eaten anymore
       }
     }
     break;
     
     case VID_E_RELEASE:
-    if (e->release.code == KEY_LMOUSE)
+    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
     {
-      gui_window.flags &= ~GUI_WND_RELOCATING;
-      gui_window.flags &= ~GUI_WND_RESIZING;
+      gui_set_flag(GUI_WND_RELOCATING, 0);
+      gui_set_flag(GUI_WND_RESIZING, 0);
     }
     break;
   }
@@ -262,6 +352,9 @@ gui_draw_window()
   {
     return;
   }
+
+  // HANDLE WINDOW LOGIC!
+
   // Move the window if necessary and other logic to keep track of movement
   if (gui_window.flags & GUI_WND_RELOCATING)
   {
@@ -290,7 +383,6 @@ gui_draw_window()
       resize_left(0);
     }
 
-
     if (flag & GUI_WND_RESIZING_B)
     {
       resize_right(1);
@@ -301,20 +393,22 @@ gui_draw_window()
     }
   }
 
+  // Draw the window decorations and stuff
+  draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
 
-  draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, shades[3], shades[1], shades[2]);
-  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, shades[3], shades[1], shades[2]);
-  draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, shades[0], shades[3], shades[1]);
-
-  if (gui_window.title != NULL)
+  // Draw window title
   {
     int x = TITLE_LEFT+2;
     int width = psf_get_width(font);
     for (int i = 0; gui_window.title[i] && x+width < TITLE_RIGHT; i++, x+=width)
     {
-      gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], shades[4]);
+      gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], get_shade(4));
     }
   }
+
+  // Drawing the elements and shit
 }
 
 void

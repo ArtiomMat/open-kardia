@@ -18,9 +18,10 @@ static fip_t y0;
 
 static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that is on the screen and wraps around it)
 
-int ekg_bpm = 0; // TODO: Implement
+int ekg_bpm = 0;
 
 unsigned char ekg_amp = 100;
+static char think_dead = 0;
 
 // Always psotive but can be indicated for negative voltage peaks too
 // At what voltage the ekg will beep, changes each beat(that is detected by finding the )
@@ -29,7 +30,7 @@ static fip_t beep_bias;
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
-  beep_bias = FTOFIP(0.15);
+  beep_bias = FTOFIP(0.10);
 
   y0 = _y0;
   x = 0;
@@ -77,6 +78,12 @@ read_into_buf()
   {
     if (!beep) // We beep here, nested if for the else below
     {
+      if (think_dead)
+      {
+        puts("WAIT IT'S ALIVE!");
+        think_dead = 0;
+      }
+
       aud_play(240, ekg_amp);
       beep = 1;
 
@@ -88,6 +95,21 @@ read_into_buf()
   else
   {
     beep = 0;
+    if (time_since_beep >= ITOFIP(5) && think_dead == 0)
+    {
+      think_dead = 1;
+      puts("I think the patient is dead...");
+    }
+    else if (time_since_beep >= ITOFIP(10)  && think_dead == 1)
+    {
+      think_dead = 2;
+      puts("Time of death anyone?");
+    }
+    else if (time_since_beep >= ITOFIP(15)  && think_dead == 2)
+    {
+      think_dead = 3;
+      puts("Poor thing...");
+    }
   }
 }
 

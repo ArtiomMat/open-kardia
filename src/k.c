@@ -96,6 +96,7 @@ on_vid(vid_event_t* e)
     break;
 
     case VID_E_CLOSE:
+    puts("\nFREEING...\n");
     edit_free();
     vid_free();
     aud_free();
@@ -137,6 +138,8 @@ main(int _args_n, const char** _args)
   args_n = _args_n;
   args = _args;
 
+  puts("\nINITIALISING...\n");
+  
   static const char* fp = NULL;
   const char* font_fp = K_FONT_REL_FP;
 
@@ -205,7 +208,10 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_on = on_vid;
 
-  gui_init(100, 100, NULL, k_font);
+  gui_thing_t gui_thing = {.type = GUI_T_TEXT};
+  gui_thing.str = "HELLO!";
+  gui_thing.text.color = 255;
+  gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
 
   aud_init(16000);
 
@@ -218,7 +224,8 @@ main(int _args_n, const char** _args)
   edit_init(fp);
   ekg_init(ITOFIP(200), K_VID_SIZE - K_VID_SIZE/10);
 
-  node_all[0].next_flows_n=1;
+
+  node_all[0].next_flows_n=0;
   node_all[0].next_flows[0] = 2;
   node_all[0].next_draws_n=0;
   node_all[0].ion = 0;
@@ -270,7 +277,9 @@ main(int _args_n, const char** _args)
   node_all[0].depol_off[1] = ITOFIP(-60);
 
   fip_t time = 0, count = 0;
-  fip_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
+  fip_t times[] = {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
+  
+  puts("\nRUNNING...\n");
   
   int skip_draw = 0;
   while(1)
@@ -295,19 +304,19 @@ main(int _args_n, const char** _args)
 
     gui_draw_window();
 
-    // if (count < sizeof(times))
-    // {
-    //   if (time >= times[count])
-    //   {
-    //     time = 0;
-    //     node_all[2].ion = NODE_MAX_ION;
-    //     count++;
-    //   }
-    //   else
-    //   {
-    //     time += clk_tick_time;
-    //   }
-    // }
+    if (count < sizeof(times))
+    {
+      if (time >= times[count])
+      {
+        time = 0;
+        node_all[2].ion = NODE_MAX_ION;
+        count++;
+      }
+      else
+      {
+        time += clk_tick_time;
+      }
+    }
 
     vid_refresh();
 
