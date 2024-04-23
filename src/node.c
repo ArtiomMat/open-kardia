@@ -4,6 +4,7 @@
 #include "k.h"
 #include "clk.h"
 #include "ekg.h"
+#include "gui.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,7 @@ put_square(int color, int _x, int _y, int size)
   }
 }
 static int
-color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
+color_for(node_t* first, node_t* second, int x, int xi, int xf)
 {
   unsigned char r,g,b,R,G,B;
   if (draw_flow)
@@ -34,8 +35,8 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
     R = 0,G = 0,B = 0;
 
     // Gradient from polarized to depolarized
-    k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, EKG_C_R, EKG_C_G, EKG_C_B);
-    k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, EKG_C_R, EKG_C_G, EKG_C_B);
+    k_gradient_rgb(first->ion, first->bias, &r, &g, &b, EKG_C_R, EKG_C_G, EKG_C_B);
+    k_gradient_rgb(second->ion, second->bias, &R, &G, &B, EKG_C_R, EKG_C_G, EKG_C_B);
   }
   else
   {
@@ -43,8 +44,8 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
     R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
 
     // Gradient from polarized to depolarized
-    k_gradient_rgb(first_ion, NODE_MAX_ION, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
-    k_gradient_rgb(second_ion, NODE_MAX_ION, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+    k_gradient_rgb(first->ion, first->bias, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
+    k_gradient_rgb(second->ion, second->bias, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
   }
   
   return k_gradient(x-xi, xf-xi, r,g,b, R,G,B);
@@ -53,12 +54,15 @@ color_for(fip_t first_ion, fip_t second_ion, int x, int xi, int xf)
 void
 node_draw_line(node_t* root_node, node_t* next)
 {
-
+  
   int xi, yi, xf, yf;
   xi = FIPTOI(root_node->pos[0]);
   yi = FIPTOI(root_node->pos[1]);
   xf = FIPTOI(next->pos[0]);
   yf = FIPTOI(next->pos[1]);
+  
+  // gui_draw_line(xi, yi, xf, yf, 255);
+  
   if (xi == xf)
   {
     node_t* b = root_node->pos[1] < next->pos[1] ? root_node : next;
@@ -71,7 +75,7 @@ node_draw_line(node_t* root_node, node_t* next)
     }
     for (int y = yi; y < yf; y++)
     {
-      vid_set(color_for(b->ion, t->ion, y, yi, yf), xi + y * K_VID_SIZE);
+      vid_set(color_for(b, t, y, yi, yf), xi + y * K_VID_SIZE);
     }
   }
   else
@@ -81,9 +85,11 @@ node_draw_line(node_t* root_node, node_t* next)
 
     fip_t slope = FIP_DIV(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
 
+    fip_t abs_slope = slope < 0 ? -slope : slope;
+
     for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += ITOFIP(1), y += slope)
     {
-      int c = color_for(l->ion, r->ion, x, l->pos[0], r->pos[0]);
+      int c = color_for(l, r, x, l->pos[0], r->pos[0]);
       fip_t i = 0;
       do
       {
@@ -91,7 +97,7 @@ node_draw_line(node_t* root_node, node_t* next)
         
         i += ITOFIP(1);
       }
-      while (i < slope);
+      while (i < abs_slope);
     }
   }
 }

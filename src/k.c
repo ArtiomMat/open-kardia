@@ -90,7 +90,7 @@ on_vid(vid_event_t* e)
     }
     else
     {
-      node_all[2].ion = NODE_MAX_ION;
+      node_all[0].ion = NODE_MAX_ION;
     }
     break;
 
@@ -128,6 +128,52 @@ k_init()
   else
   {
     puts("k_init(): Kardia module initialized, big endian system.");
+  }
+}
+
+// draws and flows end at -1
+// parent_flows_n is how many flows the parent has
+static void
+set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flows[], int parent_flows_n, int draws[])
+{
+  int j;
+  
+  node_all[i].pos[0] = pol_x;
+  node_all[i].pos[1] = pol_y;
+  
+  node_all[i].ion = 0;
+  node_all[i].halt = 0;
+  node_all[i].countdown = 0;
+  
+  node_all[i].bias = NODE_MAX_ION / parent_flows_n;
+  
+  node_all[i].next_flows_n = node_all[i].next_draws_n = 0;
+  
+  for (j = 0; flows[j] != -1; j++)
+  {
+    node_all[i].next_flows[j] = flows[j];
+  }
+  node_all[i].next_flows_n = j;
+  
+  for (j = 0; draws[j] != -1; j++)
+  {
+    node_all[i].next_draws[j] = draws[j];
+  }
+  node_all[i].next_draws_n = j;
+  
+  node_all[i].pol_pos[0] = ITOFIP(pol_x);
+  node_all[i].pol_pos[1] = ITOFIP(pol_y);
+  
+  node_all[i].depol_off[0] = ITOFIP(depol_off_x);
+  node_all[i].depol_off[1] = ITOFIP(depol_off_y);
+  
+  if (node_all[i].next_flows_n)
+  {
+    node_all[i].flow = ITOFIP(30);
+  }
+  else
+  {
+    node_all[i].flow = ITOFIP(30);
   }
 }
 
@@ -236,17 +282,16 @@ main(int _args_n, const char** _args)
   k_init();
 
   edit_init(fp);
-  ekg_init(ITOFIP(200), K_VID_SIZE - K_VID_SIZE/10);
+  ekg_init(ITOFIP(3000), K_VID_SIZE - K_VID_SIZE/10);
 
-
+  #if 0
   node_all[0].next_flows_n=0;
   node_all[0].next_flows[0] = 2;
   node_all[0].next_draws_n=0;
   node_all[0].ion = 0;
-  node_all[0].flow = ITOFIP(50);
   node_all[0].halt = 0;
   node_all[0].countdown = 0;
-  node_all[0].bias = NODE_MAX_ION/2;
+  node_all[0].bias = NODE_MAX_ION;
 
   node_all[1].next_flows_n=1;
   node_all[1].next_flows[0] = 0;
@@ -256,7 +301,7 @@ main(int _args_n, const char** _args)
   node_all[1].flow = ITOFIP(50);
   node_all[1].halt = 0;
   node_all[1].countdown = 0;
-  node_all[1].bias = NODE_MAX_ION/2;
+  node_all[1].bias = NODE_MAX_ION;
 
   node_all[2].next_flows_n=1;
   node_all[2].next_flows[0] = 1;
@@ -289,9 +334,33 @@ main(int _args_n, const char** _args)
   node_all[0].pos[1] = ITOFIP(10);
   node_all[0].depol_off[0] = ITOFIP(-30);
   node_all[0].depol_off[1] = ITOFIP(-60);
-
+  #endif
+  
+  // Begin top
+  set_node(0, 50,50, 10,10, (int[]){1,2,3,-1}, 1, (int[]){1,2,3,-1});
+  
+  // Right atrium
+  set_node(1, 200,100, -30,10, (int[]){-1}, 3, (int[]){-1});
+  // Left atrium
+  set_node(2, 10,120, 20,10, (int[]){-1}, 3, (int[]){-1});
+  
+  // Middle cunt
+  set_node(3, 100,100, -10,10, (int[]){4,5,-1}, 3, (int[]){4,5,-1});
+  node_all[3].halt = FTOFIP(0.1f);
+  
+  // Left lower cunt
+  set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,-1});
+  // Right lower cunt
+  set_node(5, 360,360, -20,-60, (int[]){7,-1}, 2, (int[]){7,-1});
+  
+  // Left ventrical
+  set_node(6, 20,130, 100,30, (int[]){-1}, 1, (int[]){-1});
+  // Right ventrical
+  set_node(7, 200,120, -100,30, (int[]){-1}, 1, (int[]){-1});
+  
+  
   fip_t time = 0, count = 0;
-  fip_t times[] = {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
+  fip_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
   
   puts("\nRUNNING...\n");
   
@@ -317,7 +386,8 @@ main(int _args_n, const char** _args)
 
 
     gui_draw_window();
-
+  
+    #if 0
     if (count < sizeof(times))
     {
       if (time >= times[count])
@@ -331,6 +401,7 @@ main(int _args_n, const char** _args)
         time += clk_tick_time;
       }
     }
+    #endif
 
     vid_refresh();
 

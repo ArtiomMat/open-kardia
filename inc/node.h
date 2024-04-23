@@ -33,9 +33,9 @@ typedef struct node_s
   unsigned char next_draws[8]; // Max is 8
   unsigned char next_draws_n;
 
-  fip_t pos[2]; // In screen space pixels
+  fip_t pos[2]; // In screen space pixels, don't worry handled by node_beat
 
-  fip_t relax; // In pixels per second, how fast it relaxes back
+  // fip_t relax; // In pixels per second, how fast it relaxes back
   fip_t bias; // Ionization required for full depol
   fip_t pol_pos[2]; // Polarized position in pixels
   fip_t depol_off[2]; // Depolarized offset in pixels

@@ -30,7 +30,7 @@ static fip_t beep_bias;
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
-  beep_bias = FTOFIP(0.015);
+  beep_bias = FTOFIP(0.10);
 
   y0 = _y0;
   x = 0;
@@ -83,7 +83,6 @@ read_into_buf()
         puts("WAIT IT'S ALIVE!");
         think_dead = 0;
       }
-      puts("BEEP");
 
       aud_play(240, ekg_amp);
       beep = 1;

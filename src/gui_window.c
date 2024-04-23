@@ -84,6 +84,7 @@ in_rect(int x_test, int y_test, int left, int top, int right, int bottom)
   return x_test <= right && x_test >= left && y_test <= bottom && y_test >= top;
 }
 
+// Draws a rectangle with light being the color on the top and left, dark is right and bottom
 static inline void
 draw_rect(int left, int top, int right, int bottom, int light, int dark)
 {
@@ -92,6 +93,28 @@ draw_rect(int left, int top, int right, int bottom, int light, int dark)
   
   draw_yline(top, bottom, left, light);
   draw_yline(top, bottom, right, dark);
+}
+
+// Extends draw_rect and also fills the rectangle.
+// If xray is enabled it avoids filling the rectangle there.
+static inline void
+draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, int fill)
+{
+  draw_rect(left, top, right, bottom, light, dark);
+  // Fill the mf now
+  for (int _x = left+1; _x < right; _x++)
+  {
+    // if ((gui_window.flags & GUI_WND_XRAY) && _x >= CONTENT_LEFT)
+    // {
+    //   _x = CONTENT_RIGHT-1;
+    //   continue;
+    // }
+
+    for (int _y = top+1; _y < bottom; _y++)
+    {
+      vid_set(fill, _y*vid_size[0] + _x);
+    }
+  }
 }
 
 void
@@ -109,24 +132,6 @@ void
 gui_toggle_flag(int flag)
 {
   gui_window.flags ^= flag;
-}
-
-static inline void
-draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, int fill)
-{
-  draw_rect(left, top, right, bottom, light, dark);
-  // Fill the mf now
-  for (int _x = left+1; _x < right; _x++)
-  {
-    for (int _y = top+1; _y < bottom; _y++)
-    {
-      if ((gui_window.flags & GUI_WND_XRAY) && in_rect(_x, _y, CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
-      {
-        continue;
-      }
-      vid_set(fill, _y*vid_size[0] + _x);
-    }
-  }
 }
 
 static void
@@ -268,9 +273,9 @@ gui_on_vid(vid_event_t* e)
       // We are 100% either in border or outside the window alltogether
       else
       {
-        int flags_tmp = gui_window.flags;
+        int flags_tmp = gui_window.flags; // Save the flag for future
 
-        // Right and left
+        // Right and left border
         if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1 - GUI_RESIZE_BLEED, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
         {
           gui_set_flag(GUI_WND_RESIZING_R, 1);
@@ -280,7 +285,7 @@ gui_on_vid(vid_event_t* e)
           gui_set_flag(GUI_WND_RESIZING_L, 1);
         }
 
-        // Top and bottom
+        // Top and bottom border, disconnected to combine the two in the corners
         if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1 + GUI_RESIZE_BLEED))
         {
           gui_set_flag(GUI_WND_RESIZING_T, 1);
@@ -308,7 +313,7 @@ gui_on_vid(vid_event_t* e)
           gui_e.type = GUI_E_UNFOCUS;
           break;
         }
-        // Otherwise it's not eaten anymore
+        // Otherwise it's not eaten ofc
       }
     }
     break;

@@ -1,5 +1,5 @@
 cc = gcc
-flags = -O3 -Iinc -D PSF_X_KARDIA
+flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D DEBUG
 db_flags = $(flags) -ggdb -D DEBUG
 libs = -lX11 -lXrandr -lasound -lm
 
@@ -13,7 +13,7 @@ obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 
 run:
-	make -B && cd bin && ./kardia -v 10 -f sanserif.psf && cd ..
+	make -B && cd bin && ./kardia -v 10 -f roman.psf && cd ..
 
 clean:
 	rm -rf obj/*.o bin/kardia
