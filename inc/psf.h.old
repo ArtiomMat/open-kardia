@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-
 enum
 {
   PSF_P_AUTO,

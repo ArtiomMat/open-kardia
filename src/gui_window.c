@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
@@ -23,7 +24,7 @@
 #define CONTENT_TOP (TITLE_BOTTOM+0)
 #define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
-psf_font_t* font;
+gui_font_t* font;
 
 gui_window_t gui_window = {0};
 
@@ -167,7 +168,7 @@ gui_recache_all()
 }
 
 void
-gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, psf_font_t* _font)
+gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, gui_font_t* _font)
 {
   font = _font;
 
@@ -188,11 +189,11 @@ gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, psf
 
   gui_title_h = font->height + 3;
 
-  shades[0] = k_pickc(40,40,0);
-  shades[1] = k_pickc(90,90,0);
-  shades[2] = k_pickc(120,120,0);
-  shades[3] = k_pickc(180,180,0);
-  shades[4] = k_pickc(220,220,0);
+  shades[0] = k_pickc(40,40,40);
+  shades[1] = k_pickc(90,90,90);
+  shades[2] = k_pickc(120,120,120);
+  shades[3] = k_pickc(180,180,180);
+  shades[4] = k_pickc(220,220,220);
 
   gui_window.things = things;
   gui_window.things_n = things_n;
@@ -401,7 +402,7 @@ gui_draw_window()
   // Draw window title
   {
     int x = TITLE_LEFT+2;
-    int width = psf_get_width(font);
+    int width = gui_get_font_width(font);
     for (int i = 0; gui_window.title[i] && x+width < TITLE_RIGHT; i++, x+=width)
     {
       gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], get_shade(4));
@@ -462,38 +463,5 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
 
     #undef FIP_FRAC_BITS
     #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
-  }
-}
-
-void
-gui_draw_font(psf_font_t* f, int _x, int _y, int g, unsigned char color)
-{
-  int add_x = _x < 0 ? -_x : 0;
-  int add_y = _y < 0 ? -_y : 0;
-
-  int width = psf_get_width(f);
-  char* glyph = psf_get_glyph(f, g);
-
-  int padding = width % 8;
-
-  // b is the bit index, it goes through glyph as a whole as if it were a bit buffer
-  int b = f->row_size * add_y;
-  for (int y = _y + add_y; y < f->height + _y && y < vid_size[1]; y++)
-  {
-    b += add_x;
-
-    for (int x = _x + add_x; x < width + _x && x < vid_size[0]; x++, b++)
-    {
-      char byte = glyph[b >> 3];
-      
-      // We just shift the byte left by b%8(to get the current bit) and just check if that lsb is on.
-      // We do it from left to right because that's how we draw
-      if ((byte << (b % 8)) & (1 << 7))
-      {
-        vid_set(color, x + y * vid_size[0]);
-      }
-    }
-
-    b += padding;
   }
 }

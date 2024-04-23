@@ -4,7 +4,7 @@
 #include "k.h"
 #include "aud.h"
 #include "clk.h"
-#include "psf.h"
+#include "gui.h"
 
 #include <stdio.h>
 #include <stdlib.h>

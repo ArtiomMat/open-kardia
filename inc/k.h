@@ -4,7 +4,7 @@
 
 #include "node.h"
 #include "fip.h"
-#include "psf.h"
+#include "gui.h"
 
 #include "k_endian.h"
 
@@ -47,7 +47,7 @@ typedef union
 extern fip_t k_tick_time;
 extern unsigned long long k_ticks;
 
-extern psf_font_t* k_font;
+extern gui_font_t* k_font;
 
 // Directly from stdlib main()
 extern int args_n;

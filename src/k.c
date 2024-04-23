@@ -6,7 +6,6 @@
 #include "k.h"
 #include "ekg.h"
 #include "aud.h"
-#include "psf.h"
 #include "gui.h"
 
 #include <stdio.h>
@@ -21,7 +20,7 @@ static int flow_mode = 0;
 fip_t k_tick_time;
 unsigned long long k_ticks;
 
-psf_font_t* k_font;
+gui_font_t* k_font;
 
 int args_n;
 const char** args;
@@ -194,8 +193,8 @@ main(int _args_n, const char** _args)
     }
   }
 
-  psf_font_t font;
-  if (!psf_open(&font, font_fp, PSF_P_AUTO))
+  gui_font_t font;
+  if (!gui_open_font(&font, font_fp, GUI_FONTP_AUTO))
   {
     k_font = NULL;
   }

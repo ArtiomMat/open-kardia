@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "psf.h"
 #include "vid.h"
 
 // The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
@@ -56,6 +55,46 @@ enum
   GUI_T_HIDE = 0b100, // Becomes hidden(not drawn)
   GUI_T_DISABLED = 0b1000, // Only the title bar is visible, until unfolded
 };
+
+enum
+{
+  GUI_FONTP_AUTO,
+  GUI_FONTP_SPEED, // Prioritize speed, cache all characters in advance
+  GUI_FONTP_MEMORY, // Prioritize less memory, expands single bit to bitmaps in realtime
+};
+
+typedef struct
+{
+  // Union because depends on priority
+  void* data; // For speed priority
+  void* fd; // For memory priority, internally a FILE*
+  unsigned data_size;
+  unsigned char type; // Either sizeof(psf2_s) or sizeof(psf1_s)
+  unsigned char p; // Priority
+  unsigned char row_size; // In bytes(8 pixels)
+  unsigned char height; // In actual pixels
+  union
+  {
+    struct psf2_s
+    {
+      int magic; // 72 b5 4a 86
+      int version;
+      int size; // Header size
+      int flags;
+      int length; // how many glyphs
+      int glyph_size;
+      int height;
+      int width;
+    } psf2;
+    int __array[8]; // For quickly swapping endian
+    struct psf1_s
+    {
+      short magic; // 36 04
+      char mode;
+      unsigned char size;
+    } psf1;
+  };
+} gui_font_t;
 
 typedef struct gui_thing_s
 {
@@ -152,10 +191,22 @@ extern gui_window_t gui_window;
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
 
+extern int
+gui_open_font(gui_font_t* f, const char* fp, int priority);
+extern void
+gui_close_font(gui_font_t* f);
+// Returns a pointer to the glyph, it is structured in row0,row1,...
+// Note that it is in compressed bit form that needs to be expanded into a bitmap if you wish
+extern void*
+gui_get_glyph(gui_font_t* f, int g);
+// Unlike height not straight forward manually
+extern int
+gui_get_font_width(gui_font_t* f);
+
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!
 extern void
-gui_init(int w, int h, const char* title,  gui_thing_t* things, int things_n, psf_font_t* font);
+gui_init(int w, int h, const char* title,  gui_thing_t* things, int things_n, gui_font_t* font);
 
 // Essentially rerenders and reinitializes the entire content_cache of the window, this is done when things are moved around the window, should not be called too much
 // If you modified a thing without fucking with its width and height directly or indirectly, you should call gui_recache_thing()
@@ -188,11 +239,11 @@ gui_on_vid(vid_event_t* event);
 // Free draw, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
 extern void
-gui_draw_font(psf_font_t* f, int x, int y, int g, unsigned char color);
+gui_draw_font(gui_font_t* f, int x, int y, int g, unsigned char color);
 
 // Draws on a grid, x and y are in grid units based on the font dimentions.
 static inline void
-gui_draw_fontg(psf_font_t* f, int x, int y, int g, unsigned char color)
+gui_draw_fontg(gui_font_t* f, int x, int y, int g, unsigned char color)
 {
   gui_draw_font(f, x * f->row_size * 8, y * f->height, g, color);
 }
