@@ -1,10 +1,13 @@
-// Meant to be included in k, just for organization of the header, it's really crowded
+// Endian 
 
 #pragma once
 
 #ifdef __x86_64__
+  #define NDN_BIG 0
+  #define NDN_LITTLE 1
+
   static inline unsigned short
-  k_bige16(unsigned short _x)
+  ndn_b16(unsigned short _x)
   {
     union
     {
@@ -22,7 +25,7 @@
     return y.i;
   }
   static inline unsigned int
-  k_bige32(unsigned int _x)
+  ndn_b32(unsigned int _x)
   {
     union
     {
@@ -42,7 +45,7 @@
     return y.i;
   }
   static inline unsigned long long
-  k_bige64(unsigned long long _x)
+  ndn_b64(unsigned long long _x)
   {
     union
     {
@@ -67,39 +70,42 @@
   }
 
   static inline unsigned short
-  k_lile16(unsigned short _x)
+  ndn_l16(unsigned short _x)
   {
     return _x;
   }
   static inline unsigned int
-  k_lile32(unsigned int _x)
+  ndn_l32(unsigned int _x)
   {
     return _x;
   }
   static inline unsigned long long
-  k_lile64(unsigned long long _x)
+  ndn_l64(unsigned long long _x)
   {
     return _x;
   }
 #elif
+  #define NDN_BIG 1
+  #define NDN_LITTLE 0
+
   static inline unsigned short
-  k_bige16(unsigned short _x)
+  ndn_b16(unsigned short _x)
   {
     return _x;
   }
   static inline unsigned int
-  k_bige32(unsigned int _x)
+  ndn_b32(unsigned int _x)
   {
     return _x;
   }
   static inline unsigned long long
-  k_bige64(unsigned long long _x)
+  ndn_b64(unsigned long long _x)
   {
     return _x;
   }
 
   static inline unsigned short
-  k_lile16(unsigned short _x)
+  ndn_l16(unsigned short _x)
   {
     union
     {
@@ -117,7 +123,7 @@
     return y.i;
   }
   static inline unsigned int
-  k_lile32(unsigned int _x)
+  ndn_l32(unsigned int _x)
   {
     union
     {
@@ -137,7 +143,7 @@
     return y.i;
   }
   static inline unsigned long long
-  k_lile64(unsigned long long _x)
+  ndn_l64(unsigned long long _x)
   {
     union
     {

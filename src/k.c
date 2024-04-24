@@ -7,6 +7,7 @@
 #include "ekg.h"
 #include "aud.h"
 #include "gui.h"
+#include "ndn.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -121,14 +122,7 @@ k_init()
     vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
   }
 
-  if (k_lile16(1) == (short)1)
-  {
-    puts("k_init(): Kardia module initialized, lil endian system.");
-  }
-  else
-  {
-    puts("k_init(): Kardia module initialized, big endian system.");
-  }
+  printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
 
 // draws and flows end at -1

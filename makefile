@@ -1,6 +1,5 @@
 cc = gcc
-flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D DEBUG
-db_flags = $(flags) -ggdb -D DEBUG
+flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D RELEASE
 libs = -lX11 -lXrandr -lasound -lm
 
 srcs = $(wildcard src/*.c)

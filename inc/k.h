@@ -6,7 +6,7 @@
 #include "fip.h"
 #include "gui.h"
 
-#include "k_endian.h"
+// #include "k_endian.h"
 
 // Relative font path
 #define K_FONT_REL_FP "viewmax.psf"
