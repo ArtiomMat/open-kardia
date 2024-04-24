@@ -83,22 +83,42 @@ node_draw_line(node_t* root_node, node_t* next)
     node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
     node_t* r = l == root_node ? next : root_node;
 
+    // Some magic to increase FIP accuracy
+    l->pos[0] <<= 12 - FIP_DEF_FRAC_BITS;
+    l->pos[1] <<= 12 - FIP_DEF_FRAC_BITS;
+    r->pos[0] <<= 12 - FIP_DEF_FRAC_BITS;
+    r->pos[1] <<= 12 - FIP_DEF_FRAC_BITS;
+    #undef FIP_FRAC_BITS
+    #define FIP_FRAC_BITS 12
+
     fip_t slope = FIP_DIV(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
 
     fip_t abs_slope = slope < 0 ? -slope : slope;
 
-    for (fip_t x = l->pos[0], y = l->pos[1]; x <= r->pos[0]; x += ITOFIP(1), y += slope)
+    for (fip_t x = l->pos[0], y = l->pos[1]; x < r->pos[0]; x += ITOFIP(1), y += slope)
     {
       int c = color_for(l, r, x, l->pos[0], r->pos[0]);
       fip_t i = 0;
       do
       {
+        if (FIPTOI(y + i) >= vid_size[1])
+        {
+          break;
+        }
         vid_set(c, FIPTOI(x) + FIPTOI(y + i) * K_VID_SIZE);
         
         i += ITOFIP(1);
       }
       while (i < abs_slope);
     }
+
+    // Back down from that black magic
+    l->pos[0] >>= 12 - FIP_DEF_FRAC_BITS;
+    l->pos[1] >>= 12 - FIP_DEF_FRAC_BITS;
+    r->pos[0] >>= 12 - FIP_DEF_FRAC_BITS;
+    r->pos[1] >>= 12 - FIP_DEF_FRAC_BITS;
+    #undef FIP_FRAC_BITS
+    #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
   }
 }
 

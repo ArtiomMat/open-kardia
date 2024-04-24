@@ -53,12 +53,12 @@ extern gui_font_t* k_font;
 extern int args_n;
 extern const char** args;
 
-extern int mouse_pos[2];
+extern int k_mouse[2];
 
 static inline int
 k_pickc_rounder(int v, int depth)
 {
-  return (v>>(8-depth)) + (v & (1<<(8-depth-1)))?1:-1;
+  return (v>>(8-depth)) + 1;
 }
 
 static inline int
@@ -71,6 +71,29 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
   rgb.b = (b>>(8-_K_BLUE_DEPTH));
 
   return rgb.c;
+}
+
+static inline void
+k_vid_set(unsigned char r, unsigned char g, unsigned char b, int i)
+{
+  int check = (i-1)&1;
+
+  k_rgb_t rgb;
+
+  if (check)
+  {
+    rgb.r = (r>>(8-_K_RED_DEPTH));
+    rgb.g = (g>>(8-_K_GREEN_DEPTH));
+    rgb.b = (b>>(8-_K_BLUE_DEPTH));
+  }
+  else
+  {
+    rgb.r = k_pickc_rounder(r,_K_RED_DEPTH);
+    rgb.g = k_pickc_rounder(g,_K_GREEN_DEPTH);
+    rgb.b = k_pickc_rounder(b,_K_BLUE_DEPTH);
+  }
+
+  vid_set(rgb.c, i);
 }
 
 // Puts the new values in rgb, same as k_gradient() just returns in RGB rather than in index

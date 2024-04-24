@@ -62,7 +62,7 @@ edit_run()
 
     int x = FIPTOI(node->pos[0]), y = FIPTOI(node->pos[1]);
     int c;
-    if (in_square(mouse_pos[0], mouse_pos[1], x, y, 7))
+    if (in_square(k_mouse[0], k_mouse[1], x, y, 7))
     {
       c = NODE_DEPOL_C;
       hover_node_i = i;

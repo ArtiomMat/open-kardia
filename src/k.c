@@ -26,7 +26,7 @@ gui_font_t* k_font;
 int args_n;
 const char** args;
 
-int mouse_pos[2];
+int k_mouse[2];
 
 void
 k_gradient_rgb(int x, int x_max, unsigned char* r, unsigned char* g, unsigned char* b, unsigned char R, unsigned char G, unsigned char B)
@@ -56,14 +56,6 @@ k_arg(const char* str)
   return 0;
 }
 
-static unsigned char
-channel_color(int value, int depth)
-{
-  int max = ((1 << depth)-1);
-  int increment = 255 / max;
-  return value * increment;
-}
-
 static int
 on_vid(vid_event_t* e)
 {
@@ -76,8 +68,8 @@ on_vid(vid_event_t* e)
   switch (e->type)
   {
     case VID_E_MOVE:
-    mouse_pos[0] = e->move.x;
-    mouse_pos[1] = e->move.y;
+    k_mouse[0] = e->move.x;
+    k_mouse[1] = e->move.y;
     break;
 
     case VID_E_PRESS:
@@ -89,7 +81,7 @@ on_vid(vid_event_t* e)
     {
       flow_mode = !flow_mode;
     }
-    else
+    else if (e->press.code == 'b' || e->press.code == KEY_LMOUSE)
     {
       node_all[0].ion = NODE_MAX_ION;
     }
@@ -111,6 +103,13 @@ on_vid(vid_event_t* e)
   return 1;
 }
 
+static unsigned char
+channel_color(int value, int depth)
+{
+  int max = ((1 << depth)-1);
+  int increment = 255 / max;
+  return value * increment;
+}
 static void
 k_init()
 {
@@ -263,6 +262,7 @@ main(int _args_n, const char** _args)
   gui_shades[3] = k_pickc(180,180,180);
   gui_shades[4] = k_pickc(220,220,220);
   gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
+  gui_set_flag(GUI_WND_HIDE, 1);
 
   aud_init(16000);
 

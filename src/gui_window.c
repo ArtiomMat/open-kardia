@@ -1,11 +1,23 @@
 #include "gui.h"
 #include "fip.h"
-#include "k.h"
 
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef MIN
+  #define MAX(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+   _a > _b ? _a : _b; })
+#endif
+#ifndef MIN
+  #define MIN(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+   _a < _b ? _a : _b; })
+#endif
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
@@ -31,6 +43,8 @@ gui_window_t gui_window = {0};
 int gui_title_h = 0;
 
 unsigned char gui_shades[5] = {0,1,2,3,4};
+
+static int mouse_pos[2] = {0};
 
 unsigned char get_shade(int i)
 {
@@ -229,6 +243,11 @@ gui_on_vid(vid_event_t* e)
 
   switch (e->type)
   {
+    case VID_E_MOVE:
+    mouse_pos[0] = e->move.x;
+    mouse_pos[1] = e->move.y;
+    break;
+
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
     {
