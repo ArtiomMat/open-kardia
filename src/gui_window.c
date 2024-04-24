@@ -420,7 +420,9 @@ gui_draw_window()
 
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
-  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  
+  // draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  
   draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
 
   // Draw window title
@@ -429,7 +431,7 @@ gui_draw_window()
     int width = gui_get_font_width(font);
     for (int i = 0; gui_window.title[i] && x+width < TITLE_RIGHT; i++, x+=width)
     {
-      gui_draw_font(font, x, TITLE_TOP+1, gui_window.title[i], get_shade(4));
+      gui_draw_font(font, x, TITLE_TOP, gui_window.title[i], get_shade(4));
     }
   }
 

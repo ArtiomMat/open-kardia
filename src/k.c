@@ -338,6 +338,7 @@ main(int _args_n, const char** _args)
   
   // Begin top
   set_node(0, 50,50, 10,10, (int[]){1,2,3,-1}, 1, (int[]){1,2,3,-1});
+  node_all[0].flow = ITOFIP(120);
   
   // Right atrium
   set_node(1, 200,100, -30,10, (int[]){-1}, 3, (int[]){-1});
@@ -347,6 +348,7 @@ main(int _args_n, const char** _args)
   // Middle cunt
   set_node(3, 100,100, -10,10, (int[]){4,5,-1}, 3, (int[]){4,5,-1});
   node_all[3].halt = FTOFIP(0.1f);
+  node_all[3].flow = ITOFIP(50);
   
   // Left lower cunt
   set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,-1});
@@ -381,8 +383,8 @@ main(int _args_n, const char** _args)
     // gui_draw_fontg(&font, 5,1, '!', 244);
     // gui_draw_font(k_font, 3, 0, 'A', EKG_C);
     // gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
-    ekg_draw();
     node_draw(flow_mode);
+    ekg_draw();
 
 
     gui_draw_window();

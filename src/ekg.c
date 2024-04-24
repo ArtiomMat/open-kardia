@@ -20,7 +20,7 @@ static int buf[K_VID_SIZE] = {0}; // Stores the entire ekg voltage history(that 
 
 int ekg_bpm = 0;
 
-unsigned char ekg_amp = 100;
+unsigned char ekg_amp = 48;
 static char think_dead = 0;
 
 // Always psotive but can be indicated for negative voltage peaks too

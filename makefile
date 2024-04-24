@@ -13,7 +13,7 @@ obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 
 run:
-	make -B && cd bin && ./kardia -v 10 -f roman.psf && cd ..
+	make -B && cd bin && ./kardia -v 10 -f viewmax.psf && cd ..
 
 clean:
 	rm -rf obj/*.o bin/kardia
