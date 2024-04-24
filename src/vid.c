@@ -24,21 +24,3 @@ vid_def_on(vid_event_t* e)
   return 1;
 }
 
-void
-vid_wipe(int color)
-{
-  for (int i = 0; i < vid_size[1]*vid_size[0]; i++)
-  {
-    vid_pixels[i*4+2] = vid_colors[color][0];
-    vid_pixels[i*4+1] = vid_colors[color][1];
-    vid_pixels[i*4+0] = vid_colors[color][2];
-  }
-}
-
-void
-vid_set(unsigned char color, int i)
-{
-  vid_pixels[i*4+2] = vid_colors[color][0];
-  vid_pixels[i*4+1] = vid_colors[color][1];
-  vid_pixels[i*4+0] = vid_colors[color][2];
-}

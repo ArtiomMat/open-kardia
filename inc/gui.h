@@ -188,6 +188,11 @@ typedef struct
   };
 } gui_event_t;
 
+/**
+ * 5 shades, [0] is the darkest, [4] is the lightest. GUI uses this to color windows and stuff, choose them wisely! default is 0,1,2,3,4. Modifiable in realtime.
+*/
+extern unsigned char gui_shades[5];
+
 // It's a bad idea to completely override it because nothing would work then, a better idea is to override it if you need to but also make sure that you call gui_def_event_handler() in the end.
 extern int (*gui_on)(gui_event_t* event);
 
@@ -237,13 +242,18 @@ gui_toggle_flag(int flag);
 extern void
 gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color);
 
-// Returns 1 for event eaten, means that the program should not handle the vid event in general situations, otherwise it returns 0 for either partially handling the event(the program should too) or not at all.
-// This must be called for GUI to actually handle shit from vid
+/**
+ * Event handler that must be called so GUI properly works.
+ * Returns 1 if the even was eaten, meaning your program shouldn't handle it because it was in the jurisdiction of GUI, returns 0 if it was not eaten, this does not always mean that GUI didn't collect information about the event for itself.
+*/
 extern int
 gui_on_vid(vid_event_t* event);
 
 // Free draw, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
+/**
+ * Draw a font on the screen, 
+*/
 extern void
 gui_draw_font(gui_font_t* f, int x, int y, int g, unsigned char color);
 

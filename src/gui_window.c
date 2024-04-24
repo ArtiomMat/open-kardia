@@ -30,17 +30,16 @@ gui_window_t gui_window = {0};
 
 int gui_title_h = 0;
 
-// The 5 shades of the window, [4]==[5] because we shift it when unfocused to darker tones.
-static unsigned char shades[5];
+unsigned char gui_shades[5] = {0,1,2,3,4};
 
 unsigned char get_shade(int i)
 {
   // Return darker shade if unfocused
   if (gui_window.flags & GUI_WND_UNFOCUSED)
   {
-    return shades[MAX(i - 1, 0)];
+    return gui_shades[MAX(i - 1, 0)];
   }
-  return shades[i];
+  return gui_shades[i];
 }
 
 int (*gui_on)(gui_event_t* event) = NULL;
@@ -182,7 +181,7 @@ gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, gui
   gui_window.title = title;
   if (gui_window.title == NULL)
   {
-    gui_window.title = "\xFF\xFF\xFF";
+    gui_window.title = "\xFF";
   }
 
   gui_window.min_size[0] = gui_window.min_size[1] = 64;
@@ -193,12 +192,6 @@ gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, gui
   gui_window.pos[0] = gui_window.pos[1] = 0;
 
   gui_title_h = font->height + 3;
-
-  shades[0] = k_pickc(40,40,40);
-  shades[1] = k_pickc(90,90,90);
-  shades[2] = k_pickc(120,120,120);
-  shades[3] = k_pickc(180,180,180);
-  shades[4] = k_pickc(220,220,220);
 
   gui_window.things = things;
   gui_window.things_n = things_n;
@@ -227,6 +220,11 @@ save_mouse_rel()
 int
 gui_on_vid(vid_event_t* e)
 {
+  if (gui_window.flags & GUI_E_HIDE)
+  {
+    return 0;
+  }
+
   gui_event_t gui_e = {.type = _GUI_E_NULL};
 
   switch (e->type)
@@ -307,6 +305,7 @@ gui_on_vid(vid_event_t* e)
           break;
         }
         // 100% outside the window, if not already set we set and put the event for eaten
+        // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
         else if (!(gui_window.flags & GUI_WND_UNFOCUSED))
         {
           gui_set_flag(GUI_WND_UNFOCUSED, 1);

@@ -56,13 +56,20 @@ extern const char** args;
 extern int mouse_pos[2];
 
 static inline int
+k_pickc_rounder(int v, int depth)
+{
+  return (v>>(8-depth)) + (v & (1<<(8-depth-1)))?1:-1;
+}
+
+static inline int
 k_pickc(unsigned char r, unsigned char g, unsigned char b)
 {
-  k_rgb_t rgb = {
-    .r = (r>>(8-_K_RED_DEPTH)),
-    .g = (g>>(8-_K_GREEN_DEPTH)),
-    .b = (b>>(8-_K_BLUE_DEPTH)),
-  };
+  k_rgb_t rgb;
+
+  rgb.r = (r>>(8-_K_RED_DEPTH));
+  rgb.g = (g>>(8-_K_GREEN_DEPTH));
+  rgb.b = (b>>(8-_K_BLUE_DEPTH));
+
   return rgb.c;
 }
 

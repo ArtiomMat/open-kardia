@@ -30,7 +30,7 @@ static fip_t beep_bias;
 void
 ekg_init(fip_t _sensitivty, int _y0)
 {
-  beep_bias = FTOFIP(0.015);
+  beep_bias = FTOFIP(0.01);
 
   y0 = _y0;
   x = 0;

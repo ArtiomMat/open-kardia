@@ -161,14 +161,7 @@ set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flow
   node_all[i].depol_off[0] = ITOFIP(depol_off_x);
   node_all[i].depol_off[1] = ITOFIP(depol_off_y);
   
-  if (node_all[i].next_flows_n)
-  {
-    node_all[i].flow = ITOFIP(30);
-  }
-  else
-  {
-    node_all[i].flow = ITOFIP(30);
-  }
+  node_all[i].flow = ITOFIP(20);
 }
 
 int
@@ -264,6 +257,11 @@ main(int _args_n, const char** _args)
   gui_thing_t gui_thing = {.type = GUI_T_TEXT};
   gui_thing.str = "HELLO!";
   gui_thing.text.color = 255;
+  gui_shades[0] = k_pickc(40,40,40);
+  gui_shades[1] = k_pickc(90,90,90);
+  gui_shades[2] = k_pickc(120,120,120);
+  gui_shades[3] = k_pickc(180,180,180);
+  gui_shades[4] = k_pickc(220,220,220);
   gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
 
   aud_init(16000);
@@ -278,81 +276,29 @@ main(int _args_n, const char** _args)
   edit_init(fp);
   ekg_init(ITOFIP(3000), K_VID_SIZE - K_VID_SIZE/10);
 
-  #if 0
-  node_all[0].next_flows_n=0;
-  node_all[0].next_flows[0] = 2;
-  node_all[0].next_draws_n=0;
-  node_all[0].ion = 0;
-  node_all[0].halt = 0;
-  node_all[0].countdown = 0;
-  node_all[0].bias = NODE_MAX_ION;
-
-  node_all[1].next_flows_n=1;
-  node_all[1].next_flows[0] = 0;
-  node_all[1].next_draws_n=1;
-  node_all[1].next_draws[0] = 0;
-  node_all[1].ion = 0;
-  node_all[1].flow = ITOFIP(50);
-  node_all[1].halt = 0;
-  node_all[1].countdown = 0;
-  node_all[1].bias = NODE_MAX_ION;
-
-  node_all[2].next_flows_n=1;
-  node_all[2].next_flows[0] = 1;
-  node_all[2].next_flows[1] = 0;
-  node_all[2].next_draws_n=1;
-  node_all[2].next_draws[0] = 1;
-  node_all[2].ion = NODE_MAX_ION;
-  node_all[2].flow = ITOFIP(50);
-  node_all[2].halt = FTOFIP(0.3f);
-  node_all[2].countdown = FTOFIP(0.1f);
-  node_all[2].bias = NODE_MAX_ION;
-
-  node_all[2].pol_pos[0] = ITOFIP(10);
-  node_all[2].pol_pos[1] = ITOFIP(10);
-  node_all[2].pos[0] = ITOFIP(10);
-  node_all[2].pos[1] = ITOFIP(10);
-  node_all[2].depol_off[0] = ITOFIP(5);
-  node_all[2].depol_off[1] = ITOFIP(15);
-
-  node_all[1].pol_pos[0] = ITOFIP(330);
-  node_all[1].pol_pos[1] = ITOFIP(211);
-  node_all[1].pos[0] = ITOFIP(10);
-  node_all[1].pos[1] = ITOFIP(10);
-  node_all[1].depol_off[0] = ITOFIP(-30);
-  node_all[1].depol_off[1] = ITOFIP(-11);
-
-  node_all[0].pol_pos[0] = ITOFIP(230);
-  node_all[0].pol_pos[1] = ITOFIP(360);
-  node_all[0].pos[0] = ITOFIP(10);
-  node_all[0].pos[1] = ITOFIP(10);
-  node_all[0].depol_off[0] = ITOFIP(-30);
-  node_all[0].depol_off[1] = ITOFIP(-60);
-  #endif
-  
   // Begin top
   set_node(0, 50,50, 10,10, (int[]){1,2,3,-1}, 1, (int[]){1,2,3,-1});
   node_all[0].flow = ITOFIP(120);
   
   // Right atrium
-  set_node(1, 200,100, -30,10, (int[]){-1}, 3, (int[]){-1});
+  set_node(1, 200,100, -50,-20, (int[]){-1}, 3, (int[]){-1});
   // Left atrium
-  set_node(2, 10,120, 20,10, (int[]){-1}, 3, (int[]){-1});
+  set_node(2, 10,120, 50,-20, (int[]){-1}, 3, (int[]){-1});
   
   // Middle cunt
-  set_node(3, 100,100, -10,10, (int[]){4,5,-1}, 3, (int[]){4,5,-1});
+  set_node(3, 170,170, -30,-10, (int[]){4,5,-1}, 3, (int[]){4,5,6,7,-1});
   node_all[3].halt = FTOFIP(0.1f);
   node_all[3].flow = ITOFIP(50);
   
   // Left lower cunt
-  set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,-1});
+  set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,5,-1});
   // Right lower cunt
   set_node(5, 360,360, -20,-60, (int[]){7,-1}, 2, (int[]){7,-1});
   
   // Left ventrical
-  set_node(6, 20,130, 100,30, (int[]){-1}, 1, (int[]){-1});
+  set_node(6, 20,130, 120,40, (int[]){-1}, 1, (int[]){2,-1});
   // Right ventrical
-  set_node(7, 200,120, -100,30, (int[]){-1}, 1, (int[]){-1});
+  set_node(7, 200,120, -120,40, (int[]){-1}, 1, (int[]){1,-1});
   
   
   fip_t time = 0, count = 0;
