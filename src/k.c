@@ -262,7 +262,7 @@ main(int _args_n, const char** _args)
   gui_shades[3] = k_pickc(180,180,180);
   gui_shades[4] = k_pickc(220,220,220);
   gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
-  gui_set_flag(GUI_WND_HIDE, 1);
+  gui_set_flag(GUI_WND_UNFOCUSED, 1);
 
   aud_init(16000);
 

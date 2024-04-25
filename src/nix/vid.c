@@ -44,6 +44,10 @@ GC vid_nix_gc;
 Window vid_nix_window;
 XImage* vid_nix_image;
 
+static Window root_window;
+
+static Colormap colormap;
+
 // TODO: It's not exactly that safe
 void
 vid_free()
@@ -175,6 +179,10 @@ vid_init(int _vid_w, int _vid_h)
 
   vid_colors = calloc(256, sizeof (*vid_colors));
 
+
+  root_window = XRootWindow(vid_nix_dsp, vid_nix_scr);
+  colormap = XDefaultColormap(vid_nix_dsp, XDefaultScreen (vid_nix_dsp));
+
   XRRScreenConfiguration* screen_info = XRRGetScreenInfo(vid_nix_dsp, vid_nix_window);
   if (screen_info == NULL)
   {
@@ -298,12 +306,35 @@ vid_refresh()
 void
 vid_wipe(int color)
 {
-  for (int i = 0; i < vid_size[1]*vid_size[0]; i++)
+  // int x, y;
+  // Window child;
+  // XWindowAttributes xwa;
+  // XTranslateCoordinates( vid_nix_dsp, vid_nix_window, root_window, 0, 0, &x, &y, &child );
+  // printf("%d,%d\n", x, y);
+  // XGetWindowAttributes(vid_nix_dsp, vid_nix_window, &xwa);
+
+  
+  // XImage* scr_image = XGetImage(vid_nix_dsp, root_window, x, y, vid_size[0], vid_size[1], AllPlanes, XYPixmap);
+
+  for (int i = 0, x = 0, y = 0; i < vid_size[1]*vid_size[0]; i++, x++)
   {
+    if (x >= vid_size[0])
+    {
+      x = 0;
+      y++;
+    }
+
     vid_pixels[i*4+2] = vid_colors[color][0];
     vid_pixels[i*4+1] = vid_colors[color][1];
     vid_pixels[i*4+0] = vid_colors[color][2];
+
+    // unsigned long pixel = XGetPixel(scr_image, x, y);
+    // vid_pixels[i*4+2] = (pixel >> 16) & 0xFF; // Red component
+    // vid_pixels[i*4+1] = (pixel >> 8) & 0xFF;  // Green component
+    // vid_pixels[i*4+0] = pixel & 0xFF;         // Blue component
   }
+
+  // XFree (scr_image);
 }
 
 void
