@@ -8,6 +8,7 @@
 #include "aud.h"
 #include "gui.h"
 #include "ndn.h"
+#include "mix.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -113,13 +114,17 @@ channel_color(int value, int depth)
 static void
 k_init()
 {
-  for (unsigned i = 0; i < 256; i++)
-  {
-    k_rgb_t rgb = {.c=i};
-    vid_colors[i][0] = channel_color(rgb.r, _K_RED_DEPTH);
-    vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
-    vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
-  }
+  // for (unsigned i = 0; i < 256; i++)
+  // {
+  //   k_rgb_t rgb = {.c=i};
+  //   vid_colors[i][0] = channel_color(rgb.r, _K_RED_DEPTH);
+  //   vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
+  //   vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
+  // }
+  mix_push(K_NODE_GRAD, 32, 240,100,100, 100,170,200);
+  mix_push(K_EKG_GRAD, 32, 50,50,50, 140,180,130);
+  int x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,64, 240,210,200);
+  printf("%d %d %d\n", vid_colors[mix_grads[K_GUI_GRAD].start + 4][0], vid_colors[mix_grads[K_GUI_GRAD].start + 4][1], vid_colors[mix_grads[K_GUI_GRAD].start + 4][2]);
 
   printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
@@ -160,7 +165,7 @@ set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flow
   node_all[i].depol_off[0] = ITOFIP(depol_off_x);
   node_all[i].depol_off[1] = ITOFIP(depol_off_y);
   
-  node_all[i].flow = ITOFIP(20);
+  node_all[i].flow = ITOFIP(10);
 }
 
 int
@@ -253,14 +258,17 @@ main(int _args_n, const char** _args)
   vid_set_title("Open Kardia");
   vid_on = on_vid;
 
+  k_init();
+
   gui_thing_t gui_thing = {.type = GUI_T_TEXT};
   gui_thing.str = "HELLO!";
   gui_thing.text.color = 255;
-  gui_shades[0] = k_pickc(40,40,40);
-  gui_shades[1] = k_pickc(90,90,90);
-  gui_shades[2] = k_pickc(120,120,120);
-  gui_shades[3] = k_pickc(180,180,180);
-  gui_shades[4] = k_pickc(220,220,220);
+  // Set the GUI shades
+  for (int i = 0; i < GUI_SHADES_N; i++)
+  {
+    gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
+    printf("%d\n", mix_grads[K_GUI_GRAD].start);
+  }
   gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
   gui_set_flag(GUI_WND_UNFOCUSED, 1);
 
@@ -270,8 +278,6 @@ main(int _args_n, const char** _args)
   clk_init(ITOFIP(1) / (fps == -1 ? screen_rate : fps));
 
   node_init(NULL);
-
-  k_init();
 
   edit_init(fp);
   ekg_init(ITOFIP(3000), K_VID_SIZE - K_VID_SIZE/10);
@@ -287,8 +293,8 @@ main(int _args_n, const char** _args)
   
   // Middle cunt
   set_node(3, 170,170, -30,-10, (int[]){4,5,-1}, 3, (int[]){4,5,6,7,-1});
-  node_all[3].halt = FTOFIP(0.1f);
-  node_all[3].flow = ITOFIP(50);
+  node_all[3].halt = FTOFIP(0.2f);
+  node_all[3].flow = ITOFIP(30);
   
   // Left lower cunt
   set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,5,-1});
@@ -311,10 +317,7 @@ main(int _args_n, const char** _args)
   {
     clk_begin_tick();
 
-    vid_run();
-    node_beat();
-
-    vid_wipe(k_pickc(0,0,0));
+    vid_wipe(mix_grads[K_EKG_GRAD].start);
 
     // gui_draw_fontg(&font, 1,1, 'F', 255);
     // gui_draw_fontg(&font, 2,1, 'u', 255);
@@ -326,6 +329,9 @@ main(int _args_n, const char** _args)
     node_draw(flow_mode);
     ekg_draw();
 
+
+    vid_run();
+    node_beat();
 
     gui_draw_window();
   

@@ -10,6 +10,8 @@
 // How much the resize on the edges bleeds into the horizontal and vertical border sections
 #define GUI_RESIZE_BLEED (10)
 
+#define GUI_SHADES_N 5
+
 enum
 {
   _GUI_E_NULL, // For internal use
@@ -191,7 +193,7 @@ typedef struct
 /**
  * 5 shades, [0] is the darkest, [4] is the lightest. GUI uses this to color windows and stuff, choose them wisely! default is 0,1,2,3,4. Modifiable in realtime.
 */
-extern unsigned char gui_shades[5];
+extern unsigned char gui_shades[GUI_SHADES_N];
 
 // It's a bad idea to completely override it because nothing would work then, a better idea is to override it if you need to but also make sure that you call gui_def_event_handler() in the end.
 extern int (*gui_on)(gui_event_t* event);

@@ -316,13 +316,13 @@ vid_wipe(int color)
   
   // XImage* scr_image = XGetImage(vid_nix_dsp, root_window, x, y, vid_size[0], vid_size[1], AllPlanes, XYPixmap);
 
-  for (int i = 0, x = 0, y = 0; i < vid_size[1]*vid_size[0]; i++, x++)
+  for (int i = 0; i < vid_size[1]*vid_size[0]; i++)
   {
-    if (x >= vid_size[0])
-    {
-      x = 0;
-      y++;
-    }
+    // if (x >= vid_size[0])
+    // {
+    //   x = 0;
+    //   y++;
+    // }
 
     vid_pixels[i*4+2] = vid_colors[color][0];
     vid_pixels[i*4+1] = vid_colors[color][1];

@@ -42,7 +42,7 @@ gui_window_t gui_window = {0};
 
 int gui_title_h = 0;
 
-unsigned char gui_shades[5] = {0,1,2,3,4};
+unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
 
 static int mouse_pos[2] = {0};
 

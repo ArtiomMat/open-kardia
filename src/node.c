@@ -5,6 +5,7 @@
 #include "clk.h"
 #include "ekg.h"
 #include "gui.h"
+#include "mix.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,30 +26,20 @@ put_square(int color, int _x, int _y, int size)
     }
   }
 }
-static int
-color_for(node_t* first, node_t* second, int x, int xi, int xf)
+
+// X is between(including) XI and XF, essentially the closer X is to XF, the more the color will be that of the right node.
+static unsigned char
+color_for(node_t* left, node_t* right, int x, int xi, int xf)
 {
-  unsigned char r,g,b,R,G,B;
-  if (draw_flow)
-  {
-    r = 0,g = 0,b = 0;
-    R = 0,G = 0,B = 0;
+  unsigned char left_pick, right_pick;
+  int grad_i = draw_flow ? K_EKG_GRAD : K_NODE_GRAD;
 
-    // Gradient from polarized to depolarized
-    k_gradient_rgb(first->ion, first->bias, &r, &g, &b, EKG_C_R, EKG_C_G, EKG_C_B);
-    k_gradient_rgb(second->ion, second->bias, &R, &G, &B, EKG_C_R, EKG_C_G, EKG_C_B);
-  }
-  else
-  {
-    r = NODE_POL_C_R,g = NODE_POL_C_G,b = NODE_POL_C_B;
-    R = NODE_POL_C_R,G = NODE_POL_C_G,B = NODE_POL_C_B;
-
-    // Gradient from polarized to depolarized
-    k_gradient_rgb(first->ion, first->bias, &r, &g, &b, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
-    k_gradient_rgb(second->ion, second->bias, &R, &G, &B, NODE_DEPOL_C_R, NODE_DEPOL_C_G, NODE_DEPOL_C_B);
-  }
+  // We need to left get the picks for each node
+  left_pick = mix_pick(grad_i, left->ion, left->bias);
+  right_pick = mix_pick(grad_i, right->ion, right->bias);
   
-  return k_gradient(x-xi, xf-xi, r,g,b, R,G,B);
+  // Then we return the color between them depending where x is
+  return left_pick + (right_pick - left_pick) * (x-xi) / xf;
 }
 
 void

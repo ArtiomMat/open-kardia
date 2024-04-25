@@ -27,6 +27,10 @@ mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2);
 static inline unsigned char
 mix_pick(int i, int x, int max_x)
 {
+  if (x > max_x)
+  {
+    x = max_x;
+  }
   return mix_grads[i].start + ((mix_grads[i].n - 1) * x / max_x);
 }
 
