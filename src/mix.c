@@ -25,8 +25,7 @@ mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2)
       vid_colors[j + push_start][0] = r;
       vid_colors[j + push_start][1] = g;
       vid_colors[j + push_start][2] = b;
-      mix_shifts[j + push_start].left = j;
-      mix_shifts[j + push_start].right = n-j-1;
+      mix_shifts[j + push_start].grad_i = i;
 
       r += dr;
       g += dg;

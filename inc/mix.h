@@ -17,7 +17,7 @@ extern mix_grad_t mix_grads[MIX_MAX_GRADS];
 // Includes how many shifts left and right can be done on this color.
 extern struct mix_shift
 {
-  unsigned char left, right;
+  unsigned char grad_i;
 } mix_shifts[256];
 
 /**
@@ -45,9 +45,10 @@ mix_pick(int i, int x, int max_x)
 static inline unsigned char
 mix_shl(unsigned char color_i, unsigned n)
 {
-  if (mix_shifts[color_i].left < n)
+  int start = mix_grads[mix_shifts[color_i].grad_i].start;
+  if ((int)color_i - n < start)
   {
-    return color_i - mix_shifts[color_i].left;
+    return start;
   }
 
   return color_i - n;
@@ -58,9 +59,11 @@ mix_shl(unsigned char color_i, unsigned n)
 static inline unsigned char
 mix_shr(unsigned char color_i, unsigned n)
 {
-  if (mix_shifts[color_i].right < n)
+  mix_grad_t* g = &mix_grads[mix_shifts[color_i].grad_i];
+  int end = g->start + g->n - 1;
+  if ((int)color_i + n > end)
   {
-    return color_i + mix_shifts[color_i].right;
+    return end;
   }
 
   return color_i + n;
