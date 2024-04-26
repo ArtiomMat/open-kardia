@@ -464,11 +464,11 @@ gui_draw_window()
   
   // draw_rect(CONTENT_LEFT, CONTENT_TOP-1, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(3), get_shade(1));
 
-  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  // draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   
   // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
 
-  draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(4));
+  draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(3));
   // draw_filled_rect(X_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   gui_draw_font(font, X_LEFT + X_WIDTH/2 - 3, TITLE_TOP, 'x', get_shade(4));
   
@@ -482,12 +482,6 @@ gui_draw_window()
     }
   }
 
-  for (int x = BORDER_LEFT; x < BORDER_RIGHT; x++)
-  {
-    int i = x + (BORDER_BOTTOM+1) * vid_size[0];
-    // printf("%d, ", vid_get(i));
-    vid_set(mix_shr(vid_get(i), 10), i);
-  }
   // printf("\n");
 
   // Drawing the elements and shit

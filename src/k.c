@@ -116,9 +116,13 @@ k_init()
 {
   mix_push(K_NODE_GRAD, 32, 255,100,0, 0,100,255);
   mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
-  int last;
+  int next;
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-  last = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,64, 255,255,255);
+         mix_push1(K_GUI_GRAD, 50,50,20);
+         mix_push1(K_GUI_GRAD, 100,100,40);
+         mix_push1(K_GUI_GRAD, 130,130,64);
+         mix_push1(K_GUI_GRAD, 200,200,130);
+  next = mix_push1(K_GUI_GRAD, 255,255,180);
 
   printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
