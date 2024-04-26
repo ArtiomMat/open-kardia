@@ -53,6 +53,8 @@ typedef struct
 // 1 for event handled, 0 for event not handled
 extern int (*vid_on)(vid_event_t*);
 
+typedef struct vid_view_s vid_view_t;
+
 /**
  * An array of 256 colors with 3 channels.
  * First index is the color itself, second index is the channel(RGB).
@@ -94,6 +96,9 @@ vid_run();
 */
 extern void
 vid_set(unsigned char color, int i);
+
+extern unsigned char
+vid_get(int i);
 
 extern void
 vid_wipe(int i);

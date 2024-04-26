@@ -86,7 +86,7 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_dsp = XOpenDisplay(NULL);
   if (!vid_nix_dsp)
   {
-    puts("vid_init(): Can't XOpenDisplay(NULL)!");
+    fputs("vid_init(): Can't XOpenDisplay(NULL)!", stderr);
     return 0;
   }
 
@@ -99,7 +99,7 @@ vid_init(int _vid_w, int _vid_h)
   XVisualInfo xvisualinfo;
   if (!XMatchVisualInfo(vid_nix_dsp, vid_nix_scr, 24, TrueColor, &xvisualinfo))
   {
-    puts("vid_init(): Failed to XMatchVisualInfo(). Are you sure you have 24 bit depth TrueColor?");
+    fputs("vid_init(): Failed to XMatchVisualInfo(). Are you sure you have 24 bit depth TrueColor?", stderr);
     vid_free();
     return 0;
   }
@@ -142,7 +142,7 @@ vid_init(int _vid_w, int _vid_h)
   char* data = malloc(vid_size[0]*32/8 * vid_size[1]); // 32 because of padding >:(
   if (!data)
   {
-    puts("vid_init(): Failed to allocate image data.");
+    fputs("vid_init(): Failed to allocate image data.", stderr);
     vid_free();
     return 0;
   }
@@ -161,7 +161,7 @@ vid_init(int _vid_w, int _vid_h)
 
   if (!vid_nix_image)
   {
-    puts("vid_init(): Failed to create image.");
+    fputs("vid_init(): Failed to create image.", stderr);
     vid_free();
     return 0;
   }
@@ -179,14 +179,13 @@ vid_init(int _vid_w, int _vid_h)
 
   vid_colors = calloc(256, sizeof (*vid_colors));
 
-
   root_window = XRootWindow(vid_nix_dsp, vid_nix_scr);
   colormap = XDefaultColormap(vid_nix_dsp, XDefaultScreen (vid_nix_dsp));
 
   XRRScreenConfiguration* screen_info = XRRGetScreenInfo(vid_nix_dsp, vid_nix_window);
   if (screen_info == NULL)
   {
-    puts("vid_init(): Could not get screen info, extra screen information not available.");
+    fputs("vid_init(): Could not get screen info, extra screen information not available.", stderr);
   }
 
   int sizes_n;
@@ -196,8 +195,7 @@ vid_init(int _vid_w, int _vid_h)
   short* rates = XRRConfigRates(screen_info, 0, &rates_n);
   if (screen_info == NULL)
   {
-    puts("vid_init(): Video module initialized, but could not find refresh rate!");
-    return 30; // A safe refresh rate
+    fprintf(stderr, "vid_init(): Could not find refresh rate, so defaulting to %hdHz!", rates[0] = 30);
   }
   
   printf("vid_init(): Video module initialized, Screen refresh rate %hdHz.\n", rates[0]);
@@ -324,6 +322,7 @@ vid_wipe(int color)
     //   y++;
     // }
 
+    vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
     vid_pixels[i*4+2] = vid_colors[color][0];
     vid_pixels[i*4+1] = vid_colors[color][1];
     vid_pixels[i*4+0] = vid_colors[color][2];
@@ -340,7 +339,15 @@ vid_wipe(int color)
 void
 vid_set(unsigned char color, int i)
 {
+  vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
   vid_pixels[i*4+2] = vid_colors[color][0];
   vid_pixels[i*4+1] = vid_colors[color][1];
   vid_pixels[i*4+0] = vid_colors[color][2];
 }
+
+unsigned char
+vid_get(int i)
+{
+  return vid_pixels[i*4+3];
+}
+

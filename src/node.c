@@ -85,22 +85,23 @@ node_draw_line(node_t* root_node, node_t* next)
     fip_t slope = FIP_DIV(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
 
     fip_t abs_slope = slope < 0 ? -slope : slope;
+    int sign = slope < 0 ? -1 : 1;
 
     for (fip_t x = l->pos[0], y = l->pos[1]; x < r->pos[0]; x += ITOFIP(1), y += slope)
     {
       int c = color_for(l, r, x, l->pos[0], r->pos[0]);
-      fip_t i = 0;
-      do
+
+      for (fip_t i = 0; i < abs_slope; i += ITOFIP(1))
       {
-        if (FIPTOI(y + i) >= vid_size[1])
+        fip_t set_y = FIPTOI(sign * i + y);
+        
+        if (set_y >= vid_size[1] || set_y < 0)
         {
           break;
         }
-        vid_set(c, FIPTOI(x) + FIPTOI(y + i) * K_VID_SIZE);
-        
-        i += ITOFIP(1);
+
+        vid_set(c, FIPTOI(x) + set_y * K_VID_SIZE);
       }
-      while (i < abs_slope);
     }
 
     // Back down from that black magic

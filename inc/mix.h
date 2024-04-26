@@ -14,6 +14,12 @@ typedef struct
 
 extern mix_grad_t mix_grads[MIX_MAX_GRADS];
 
+// Includes how many shifts left and right can be done on this color.
+extern struct mix_shift
+{
+  unsigned char left, right;
+} mix_shifts[256];
+
 /**
  * Initialize a gradient of index I in vid_colors, generates a gradient that goes from RGB to R2G2B2, at index of the last pushed gradient.
  * Returns the index that comes after this last pushed gradient.
@@ -34,5 +40,40 @@ mix_pick(int i, int x, int max_x)
   return mix_grads[i].start + ((mix_grads[i].n - 1) * x / max_x);
 }
 
-#undef NEXT
+// NOTE THAT N MUST BE POSITIVE FOR INTEGER N USE MIX_SH()!
+// Shift a color left(towards smaller color index) by N
+static inline unsigned char
+mix_shl(unsigned char color_i, unsigned n)
+{
+  if (mix_shifts[color_i].left < n)
+  {
+    return color_i - mix_shifts[color_i].left;
+  }
+
+  return color_i - n;
+}
+
+// NOTE THAT N MUST BE POSITIVE FOR INTEGER N USE MIX_SH()!
+// Shift a color right(towards bigger color index) by N
+static inline unsigned char
+mix_shr(unsigned char color_i, unsigned n)
+{
+  if (mix_shifts[color_i].right < n)
+  {
+    return color_i + mix_shifts[color_i].right;
+  }
+
+  return color_i + n;
+}
+
+// Shift a color to a direction defined by N's sign and magnitude of N(- is left to negative colors, + is right to positive colors)
+static inline unsigned char
+mix_sh(unsigned char color_i, int n)
+{
+  if (n > 0)
+  {
+    mix_shl(color_i, n);
+  }
+  return mix_shl(color_i, -n);
+}
 

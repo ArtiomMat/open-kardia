@@ -104,6 +104,16 @@ typedef struct
   };
 } gui_font_t;
 
+/**
+ * Used religiously in various shit, and it is just a base struct for multi prupose use, like gui_film_t, cached image of the window, x button, etc.
+*/
+typedef struct gui_bmap
+{
+  unsigned char* data;
+  unsigned short size[2];
+  int flags;
+} gui_bmap_t;
+
 typedef struct gui_thing_s
 {
   const char* str;
@@ -114,16 +124,9 @@ typedef struct gui_thing_s
       unsigned char color;
       unsigned short line_size; // in characters. 0 for unlimited line size
     } text; // Uses str as text
-    struct gui_image
-    {
-      char* fp;
-      unsigned char* data; // may be NULL if still was not loaded
-      unsigned short frames_n, frame;
-      unsigned short fps, frame_time;
-      unsigned short size[2];
-      unsigned short loop : 1;
-      unsigned short play : 1;
-    } image;
+    
+    gui_bmap_t bmap;
+
     struct gui_button
     {
       struct gui_text text;

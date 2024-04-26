@@ -1,6 +1,8 @@
 #include "gui.h"
 #include "fip.h"
 
+#include "mix.h"
+
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -19,6 +21,8 @@
    _a < _b ? _a : _b; })
 #endif
 
+#define X_WIDTH 12
+
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
 #define BORDER_RIGHT (gui_window.pos[0] + gui_window.size[0] - 1)
@@ -30,6 +34,11 @@
 #define TITLE_LEFT (BORDER_LEFT + BORDER_THICKNESS)
 #define TITLE_TOP (BORDER_TOP + BORDER_THICKNESS)
 #define TITLE_BOTTOM (TITLE_TOP + gui_title_h - 1)
+
+// All that is used because X is literally inside of the title
+#define X_LEFT (TITLE_RIGHT - X_WIDTH)
+#define X_BOTTOM (TITLE_BOTTOM - 2)
+
 
 #define CONTENT_RIGHT TITLE_RIGHT
 #define CONTENT_LEFT TITLE_LEFT
@@ -161,7 +170,11 @@ get_thing_width(gui_thing_t* t, short out[2])
     {
       if (c == '\n')
       {
-
+        if (line_n > max_line_n)
+        {
+          max_line_n = line_n;
+        }
+        line_n = -1;
         lines++;
       }
       else if (text_len % t->text.line_size)
@@ -254,12 +267,7 @@ gui_on_vid(vid_event_t* e)
       // Inside of the title bar
       if (in_rect(mouse_pos[0], mouse_pos[1], TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
-        if (e->press.code == KEY_LMOUSE)
-        {
-          gui_set_flag(GUI_WND_RELOCATING, 1);
-          save_mouse_rel();
-        }
-        else if (e->press.code == KEY_MMOUSE)
+        if (mouse_pos[0] >= X_LEFT && mouse_pos[1] <= X_BOTTOM)
         {
           gui_set_flag(GUI_WND_HIDE, 1);
           gui_set_flag(GUI_WND_UNFOCUSED, 1); // Also we unfocus so the user can interact again
@@ -268,6 +276,21 @@ gui_on_vid(vid_event_t* e)
           send_event(&gui_e);
           break;
         }
+
+        if (e->press.code == KEY_LMOUSE)
+        {
+          gui_set_flag(GUI_WND_RELOCATING, 1);
+          save_mouse_rel();
+        }
+        // else if (e->press.code == KEY_MMOUSE)
+        // {
+        //   gui_set_flag(GUI_WND_HIDE, 1);
+        //   gui_set_flag(GUI_WND_UNFOCUSED, 1); // Also we unfocus so the user can interact again
+          
+        //   gui_e.type = GUI_E_HIDE;
+        //   send_event(&gui_e);
+        //   break;
+        // }
         else if (e->press.code == KEY_RMOUSE)
         {
           gui_toggle_flag(GUI_WND_XRAY); // Toggle!
@@ -439,19 +462,31 @@ gui_draw_window()
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   
-  // draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   
-  draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
+  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
 
+  draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(4));
+  // draw_filled_rect(X_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  gui_draw_font(font, X_LEFT + X_WIDTH/2 - 3, TITLE_TOP, 'x', get_shade(4));
+  
   // Draw window title
   {
     int x = TITLE_LEFT+2;
     int width = gui_get_font_width(font);
-    for (int i = 0; gui_window.title[i] && x+width < TITLE_RIGHT; i++, x+=width)
+    for (int i = 0; gui_window.title[i] && x+width < X_LEFT; i++, x+=width)
     {
-      gui_draw_font(font, x, TITLE_TOP, gui_window.title[i], get_shade(4));
+      gui_draw_font(font, x, TITLE_TOP+2, gui_window.title[i], get_shade(4));
     }
   }
+
+  for (int x = BORDER_LEFT; x < BORDER_RIGHT; x++)
+  {
+    int i = x + (BORDER_BOTTOM+1) * vid_size[0];
+    // printf("%d, ", vid_get(i));
+    vid_set(mix_shr(vid_get(i), 10), i);
+  }
+  // printf("\n");
 
   // Drawing the elements and shit
 }

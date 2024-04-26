@@ -121,10 +121,9 @@ k_init()
   //   vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
   //   vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
   // }
-  mix_push(K_NODE_GRAD, 32, 240,100,100, 100,170,200);
-  mix_push(K_EKG_GRAD, 32, 50,50,50, 140,180,130);
-  int x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,64, 240,210,200);
-  printf("%d %d %d\n", vid_colors[mix_grads[K_GUI_GRAD].start + 4][0], vid_colors[mix_grads[K_GUI_GRAD].start + 4][1], vid_colors[mix_grads[K_GUI_GRAD].start + 4][2]);
+  mix_push(K_NODE_GRAD, 32, 255,100,0, 0,100,255);
+  mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
+  int x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
 
   printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
@@ -319,13 +318,6 @@ main(int _args_n, const char** _args)
 
     vid_wipe(mix_grads[K_EKG_GRAD].start);
 
-    // gui_draw_fontg(&font, 1,1, 'F', 255);
-    // gui_draw_fontg(&font, 2,1, 'u', 255);
-    // gui_draw_fontg(&font, 3,1, 'c', 255);
-    // gui_draw_fontg(&font, 4,1, 'k', 244);
-    // gui_draw_fontg(&font, 5,1, '!', 244);
-    // gui_draw_font(k_font, 3, 0, 'A', EKG_C);
-    // gui_draw_line(300,300, 350,399, k_pickc(100, 100, 100));
     node_draw(flow_mode);
     ekg_draw();
 
