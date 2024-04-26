@@ -114,16 +114,11 @@ channel_color(int value, int depth)
 static void
 k_init()
 {
-  // for (unsigned i = 0; i < 256; i++)
-  // {
-  //   k_rgb_t rgb = {.c=i};
-  //   vid_colors[i][0] = channel_color(rgb.r, _K_RED_DEPTH);
-  //   vid_colors[i][1] = channel_color(rgb.g, _K_GREEN_DEPTH);
-  //   vid_colors[i][2] = channel_color(rgb.b, _K_BLUE_DEPTH);
-  // }
   mix_push(K_NODE_GRAD, 32, 255,100,0, 0,100,255);
   mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
-  int x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
+  int last;
+  // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
+  last = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,64, 255,255,255);
 
   printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }

@@ -462,6 +462,8 @@ gui_draw_window()
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   
+  // draw_rect(CONTENT_LEFT, CONTENT_TOP-1, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(3), get_shade(1));
+
   draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
   
   // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));

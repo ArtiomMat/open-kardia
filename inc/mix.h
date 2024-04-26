@@ -1,4 +1,4 @@
-// Includes information about the colors k_ puts into vid_colors, all the partitioning.
+// Mixing module, for creating gradients within vid_colors, a pillar of Kardia's graphics.
 
 #pragma once
 
@@ -19,6 +19,13 @@ extern struct mix_shift
 {
   unsigned char grad_i;
 } mix_shifts[256];
+
+/**
+ * Push a single color into the gradient of index I in vid_colors.
+ * Returns the index that comes after this last pushed color.
+*/
+extern unsigned char
+mix_push1(int i, int r, int g, int b);
 
 /**
  * Initialize a gradient of index I in vid_colors, generates a gradient that goes from RGB to R2G2B2, at index of the last pushed gradient.
