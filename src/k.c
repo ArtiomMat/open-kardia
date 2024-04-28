@@ -7,7 +7,7 @@
 #include "ekg.h"
 #include "aud.h"
 #include "gui.h"
-#include "ndn.h"
+#include "com.h"
 #include "mix.h"
 
 #include <stdio.h>
@@ -24,9 +24,6 @@ unsigned long long k_ticks;
 
 gui_font_t* k_font;
 
-int args_n;
-const char** args;
-
 int k_mouse[2];
 
 void
@@ -42,19 +39,6 @@ k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, 
 {
   k_gradient_rgb(x, x_max, &r, &g, &b, R, G, B);
   return k_pickc(r, g, b);
-}
-
-int
-k_arg(const char* str)
-{
-  for (int i = 1; i < args_n; i++)
-  {
-    if (!strcmp(str, args[i]))
-    {
-      return i;
-    }
-  }
-  return 0;
 }
 
 static int
@@ -129,7 +113,6 @@ k_init()
   mix_push1(K_GUI_GRAD, 180,180,180);
   next = mix_push1(K_GUI_GRAD, 255,255,255);
 
-  printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
 
 // draws and flows end at -1
@@ -172,12 +155,11 @@ set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flow
 }
 
 int
-main(int _args_n, const char** _args)
+main(int args_n, const char** args)
 {
-  args_n = _args_n;
-  args = _args;
-
   puts("\nINITIALISING...\n");
+
+  com_init(args_n, args);
   
   static const char* fp = NULL;
   const char* font_fp = K_FONT_REL_FP;
@@ -250,7 +232,7 @@ main(int _args_n, const char** _args)
   gui_font_t font;
   if (!gui_open_font(&font, font_fp, GUI_FONTP_AUTO))
   {
-    k_font = NULL;
+    return 1;
   }
   else
   {

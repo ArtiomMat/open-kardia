@@ -58,8 +58,8 @@ extern unsigned long long k_ticks;
 extern gui_font_t* k_font;
 
 // Directly from stdlib main()
-extern int args_n;
-extern const char** args;
+// extern int args_n;
+// extern const char** args;
 
 extern int k_mouse[2];
 

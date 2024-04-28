@@ -1,13 +1,15 @@
-// Endian 
+// Common functionality module, a m 
 
 #pragma once
 
-#ifdef __x86_64__
-  #define NDN_BIG 0
-  #define NDN_LITTLE 1
+#define COM_PATH_SIZE 512
 
+// Little endian
+#ifdef __x86_64__
+  #define COM_LILE 1
+  
   static inline unsigned short
-  ndn_b16(unsigned short _x)
+  com_big16(unsigned short _x)
   {
     union
     {
@@ -25,7 +27,7 @@
     return y.i;
   }
   static inline unsigned int
-  ndn_b32(unsigned int _x)
+  com_big32(unsigned int _x)
   {
     union
     {
@@ -45,7 +47,7 @@
     return y.i;
   }
   static inline unsigned long long
-  ndn_b64(unsigned long long _x)
+  com_big64(unsigned long long _x)
   {
     union
     {
@@ -70,42 +72,41 @@
   }
 
   static inline unsigned short
-  ndn_l16(unsigned short _x)
+  com_lil16(unsigned short _x)
   {
     return _x;
   }
   static inline unsigned int
-  ndn_l32(unsigned int _x)
+  com_lil32(unsigned int _x)
   {
     return _x;
   }
   static inline unsigned long long
-  ndn_l64(unsigned long long _x)
+  com_lil64(unsigned long long _x)
   {
     return _x;
   }
 #elif
-  #define NDN_BIG 1
-  #define NDN_LITTLE 0
+  #define COM_BIGE 1
 
   static inline unsigned short
-  ndn_b16(unsigned short _x)
+  com_big16(unsigned short _x)
   {
     return _x;
   }
   static inline unsigned int
-  ndn_b32(unsigned int _x)
+  com_big32(unsigned int _x)
   {
     return _x;
   }
   static inline unsigned long long
-  ndn_b64(unsigned long long _x)
+  com_big64(unsigned long long _x)
   {
     return _x;
   }
 
   static inline unsigned short
-  ndn_l16(unsigned short _x)
+  com_lil16(unsigned short _x)
   {
     union
     {
@@ -123,7 +124,7 @@
     return y.i;
   }
   static inline unsigned int
-  ndn_l32(unsigned int _x)
+  com_lil32(unsigned int _x)
   {
     union
     {
@@ -143,7 +144,7 @@
     return y.i;
   }
   static inline unsigned long long
-  ndn_l64(unsigned long long _x)
+  com_lil64(unsigned long long _x)
   {
     union
     {
@@ -166,5 +167,19 @@
     
     return y.i;
   }
-
 #endif
+
+// The directory in which the executable is located
+extern char com_dir[COM_PATH_SIZE];
+
+// Some COM functionality depends on the initialization!
+// Returns 0 if something failed, for instance getting com_dir, otherwise 1.
+extern int
+com_init(int args_n, const char** args);
+extern int
+com_arg(const char* arg);
+// Returns a string to a path relative to the executable file.
+// Returns NULL if the path became too large.
+// NOT THREAD SAFE IT USES ONE BUFFER ONLY!
+extern const char*
+com_rel_path(const char* p);

@@ -1,3 +1,6 @@
+#include <stddef.h>
+
+
 #ifdef __linux__
   #include "nix/vid.c"
 #elif

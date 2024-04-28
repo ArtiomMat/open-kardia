@@ -4,5 +4,4 @@
 
 [seperator]
 
-(align_x=m) [button f=0 str='Cool'] [button f=1 text='Lame']
-
+(align_x=m) [button p=0 str='Cool'] [button f=1 text='Lame']

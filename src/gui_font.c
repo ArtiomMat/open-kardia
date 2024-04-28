@@ -1,6 +1,6 @@
 #include "gui.h"
 #include "k.h"
-#include "ndn.h"
+#include "com.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,7 +113,7 @@ gui_open_font(gui_font_t* font, const char* fp, int priority)
     // Make endian readable on this system
     for (int i = 0; i < sizeof(font->__array)/sizeof(font->__array[0]); i++)
     {
-      font->__array[i] = ndn_l32(font->__array[i]);
+      font->__array[i] = com_lil32(font->__array[i]);
     }
   }
 
