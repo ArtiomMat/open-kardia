@@ -21,10 +21,8 @@
    _a < _b ? _a : _b; })
 #endif
 
-#define X_WIDTH 12
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
-
 #define BORDER_RIGHT (gui_window.pos[0] + gui_window.size[0] - 1)
 #define BORDER_LEFT (gui_window.pos[0])
 #define BORDER_TOP (gui_window.pos[1])
@@ -35,17 +33,21 @@
 #define TITLE_TOP (BORDER_TOP + BORDER_THICKNESS)
 #define TITLE_BOTTOM (TITLE_TOP + gui_title_h - 1)
 
-// All that is used because X is literally inside of the title
+// All that is used because X is inside of the title so it inherits some stuff
 #define X_LEFT (TITLE_RIGHT - X_WIDTH)
 #define X_BOTTOM (TITLE_BOTTOM - 2)
-
+#define X_WIDTH 12
 
 #define CONTENT_RIGHT TITLE_RIGHT
 #define CONTENT_LEFT TITLE_LEFT
 #define CONTENT_TOP (TITLE_BOTTOM+0)
 #define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
-gui_font_t* font;
+static gui_font_t* font;
+static int mouse_pos[2] = {0};
+
+// The currently focused thing, for instance a button, eg if enter is pressed we press it.
+static gui_thing_t* focused_thing = NULL;
 
 gui_window_t gui_window = {0};
 
@@ -53,9 +55,10 @@ int gui_title_h = 0;
 
 unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
 
-static int mouse_pos[2] = {0};
+int (*gui_on)(gui_event_t* event) = NULL;
 
-unsigned char get_shade(int i)
+static unsigned char
+get_shade(int i)
 {
   // Return darker shade if unfocused
   if (gui_window.flags & GUI_WND_UNFOCUSED)
@@ -64,8 +67,6 @@ unsigned char get_shade(int i)
   }
   return gui_shades[i];
 }
-
-int (*gui_on)(gui_event_t* event) = NULL;
 
 static void
 send_event(gui_event_t* e)
@@ -100,6 +101,9 @@ draw_yline(int yi, int yf, int x, int color)
   }
 }
 
+/**
+ * Test if X_TEST and Y_TEST are within a rectangle.
+*/
 static inline int
 in_rect(int x_test, int y_test, int left, int top, int right, int bottom)
 {
@@ -126,12 +130,6 @@ draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, 
   // Fill the mf now
   for (int _x = left+1; _x < right; _x++)
   {
-    // if ((gui_window.flags & GUI_WND_XRAY) && _x >= CONTENT_LEFT)
-    // {
-    //   _x = CONTENT_RIGHT-1;
-    //   continue;
-    // }
-
     for (int _y = top+1; _y < bottom; _y++)
     {
       vid_set(fill, _y*vid_size[0] + _x);
@@ -157,7 +155,7 @@ gui_toggle_flag(int flag)
 }
 
 static void
-get_thing_width(gui_thing_t* t, short out[2])
+get_thing_size(gui_thing_t* t, short out[2])
 {
   switch (t->type)
   {
@@ -192,18 +190,16 @@ gui_recache_all()
 {
   gui_window.content_cache_size[0] = gui_window.content_cache_size[1] = 0;
   short size[2] = {0}; // For storring current sizes of this line
-  for (int i = 0; i < gui_window.things_n; i++)
-  {
-    gui_thing_t* t = gui_window.things+i;
-  }
+  //for (int i = 0; i < gui_window.things_n; i++)
+  //{
+    //gui_thing_t* t = gui_window.things+i;
+  //}
 }
 
 void
-gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, gui_font_t* _font)
+gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
 {
   font = _font;
-
-  gui_window.things = NULL;
 
   gui_window.title = title;
   if (gui_window.title == NULL)
@@ -220,8 +216,7 @@ gui_init(int w, int h, const char* title, gui_thing_t* things, int things_n, gui
 
   gui_title_h = font->height + 3;
 
-  gui_window.things = things;
-  gui_window.things_n = things_n;
+  // gui_window.thing = thing;
 
   gui_window.content_cache = NULL;
 
@@ -461,18 +456,18 @@ gui_draw_window()
 
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
-  
-  // draw_rect(CONTENT_LEFT, CONTENT_TOP-1, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(3), get_shade(1));
 
-  // draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
-  
-  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(0), get_shade(3), get_shade(1));
+  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
 
+  draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+
+  // Seperate x button from the rest of the title
   draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(3));
-  // draw_filled_rect(X_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+
+  // X button text
   gui_draw_font(font, X_LEFT + X_WIDTH/2 - 3, TITLE_TOP, 'x', get_shade(4));
   
-  // Draw window title
+  // Window title text
   {
     int x = TITLE_LEFT+2;
     int width = gui_get_font_width(font);
@@ -481,10 +476,13 @@ gui_draw_window()
       gui_draw_font(font, x, TITLE_TOP+2, gui_window.title[i], get_shade(4));
     }
   }
+  
+  // Three dots on the corner
+  // gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height-2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT-10, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
 
-  // printf("\n");
-
-  // Drawing the elements and shit
+  // Drawing the things and shit
 }
 
 void

@@ -1,5 +1,5 @@
 cc = gcc
-flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D RELEASE
+flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D DEBUG
 libs = -lX11 -lXrandr -lasound -lm
 
 srcs = $(wildcard src/*.c)
@@ -12,7 +12,7 @@ obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 
 run:
-	make -B && cd bin && ./kardia -fr 30 -f viewmax.psf && cd ..
+	make -B && cd bin && ./kardia -f sanserif.psf && cd ..
 
 clean:
 	rm -rf obj/*.o bin/kardia

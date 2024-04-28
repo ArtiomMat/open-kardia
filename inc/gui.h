@@ -59,9 +59,16 @@ enum
 
   // FLAGS
 
-  GUI_T_NEW_LINE = 0b1, // This thing is below the previous thing(next things are too now)
-  GUI_T_HIDE = 0b100, // Becomes hidden(not drawn)
-  GUI_T_DISABLED = 0b1000, // Only the title bar is visible, until unfolded
+  GUI_T_LEFT          = 0b1, // Align the thing to the left of its parent
+  GUI_T_RIGHT         = 0b10, // Align the thing to the right of its parent
+  GUI_T_TOP           = 0b100, // Align the thing to the top of its parent
+  GUI_T_BOTTOM        = 0b1000, // Align the thing to the bottom of its parent
+  
+  GUI_T_AUTO_WIDTH    = 0b10000,
+  GUI_T_AUTO_HEIGHT   = 0b100000,
+  
+  GUI_T_PARENT_WIDTH  = 0b1000000, // Cannot be paired with AUTO_WIDTH
+  GUI_T_PARENT_HEIGHT = 0b10000000, // Cannot be paired with AUTO_HEIGHT
 };
 
 enum
@@ -114,11 +121,21 @@ typedef struct gui_bmap
   int flags;
 } gui_bmap_t;
 
-typedef struct gui_thing_s
+typedef struct gui_thing
 {
-  const char* str;
+  struct gui_thing* next;
+  
   union
   {
+    /*struct gui_table
+    {
+      struct gui_table_e
+      {
+        struct gui_thing_s* t;
+      }* e;
+      int cols, rows;
+    } table;*/
+
     struct gui_text
     {
       unsigned char color;
@@ -141,19 +158,26 @@ typedef struct gui_thing_s
       unsigned short width; // 0 for an automatically determined width
     } slider;
   };
-  short pos_cache[2]; // Cached position of the thing in the content_cache of the window, to quickly draw it.
+  
+  const char* str;
   int flags;
   char type;
-  char padding_t, padding_b; // Since things in a single line can have a conflict, this is only read for the GUI_T_NEW_LINE thing
-  char padding_l;
+  unsigned short size[2];
+  // short pos_cache[2]; // Cached position of the thing in the content_cache of the window, to quickly draw it.
 } gui_thing_t;
+
+typedef struct gui_row
+{
+  struct gui_row* next;
+  gui_thing_t* thing0;
+  int n;
+} gui_row_t;
 
 // The container for things!
 typedef struct gui_window_s
 {
   const char* title;
-  gui_thing_t* things;
-  int things_n;
+  gui_row_t* row0;
 
   // An array allocated to the size of the content at its most revealed state.
   // The idea is that things that have been drawn are stored in this cache.
@@ -222,14 +246,14 @@ gui_get_font_width(gui_font_t* f);
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!
 extern void
-gui_init(int w, int h, const char* title,  gui_thing_t* things, int things_n, gui_font_t* font);
+gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font);
 
-// Essentially rerenders and reinitializes the entire content_cache of the window, this is done when things are moved around the window, should not be called too much
-// If you modified a thing without fucking with its width and height directly or indirectly, you should call gui_recache_thing()
+// Essentially rerenders and reinitializes the entire content_cache of the window, this is done when things are moved around the window, should not be called too much.
 extern void
 gui_recache_all();
 
-// If you changed a thing a little in a way that wont directly do anything to its size you can call this.
+// If you modified a thing without fucking with its width and height directly or indirectly, you need to call this to recache it into the window cache bitmap.
+// If you changed the size, you must use gui_recache_all()
 extern void
 gui_recache_thing(gui_thing_t* thing);
 

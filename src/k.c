@@ -118,11 +118,16 @@ k_init()
   mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
   int next;
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-         mix_push1(K_GUI_GRAD, 50,50,20);
+  /*       mix_push1(K_GUI_GRAD, 60,60,10);
+         mix_push1(K_GUI_GRAD, 80,80,30);
          mix_push1(K_GUI_GRAD, 100,100,40);
-         mix_push1(K_GUI_GRAD, 130,130,64);
-         mix_push1(K_GUI_GRAD, 200,200,130);
-  next = mix_push1(K_GUI_GRAD, 255,255,180);
+         mix_push1(K_GUI_GRAD, 160,160,80);
+  next = mix_push1(K_GUI_GRAD, 235,235,180);*/
+  mix_push1(K_GUI_GRAD, 60,60,60);
+  mix_push1(K_GUI_GRAD, 80,80,80);
+  mix_push1(K_GUI_GRAD, 130,130,130);
+  mix_push1(K_GUI_GRAD, 180,180,180);
+  next = mix_push1(K_GUI_GRAD, 255,255,255);
 
   printf("k_init(): Kardia module initialized, %s endian system.\n", (NDN_BIG)?"big":"little" );
 }
@@ -265,10 +270,14 @@ main(int _args_n, const char** _args)
   for (int i = 0; i < GUI_SHADES_N; i++)
   {
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
-    printf("%d\n", mix_grads[K_GUI_GRAD].start);
   }
-  gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, 0, k_font);
-  gui_set_flag(GUI_WND_UNFOCUSED, 1);
+  gui_init(100, 100, "TIS CHEWSHDAY INNIT", NULL, k_font);
+  
+  for (int i = 0; i < 2; i++)
+  {
+    gui_window.pos[i] = vid_size[i]/2 - gui_window.size[i]/2;
+  }
+  // gui_set_flag(GUI_WND_UNFOCUSED, 1);
 
   aud_init(16000);
 

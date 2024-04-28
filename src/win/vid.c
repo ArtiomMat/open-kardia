@@ -1,7 +1,3 @@
-int
-vid_def_on()
-{
-}
 
 void
 vid_free()

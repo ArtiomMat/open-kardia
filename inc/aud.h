@@ -7,7 +7,8 @@ extern int
 aud_init(unsigned int sample_rate);
 extern void
 aud_free();
-// Plays a beep for an implementation defined time with the frequency and amplitude specified.
+// Plays a "short" beep for an implementation defined time with the frequency and amplitude specified.
 // freq of 255 means it literally fills up every single sample with the 
 extern void
 aud_play(unsigned char freq, unsigned char amp);
+

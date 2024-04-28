@@ -85,7 +85,7 @@ extern int
 vid_init(int w, int h);
 
 /**
- * Run the window, depending on underlying API may not blit the pixels though, vid_refresh() does.
+ * Run the window, meaning for one send all the events to vid_on, depending on underlying API may not blit the pixels though, call vid_refresh() to be 100% sure.
 */
 extern void
 vid_run();

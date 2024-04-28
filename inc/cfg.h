@@ -1,8 +1,20 @@
 // Configuration module, works as a realtime configuration editor
 
-#define CFG_MAX_VARS 32
+#pragma once
 
-extern void
+#define CFG_VAR_LIMIT 128
+
+// The values of the enum represent the shift not the flag itself.
+enum
+{
+  CFG_F_NOSET = 0, // The variable is readonly, value provided by file is the only one.
+  CFG_F_PRIVATE, // The variable is only meant for the program to interact with, not for the user of the program. Useful for programs with a developer console.
+  // CFG_F_
+};
+
+typedef unsigned char cfg_id_t;
+
+extern int
 cfg_init(const char* fp);
 
 extern void
@@ -13,18 +25,29 @@ cfg_free();
  * One time per each variable, once it's found you can't refind it. to speed this up as much as I can.
  * Returns an ID for the variable.
  */
-extern int
+extern cfg_id_t
 cfg_find(const char* name);
+
+/**
+ * Test if a flag is set in a variable.
+ */
+extern int
+cfg_flag(cfg_id_t id, int flag);
 
 /**
  * STR is copied over.
  */
 extern void
-cfg_sets(int id, const char* str);
-
+cfg_sets(cfg_id_t id, const char* str);
 extern void
-cfg_seti(int id, long long x);
-
+cfg_seti(cfg_id_t id, long long x);
 extern void
-cfg_setu(int id, unsigned long long u);
+cfg_setu(cfg_id_t id, unsigned long long u);
+
+extern char*
+cfg_gets(cfg_id_t id);
+extern long long
+cfg_geti(cfg_id_t id);
+extern unsigned long long
+cfg_getu(cfg_id_t id);
 
