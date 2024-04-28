@@ -182,4 +182,4 @@ com_arg(const char* arg);
 // Returns NULL if the path became too large.
 // NOT THREAD SAFE IT USES ONE BUFFER ONLY!
 extern const char*
-com_rel_path(const char* p);
+com_relfp(const char* p);

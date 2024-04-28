@@ -161,7 +161,7 @@ main(int args_n, const char** args)
 
   com_init(args_n, args);
   
-  static const char* fp = NULL;
+  static const char* fp = "NULL";
   const char* font_fp = K_FONT_REL_FP;
 
   int fps = -1;
@@ -230,7 +230,7 @@ main(int args_n, const char** args)
   }
 
   gui_font_t font;
-  if (!gui_open_font(&font, font_fp, GUI_FONTP_AUTO))
+  if (!gui_open_font(&font, com_relfp(font_fp), GUI_FONTP_AUTO))
   {
     return 1;
   }
@@ -268,7 +268,7 @@ main(int args_n, const char** args)
 
   node_init(NULL);
 
-  edit_init(fp);
+  edit_init(com_relfp(fp));
   ekg_init(ITOFIP(3000), K_VID_SIZE - K_VID_SIZE/10);
 
   // Begin top

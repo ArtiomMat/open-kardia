@@ -5,7 +5,7 @@
 static int args_n;
 static const char** args;
 
-static int dir_end; // Where to splice the relative path in com_rel_path
+static int dir_end; // Where to splice the relative path in com_relfp
 
 char com_dir[COM_PATH_SIZE];
 
@@ -29,7 +29,7 @@ com_arg(const char* str)
 }
 
 const char*
-com_rel_path(const char* p)
+com_relfp(const char* p)
 {
   int dir_i = dir_end;
   for (int i = 0; p[i]; i++, dir_i++)

@@ -20,7 +20,6 @@ com_init(int _args_n, const char** _args)
     {
       found_slash = 1;
       com_dir[++dir_end] = 0;
-      puts(com_dir);
       break;
     }
   }
