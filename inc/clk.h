@@ -16,6 +16,7 @@ extern fip_t clk_tick_time;
 extern void
 clk_init(fip_t initial_tick_time);
 
+// Do not assume the starting time of this function(t0), it is system dependant.
 extern fip_t
 clk_now();
 

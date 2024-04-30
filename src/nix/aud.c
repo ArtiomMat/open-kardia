@@ -1,5 +1,6 @@
 #include "aud.h"
 #include "clk.h"
+#include "com.h"
 
 #include <alsa/asoundlib.h>
 
@@ -54,7 +55,7 @@ aud_init(unsigned int _sample_rate)
   buf = malloc(sizeof (*buf) * buf_size);
 
 
-  printf("aud_init(): Audio module initialized, %d bytes allocated for %dHz.\n", sizeof (*buf) * buf_size, sample_rate);
+  printf("aud_init(): Audio module initialized, %ld bytes allocated for %dHz.\n", sizeof (*buf) * buf_size, sample_rate);
 
   return 1;
 }
@@ -62,13 +63,13 @@ aud_init(unsigned int _sample_rate)
 void
 aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect volume level
 {
-  int write_size = sample_rate/15;
+  int write_size = MIN(sample_rate/15, buf_size);
   // How many samples per zig/zag in the sound wave
   int spz = __UINT8_MAX__ - freq + 1;
   int amp16 = amp * (__INT16_MAX__ / __UINT8_MAX__);
   int jps = 2*amp16 / spz; // How much we jump per sample
 
-  buf[0] = 0; // We start at the top
+  buf[0] = 0; // We start at 0
   
   // Set all samples to the desired level (0-127 for 8-bit signed)
   for (int i = 1, sign = -1; i < write_size; i++)
@@ -87,7 +88,7 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
 
   if ((err = snd_pcm_writei(pcm, buf, write_size)) != write_size)
   {
-    printf("aud_play(): Didn't write everything...\n", snd_strerror(err));
+    printf("aud_play(): Didn't write everything... error: %s\n", snd_strerror(err));
   }
 }
 

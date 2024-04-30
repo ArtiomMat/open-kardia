@@ -1,6 +1,7 @@
 #include "edit.h"
 #include "vid.h"
 #include "k.h"
+#include "com.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -4,6 +4,20 @@
 
 #define COM_PATH_SIZE 512
 
+#ifndef MAX
+  #define MAX(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+   _a > _b ? _a : _b; })
+#endif
+
+#ifndef MIN
+  #define MIN(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+   _a < _b ? _a : _b; })
+#endif
+
 // Little endian
 #ifdef __x86_64__
   #define COM_LILE 1
@@ -183,3 +197,4 @@ com_arg(const char* arg);
 // NOT THREAD SAFE IT USES ONE BUFFER ONLY!
 extern const char*
 com_relfp(const char* p);
+

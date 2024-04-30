@@ -465,7 +465,9 @@ gui_draw_window()
   draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(3));
 
   // X button text
-  gui_draw_font(font, X_LEFT + X_WIDTH/2 - 3, TITLE_TOP, 'x', get_shade(4));
+  int xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP;
+  gui_draw_font(font, xx+1, xy+1, 'x', get_shade(1));
+  gui_draw_font(font, xx, xy, 'x', get_shade(3));
   
   // Window title text
   {

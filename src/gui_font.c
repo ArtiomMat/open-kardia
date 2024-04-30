@@ -15,8 +15,8 @@ enum
 };
 enum
 {
-  PSF1 = sizeof(struct psf1_s),
-  PSF2 = sizeof(struct psf2_s),
+  PSF1 = sizeof (struct psf1_s),
+  PSF2 = sizeof (struct psf2_s),
 };
 
 void

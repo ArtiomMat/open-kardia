@@ -6,6 +6,7 @@
 #include "ekg.h"
 #include "gui.h"
 #include "mix.h"
+#include "com.h"
 
 #include <string.h>
 #include <stdlib.h>

@@ -1,6 +1,6 @@
-cc = gcc
-flags = -O3 -Iinc -D PSF_X_KARDIA -ggdb -D DEBUG
-libs = -lX11 -lXrandr -lasound -lm
+cc = x86_64-w64-mingw32-gcc
+flags = -Wall -O3 -Iinc -ggdb -D DEBUG
+libs = -lgdi32 -lrt -Winmm
 
 srcs = $(wildcard src/*.c)
 objs = $(patsubst src/%.c,obj/%.o,$(srcs))
@@ -12,7 +12,7 @@ obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 
 run:
-	make -B && bin/kardia -f sanserif.psf
+	make -B && bin/kardia -v 255 -f sanserif.psf
 
 clean:
 	rm -rf obj/*.o bin/kardia

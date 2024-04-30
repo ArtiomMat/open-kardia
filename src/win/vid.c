@@ -1,7 +1,11 @@
+#include <windows.h>
+
+#include <stdio.h>
 
 void
 vid_free()
 {
+  
 }
 
 int
@@ -29,3 +33,20 @@ void
 vid_refresh()
 {
 }
+
+
+void
+vid_wipe(int color)
+{
+}
+
+void
+vid_set(unsigned char color, int i)
+{
+}
+
+unsigned char
+vid_get(int i)
+{
+}
+

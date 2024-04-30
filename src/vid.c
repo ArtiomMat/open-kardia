@@ -1,9 +1,11 @@
 #include <stddef.h>
+#include <stdlib.h>
 
+#include "vid.h"
 
 #ifdef __linux__
   #include "nix/vid.c"
-#elif
+#elif _WIN32
   #include "win/vid.c"
 #endif
 
