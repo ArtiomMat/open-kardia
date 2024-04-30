@@ -51,7 +51,8 @@ enum
 {
   // TYPES
 
-  GUI_T_TEXT,
+  GUI_T_ITEXT,
+  GUI_T_OTEXT,
   GUI_T_IMAGE,
   GUI_T_BUTTON,
   GUI_T_TICKBOX,
@@ -146,7 +147,7 @@ typedef struct gui_thing
 
     struct gui_button
     {
-      struct gui_text text;
+      char pressed; // 1 for pressed, 0 for not
     } button;
     struct gui_tick
     {

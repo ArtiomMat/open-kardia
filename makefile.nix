@@ -12,7 +12,7 @@ obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 
 run:
-	make -B && bin/kardia -v 255 -f sanserif.psf
+	make -f makefile.nix -B && bin/kardia -v 255 -f sanserif.psf
 
 clean:
 	rm -rf obj/*.o bin/kardia

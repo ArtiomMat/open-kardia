@@ -1,7 +1,7 @@
 {window str='Example Window' min_w=100 min_h=100};
 
-[text str='What do you think?' align_x=l];
+[otext str='What do you think?' align_x=l];
 
 [seperator];
 
-(align_x=m) [button f=0 str='Cool'] [button f=1 text='Lame'];
+(align_x=m) [button id=0 str='Cool'] [button id=1 text='Lame'];

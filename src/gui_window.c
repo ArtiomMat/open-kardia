@@ -154,6 +154,7 @@ gui_toggle_flag(int flag)
   gui_window.flags ^= flag;
 }
 
+/*
 static void
 get_thing_size(gui_thing_t* t, short out[2])
 {
@@ -183,7 +184,7 @@ get_thing_size(gui_thing_t* t, short out[2])
     
     return;
   }
-}
+}*/
 
 void
 gui_recache_all()
@@ -238,6 +239,7 @@ save_mouse_rel()
   gui_window.mouse_rel[0] = mouse_x - gui_window.pos[0];
   gui_window.mouse_rel[1] = mouse_y - gui_window.pos[1];
 }
+
 
 int
 gui_on_vid(vid_event_t* e)
@@ -406,6 +408,23 @@ resize_left(int i)
   gui_window.size_0[i] = gui_window.size[i];
 }
 
+static void
+draw_thing(gui_thing_t* t, int left, int top, int right, int bottom)
+{
+  switch(t->type)
+  {
+    case GUI_T_ITEXT:
+    draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
+    break;
+    
+    case GUI_T_BUTTON:;
+    int p = t->button.pressed;
+    // Doing math with p to just reverse if pressed or not.
+    draw_filled_rect(left, top, right, bottom, get_shade(p?1:3), get_shade(p?3:1), get_shade(2));
+    break;
+  }
+}
+
 void
 gui_draw_window()
 {
@@ -454,6 +473,7 @@ gui_draw_window()
     }
   }
 
+
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
 
@@ -485,6 +505,10 @@ gui_draw_window()
   // gui_draw_font(font, BORDER_RIGHT-10, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
 
   // Drawing the things and shit
+  static gui_thing_t t = {0};
+  t.type = GUI_T_BUTTON;
+  t.button.pressed = 1;
+  draw_thing(&t, 50,80, 100, 100);
 }
 
 void

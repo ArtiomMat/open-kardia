@@ -245,9 +245,9 @@ main(int args_n, const char** args)
 
   k_init();
 
-  gui_thing_t gui_thing = {.type = GUI_T_TEXT};
+  /*gui_thing_t gui_thing = {.type = GUI_T_TEXT};
   gui_thing.str = "HELLO!";
-  gui_thing.text.color = 255;
+  gui_thing.text.color = 255;*/
   // Set the GUI shades
   for (int i = 0; i < GUI_SHADES_N; i++)
   {
