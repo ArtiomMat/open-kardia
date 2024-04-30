@@ -186,6 +186,15 @@
 // The directory in which the executable is located
 extern char com_dir[COM_PATH_SIZE];
 
+extern const char** com_args;
+extern int com_args_n;
+
+// For internal use
+extern int _com_dir_end;
+// For internal use
+extern int
+_com_init_dir();
+
 // Some COM functionality depends on the initialization!
 // Returns 0 if something failed, for instance getting com_dir, otherwise 1.
 extern int

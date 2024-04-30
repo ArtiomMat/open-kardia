@@ -6,9 +6,9 @@ fip_t clk_tick_time;
 static fip_t begin_time; 
 
 #ifdef __linux__
-  #include "nix/com.c"
+  #include "nix/clk.c"
 #elif _WIN32
-  #include "win/com.c"
+  #include "win/clk.c"
 #endif
 
 void
