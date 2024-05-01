@@ -61,7 +61,7 @@ static unsigned char
 get_shade(int i)
 {
   // Return darker shade if unfocused
-  if (gui_window.flags & GUI_WND_UNFOCUSED)
+  if (gui_window.window.flags & GUI_WND_UNFOCUSED)
   {
     return gui_shades[MAX(i - 1, 0)];
   }
@@ -142,16 +142,16 @@ gui_set_flag(int flag, int yes)
 {
   if (yes)
   {
-    gui_window.flags |= flag;
+    gui_window.window.flags |= flag;
     return;
   }
-  gui_window.flags &= ~flag;
+  gui_window.window.flags &= ~flag;
 }
 
 void
 gui_toggle_flag(int flag)
 {
-  gui_window.flags ^= flag;
+  gui_window.window.flags ^= flag;
 }
 
 /*
@@ -192,10 +192,10 @@ gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
 {
   font = _font;
 
-  gui_window.title = title;
-  if (gui_window.title == NULL)
+  gui_window.str = title;
+  if (gui_window.str == NULL)
   {
-    gui_window.title = "\xFF";
+    gui_window.str = "\xFF";
   }
 
   gui_window.min_size[0] = gui_window.min_size[1] = 64;
@@ -208,16 +208,16 @@ gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
   gui_title_h = font->height + 3;
 
   // gui_window.thing = thing;
+  
+  // gui_window.content_cache = NULL;
 
-  gui_window.content_cache = NULL;
-
-  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.title);
+  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.str);
 }
 
 void
 gui_free()
 {
-  free(gui_window.content_cache);
+  // free(gui_window.content_cache);
 }
 
 static void
@@ -226,15 +226,15 @@ save_mouse_rel()
   int mouse_x = MIN(MAX(mouse_pos[0], 0), vid_size[0]-1);
   int mouse_y = MIN(MAX(mouse_pos[1], 0), vid_size[1]-1);
 
-  gui_window.mouse_rel[0] = mouse_x - gui_window.pos[0];
-  gui_window.mouse_rel[1] = mouse_y - gui_window.pos[1];
+  gui_window.window.mouse_rel[0] = mouse_x - gui_window.pos[0];
+  gui_window.window.mouse_rel[1] = mouse_y - gui_window.pos[1];
 }
 
 
 int
 gui_on_vid(vid_event_t* e)
 {
-  if (gui_window.flags & GUI_E_HIDE)
+  if (gui_window.window.flags & GUI_E_HIDE)
   {
     return 0;
   }
@@ -284,14 +284,14 @@ gui_on_vid(vid_event_t* e)
         }
 
         // We need to automatically focus back the window regardless, we don't reach this is middle clicked
-        gui_window.flags &= ~GUI_WND_UNFOCUSED;
+        gui_window.window.flags &= ~GUI_WND_UNFOCUSED;
 
         gui_set_flag(GUI_WND_UNFOCUSED, 0);
         gui_e.type = GUI_E_UNFOCUS;
         break;
       }
       // Inside of the content zone
-      else if (!(gui_window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
+      else if (!(gui_window.window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
       {
         gui_set_flag(GUI_WND_UNFOCUSED, 0);
         gui_e.type = GUI_E_HIDE;
@@ -300,7 +300,7 @@ gui_on_vid(vid_event_t* e)
       // We are 100% either in border or outside the window alltogether
       else
       {
-        int flags_tmp = gui_window.flags; // Save the flag for future
+        int flags_tmp = gui_window.window.flags; // Save the flag for future
 
         // Right and left border
         if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1 - GUI_RESIZE_BLEED, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
@@ -323,10 +323,10 @@ gui_on_vid(vid_event_t* e)
         }
 
         // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
-        if (gui_window.flags != flags_tmp)
+        if (gui_window.window.flags != flags_tmp)
         {
-          gui_window.size_0[0] = gui_window.size[0];
-          gui_window.size_0[1] = gui_window.size[1];
+          gui_window.window.size_0[0] = gui_window.size[0];
+          gui_window.window.size_0[1] = gui_window.size[1];
 
           save_mouse_rel();
           gui_set_flag(GUI_WND_UNFOCUSED, 0);
@@ -335,7 +335,7 @@ gui_on_vid(vid_event_t* e)
         }
         // 100% outside the window, if not already set we set and put the event for eaten
         // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
-        else if (!(gui_window.flags & GUI_WND_UNFOCUSED))
+        else if (!(gui_window.window.flags & GUI_WND_UNFOCUSED))
         {
           gui_set_flag(GUI_WND_UNFOCUSED, 1);
           gui_e.type = GUI_E_UNFOCUS;
@@ -367,16 +367,16 @@ gui_on_vid(vid_event_t* e)
 static void
 resize_right(int i)
 {
-  int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+  int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
-  gui_window.size[i] = gui_window.size_0[i] + mouse_delta;
+  gui_window.size[i] = gui_window.window.size_0[i] + mouse_delta;
   gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), vid_size[i] - gui_window.pos[i]);
 }
 
 static void
 resize_left(int i)
 {
-  int mouse_delta = mouse_pos[i] - (gui_window.mouse_rel[i] + gui_window.pos[i]);
+  int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
   gui_window.pos[i] += mouse_delta;
 
@@ -386,7 +386,7 @@ resize_left(int i)
     gui_window.pos[i] = 0;
   }
 
-  gui_window.size[i] = gui_window.size_0[i] - mouse_delta;
+  gui_window.size[i] = gui_window.window.size_0[i] - mouse_delta;
 
   if (gui_window.size[i] < gui_window.min_size[i])
   {
@@ -395,7 +395,7 @@ resize_left(int i)
   }
 
   // So that in the next call to resize_left(), the size[i] does not return to be size_0(old). Since the X keeps updating, we need to shift the width with it, so that mouse_delta keeps being current. I know this is not really a good explanation, but just run this on a fucking paper, just shift the window do all the operations without this line, you will understand what I mean.
-  gui_window.size_0[i] = gui_window.size[i];
+  gui_window.window.size_0[i] = gui_window.size[i];
 }
 
 static void
@@ -418,7 +418,7 @@ draw_thing(gui_thing_t* t, int left, int top, int right, int bottom)
 void
 gui_draw_window()
 {
-  if (gui_window.flags & GUI_WND_HIDE)
+  if (gui_window.window.flags & GUI_WND_HIDE)
   {
     return;
   }
@@ -426,20 +426,20 @@ gui_draw_window()
   // HANDLE WINDOW LOGIC!
 
   // Move the window if necessary and other logic to keep track of movement
-  if (gui_window.flags & GUI_WND_RELOCATING)
+  if (gui_window.window.flags & GUI_WND_RELOCATING)
   {
     gui_event_t e;
-    gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.mouse_rel[0];
-    gui_window.pos[1] = e.relocate.delta[1] = mouse_pos[1]-gui_window.mouse_rel[1];
+    gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.window.mouse_rel[0];
+    gui_window.pos[1] = e.relocate.delta[1] = mouse_pos[1]-gui_window.window.mouse_rel[1];
 
     gui_window.pos[0] = e.relocate.normalized[0] = MIN(MAX(gui_window.pos[0], 0), vid_size[0]-gui_window.size[0]);
     gui_window.pos[1] = e.relocate.normalized[1] = MIN(MAX(gui_window.pos[1], 0), vid_size[1]-gui_window.size[1]);
     send_event(&e);
   }
   // Resize the window and keep track of resizing too
-  else if (gui_window.flags & GUI_WND_RESIZING)
+  else if (gui_window.window.flags & GUI_WND_RESIZING)
   {
-    int flag = gui_window.flags & GUI_WND_RESIZING;
+    int flag = gui_window.window.flags & GUI_WND_RESIZING;
     int min_w = gui_window.min_size[0];
     int min_h = gui_window.min_size[1];
 
@@ -483,9 +483,9 @@ gui_draw_window()
   {
     int x = TITLE_LEFT+2;
     int width = gui_get_font_width(font);
-    for (int i = 0; gui_window.title[i] && x+width < X_LEFT; i++, x+=width)
+    for (int i = 0; gui_window.str[i] && x+width < X_LEFT; i++, x+=width)
     {
-      gui_draw_font(font, x, TITLE_TOP+2, gui_window.title[i], get_shade(4));
+      gui_draw_font(font, x, TITLE_TOP+2, gui_window.str[i], get_shade(4));
     }
   }
   
