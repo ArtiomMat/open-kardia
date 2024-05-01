@@ -49,7 +49,7 @@ static int mouse_pos[2] = {0};
 // The currently focused thing, for instance a button, eg if enter is pressed we press it.
 static gui_thing_t* focused_thing = NULL;
 
-gui_window_t gui_window = {0};
+gui_thing_t gui_window = {0};
 
 int gui_title_h = 0;
 
@@ -186,16 +186,6 @@ get_thing_size(gui_thing_t* t, short out[2])
   }
 }*/
 
-void
-gui_recache_all()
-{
-  gui_window.content_cache_size[0] = gui_window.content_cache_size[1] = 0;
-  short size[2] = {0}; // For storring current sizes of this line
-  //for (int i = 0; i < gui_window.things_n; i++)
-  //{
-    //gui_thing_t* t = gui_window.things+i;
-  //}
-}
 
 void
 gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)

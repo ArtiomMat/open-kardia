@@ -75,5 +75,5 @@ edit_run()
     put_square(c, x, y, 7);
   }
 
-
+  return 0;
 }

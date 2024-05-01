@@ -38,7 +38,12 @@ gui_open_font(gui_font_t* font, const char* fp, int priority)
     return 0;
   }
 
-  fread(&font->psf1.magic, sizeof(font->psf1.magic), 1, font->fd);
+  if (!fread(&font->psf1.magic, sizeof(font->psf1.magic), 1, font->fd))
+  {
+    _magic_fail:
+    fprintf(stderr, "gui_open_font(): Failed to read magic bytes of '%s'.\n", fp);
+    return 0;
+  }
   if (font->psf1.magic == 0x0436)
   {
     font->type = PSF1;
@@ -46,7 +51,10 @@ gui_open_font(gui_font_t* font, const char* fp, int priority)
   else
   {
     rewind(font->fd);
-    fread(&font->psf2.magic, sizeof(font->psf2.magic), 1, font->fd);
+    if (!fread(&font->psf2.magic, sizeof(font->psf2.magic), 1, font->fd))
+    {
+      goto _magic_fail;
+    }
    
     if (font->psf2.magic == 0x864ab572)
     {
@@ -61,8 +69,12 @@ gui_open_font(gui_font_t* font, const char* fp, int priority)
 
   // Read the correct header
   rewind(font->fd);
-  fread(&font->psf1, font->type, 1, font->fd); // font->type is the size
-
+  if (!fread(&font->psf1, font->type, 1, font->fd)) // font->type is the size
+  {
+    fprintf(stderr, "gui_open_font(): Failed to read header of '%s'.\n", fp);
+    return 0;
+  }
+  
   // Just opt for memory priority since it's the safe option
   font->p = (priority == GUI_FONTP_AUTO) ? GUI_FONTP_MEMORY : priority;
 
@@ -145,7 +157,10 @@ gui_get_glyph(gui_font_t* font, int g)
   {
     // TODO: Make it depend on flags too
     fseek(font->fd, font->type + index, SEEK_SET);
-    fread(font->data, 1, font->row_size * font->height, font->fd);
+    if (!fread(font->data, font->row_size * font->height, 1, font->fd))
+    {
+      return NULL;
+    }
     return font->data;
   }
 }

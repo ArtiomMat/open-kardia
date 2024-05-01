@@ -1,6 +1,7 @@
 #include "com.h"
 
 #include <string.h>
+#include <stdio.h>
 
 const char** com_args;
 int com_args_n;

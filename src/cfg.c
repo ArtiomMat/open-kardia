@@ -58,6 +58,6 @@ cfg_init(const char* fp)
   rewind(f);
   vars = malloc(sizeof (*vars) * vars_n);
   
-   
+  return 0; // TODO: Make it 1
 }
 

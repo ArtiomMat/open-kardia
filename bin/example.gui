@@ -1,0 +1,7 @@
+[window str='Example Window' min_w=100 min_h=100:
+  [otext str='What do you think?' align_x=l];
+
+  [seperator];
+
+  (align_x=m) [button id=0 str='Cool'] [button id=1 text='Lame'];
+];

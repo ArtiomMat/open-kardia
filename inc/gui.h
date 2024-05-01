@@ -50,7 +50,7 @@ enum
 enum
 {
   // TYPES
-
+  GUI_T_WINDOW,
   GUI_T_ITEXT,
   GUI_T_OTEXT,
   GUI_T_IMAGE,
@@ -122,6 +122,8 @@ typedef struct gui_bmap
   int flags;
 } gui_bmap_t;
 
+#if 0
+
 typedef struct gui_thing
 {
   struct gui_thing* next;
@@ -167,12 +169,55 @@ typedef struct gui_thing
   // short pos_cache[2]; // Cached position of the thing in the content_cache of the window, to quickly draw it.
 } gui_thing_t;
 
+#endif
+
+typedef struct gui_thing gui_thing_t;
+
 typedef struct gui_row
 {
   struct gui_row* next;
   gui_thing_t* thing0;
   int n;
 } gui_row_t;
+
+typedef struct gui_thing
+{
+  char* str; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
+  short min_size[2], max_size[2]; // Always valid and no flag can make it unused!
+  short size[2]; // If overriden by flags the size is automatically modified by GUI.
+  short pos[2]; // If overriden by flags the position is automatically modified by GUI.
+  short flags;
+  char type;
+  unsigned char id; // Mainly so you can identify stuff, you can use the same ID for multiple things
+  union
+  {
+    struct
+    {
+      gui_row_t* row0;
+      // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
+      // For internal use
+      short mouse_rel[2];
+      // The size before we began resizing, for internal use, crucial for calculating resizing for good UX 
+      short size_0[2];
+      int flags;
+    } window;
+    
+    gui_bmap_t bmap;
+    
+    struct
+    {
+      char pressed;
+    } button;
+    struct
+    {
+      char ticked;
+    } tick;
+    struct gui_slider
+    {
+      unsigned short value; // 0 is the far left, maximum value is the right
+    } slider;
+  };
+} gui_thing_t;
 
 // The container for things!
 typedef struct gui_window_s
@@ -194,11 +239,6 @@ typedef struct gui_window_s
   short content_cache_size[2];
   short pos[2];
 
-  // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
-  // For internal use
-  int mouse_rel[2];
-  // The size before we began resizing, for internal use, crucial for calculating resizing for good UX 
-  int size_0[2];
 } gui_window_t;
 
 typedef struct
@@ -227,7 +267,7 @@ extern unsigned char gui_shades[GUI_SHADES_N];
 extern int (*gui_on)(gui_event_t* event);
 
 // The initial window, currently only one window can work.
-extern gui_window_t gui_window;
+extern gui_thing_t gui_window;
 
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
