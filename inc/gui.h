@@ -49,11 +49,24 @@ enum
 
 enum
 {
+  GUI_POS_LEFT=-1,
+  GUI_POS_TOP=GUI_POS_LEFT,
+  
+  GUI_POS_RIGHT=-2,
+  GUI_POS_BOTTOM=GUI_POS_RIGHT,
+  
+  GUI_SIZE_FILL=-1, // Can be used for both
+  GUI_SIZE_SMART=-2, // Can be used for both
+};
+
+enum
+{
   // TYPES
   GUI_T_WINDOW,
+  GUI_T_MAP,
   GUI_T_ITEXT,
   GUI_T_OTEXT,
-  GUI_T_IMAGE,
+  GUI_T_BMAP,
   GUI_T_BUTTON,
   GUI_T_TICKBOX,
   GUI_T_SLIDER,
@@ -173,13 +186,6 @@ typedef struct gui_thing
 
 typedef struct gui_thing gui_thing_t;
 
-typedef struct gui_row
-{
-  struct gui_row* next;
-  gui_thing_t* thing0;
-  int n;
-} gui_row_t;
-
 typedef struct gui_thing
 {
   char* str; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
@@ -191,9 +197,18 @@ typedef struct gui_thing
   unsigned char id; // Mainly so you can identify stuff, you can use the same ID for multiple things
   union
   {
+    // A map contains rows and columns, it's like a table, but it's actually dynamic in number of columns per row.
+    // It would be benefitial to have another column based map, but that's what you got, deal with it.
     struct
     {
-      gui_row_t* row0;
+      unsigned char* indices;
+      unsigned char* cols_n; // Gives number of columns per each row index.
+      unsigned char rows_n;
+    } map;
+    
+    struct
+    {
+      unsigned char thing;
       // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
       // For internal use
       short mouse_rel[2];
@@ -219,27 +234,6 @@ typedef struct gui_thing
   };
 } gui_thing_t;
 
-// The container for things!
-typedef struct gui_window_s
-{
-  const char* title;
-  gui_row_t* row0;
-
-  // An array allocated to the size of the content at its most revealed state.
-  // The idea is that things that have been drawn are stored in this cache.
-  struct
-  {
-    unsigned char color;
-    unsigned char index; // thing index, we can directly reference a thing corresponding to this cached pixel
-  }* content_cache;
-
-  int flags;
-  short size[2];
-  short min_size[2];
-  short content_cache_size[2];
-  short pos[2];
-
-} gui_window_t;
 
 typedef struct
 {
@@ -301,8 +295,10 @@ gui_recache_thing(gui_thing_t* thing);
 extern void
 gui_free();
 
+// This function is the starting point of any drawn thing.
+// the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
 extern void
-gui_draw_window();
+gui_draw(gui_thing_t* t, int left, int top, int right, int bottom);
 
 extern void
 gui_set_flag(int flag, int yes);

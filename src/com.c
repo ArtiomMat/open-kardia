@@ -29,7 +29,7 @@ _com_init_dir()
   // If we didn't find a slash it means something went wrong, perhaps _com_dir_end was =-1 to begin with
   if (!found_slash)
   {
-    puts("com_init(): Getting executable's directory failed.");
+    fputs("com_init(): Getting executable's directory failed.", stderr);
     return 0;
   }
 

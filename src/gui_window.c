@@ -44,7 +44,9 @@
 #define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS)
 
 static gui_font_t* font;
+int font_w;
 static int mouse_pos[2] = {0};
+static int mouse_state; // 1 for pressed, 0 for not!
 
 // The currently focused thing, for instance a button, eg if enter is pressed we press it.
 static gui_thing_t* focused_thing = NULL;
@@ -191,12 +193,15 @@ void
 gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
 {
   font = _font;
-
+  font_w = gui_get_font_width(font);
+  
   gui_window.str = title;
   if (gui_window.str == NULL)
   {
     gui_window.str = "\xFF";
   }
+
+  gui_window.type = GUI_T_WINDOW;
 
   gui_window.min_size[0] = gui_window.min_size[1] = 64;
 
@@ -251,6 +256,8 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
     {
+      mouse_state = 1;
+      
       // Inside of the title bar
       if (in_rect(mouse_pos[0], mouse_pos[1], TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
       {
@@ -365,22 +372,22 @@ gui_on_vid(vid_event_t* e)
 }
 
 static void
-resize_right(int i)
+resize_right(int i, int max_r)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
   gui_window.size[i] = gui_window.window.size_0[i] + mouse_delta;
-  gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), vid_size[i] - gui_window.pos[i]);
+  gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), max_r - gui_window.pos[i]);
 }
 
 static void
-resize_left(int i)
+resize_left(int i, int min_l)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
   gui_window.pos[i] += mouse_delta;
 
-  if (gui_window.pos[i] < 0)
+  if (gui_window.pos[i] < min_l)
   {
     mouse_delta -= gui_window.pos[i];
     gui_window.pos[i] = 0;
@@ -398,11 +405,72 @@ resize_left(int i)
   gui_window.window.size_0[i] = gui_window.size[i];
 }
 
-static void
-draw_thing(gui_thing_t* t, int left, int top, int right, int bottom)
+// How much text would fit per line, given a width of a rectangle
+static inline int
+text_per_line(int width)
 {
+  return width / font_w;
+}
+// How many lines fit in a rectangle that has a height
+static inline int
+text_lines_n(int height)
+{
+  return height / font->height;
+}
+// How much text would fit in a rectangle with width and height
+static inline int
+text_in_rect(int width, int height)
+{
+  return text_per_line(width) * text_lines_n(height);
+}
+
+// Safe to pass NULL as string
+static int
+draw_str(const char* str, int l, int t, int r, int b)
+{
+  if (str == NULL)
+  {
+    return 0;
+  }
+  
+  int i = 0;
+  for (int y = t+1; y+font->height < b; y+=font->height)
+  {
+    int nl = 0;
+    for (int x = l+1; x+font_w < r && !nl; i++, x+=font_w)
+    {
+      if (!str[i])
+      {
+        return i;
+      }
+      else if (str[i] == '\n')
+      {
+        nl = 1;
+        continue;
+      }
+      gui_draw_font(font, x, y, str[i], get_shade(4));
+    }
+  }
+}
+
+void
+gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
+{
+  int yes_text = 1;
   switch(t->type)
   {
+    case GUI_T_WINDOW:
+    gui_draw_window(left, top, right, bottom);
+    yes_text = 0;
+    break;
+    
+    case GUI_T_MAP:
+    
+    break;
+    
+    case GUI_T_OTEXT:
+    break;
+    
     case GUI_T_ITEXT:
     draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
     break;
@@ -412,11 +480,17 @@ draw_thing(gui_thing_t* t, int left, int top, int right, int bottom)
     // Doing math with p to just reverse if pressed or not.
     draw_filled_rect(left, top, right, bottom, get_shade(p?1:3), get_shade(p?3:1), get_shade(2));
     break;
+    
+  }
+  
+  if (yes_text)
+  {
+    draw_str(t->str, left, top, right, bottom);
   }
 }
 
 void
-gui_draw_window()
+gui_draw_window(int l, int t, int r, int b)
 {
   if (gui_window.window.flags & GUI_WND_HIDE)
   {
@@ -432,8 +506,8 @@ gui_draw_window()
     gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.window.mouse_rel[0];
     gui_window.pos[1] = e.relocate.delta[1] = mouse_pos[1]-gui_window.window.mouse_rel[1];
 
-    gui_window.pos[0] = e.relocate.normalized[0] = MIN(MAX(gui_window.pos[0], 0), vid_size[0]-gui_window.size[0]);
-    gui_window.pos[1] = e.relocate.normalized[1] = MIN(MAX(gui_window.pos[1], 0), vid_size[1]-gui_window.size[1]);
+    gui_window.pos[0] = e.relocate.normalized[0] = MIN(MAX(gui_window.pos[0], l), r-gui_window.size[0]);
+    gui_window.pos[1] = e.relocate.normalized[1] = MIN(MAX(gui_window.pos[1], l), b-gui_window.size[1]);
     send_event(&e);
   }
   // Resize the window and keep track of resizing too
@@ -446,20 +520,20 @@ gui_draw_window()
 
     if (flag & GUI_WND_RESIZING_R)
     {
-      resize_right(0);
+      resize_right(0, r);
     }
     else if (flag & GUI_WND_RESIZING_L)
     {
-      resize_left(0);
+      resize_left(0, l);
     }
 
     if (flag & GUI_WND_RESIZING_B)
     {
-      resize_right(1);
+      resize_right(1, b);
     }
     else if (flag & GUI_WND_RESIZING_T)
     {
-      resize_left(1);
+      resize_left(1, t);
     }
   }
 
@@ -467,7 +541,7 @@ gui_draw_window()
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
 
-  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(1), get_shade(1), get_shade(2));
 
   draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
 
@@ -475,19 +549,12 @@ gui_draw_window()
   draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(3));
 
   // X button text
-  int xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP;
-  gui_draw_font(font, xx+1, xy+1, 'x', get_shade(1));
-  gui_draw_font(font, xx, xy, 'x', get_shade(3));
+  int xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP+1;
+  gui_draw_font(font, xx, xy, '/', get_shade(0));
+  gui_draw_font(font, xx, xy, '\\', get_shade(0));
   
   // Window title text
-  {
-    int x = TITLE_LEFT+2;
-    int width = gui_get_font_width(font);
-    for (int i = 0; gui_window.str[i] && x+width < X_LEFT; i++, x+=width)
-    {
-      gui_draw_font(font, x, TITLE_TOP+2, gui_window.str[i], get_shade(4));
-    }
-  }
+  draw_str(gui_window.str, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
   
   // Three dots on the corner
   // gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height-2, '.', get_shade(3));
@@ -495,10 +562,11 @@ gui_draw_window()
   // gui_draw_font(font, BORDER_RIGHT-10, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
 
   // Drawing the things and shit
-  static gui_thing_t t = {0};
-  t.type = GUI_T_BUTTON;
-  t.button.pressed = 1;
-  draw_thing(&t, 50,80, 100, 100);
+  static gui_thing_t th = {0};
+  th.str = "Ouah";
+  th.type = GUI_T_BUTTON;
+  th.button.pressed = 0;
+  gui_draw(&th, CONTENT_LEFT+2,CONTENT_TOP+2, CONTENT_LEFT+100,CONTENT_TOP+font->height+5);
 }
 
 void
@@ -534,7 +602,6 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
     
     fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
-    int x;
     for (int x = MAX(left, 0); x < MIN(right, vid_size[0]); x++)
     {
       fip_t i;

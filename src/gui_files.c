@@ -1,4 +1,0 @@
-// Parser for .wnd files
-
-
-

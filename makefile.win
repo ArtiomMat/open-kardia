@@ -1,4 +1,9 @@
-cc = x86_64-w64-mingw32-gcc
+ifeq ($(UNAME_S),Linux)
+	cc = x86_64-w64-mingw32-gcc
+else
+	cc = gcc
+endif
+
 flags = -Wall -O3 -Iinc -ggdb -D DEBUG
 libs = -lgdi32 -lrt -Winmm
 
@@ -7,7 +12,7 @@ objs = $(patsubst src/%.c,obj/%.o,$(srcs))
 
 bin/kardia: $(objs)
 	$(cc) $(flags) $^ -o $@ $(libs)
-  
+
 obj/%.o: src/%.c inc/*.h
 	$(cc) $(flags) -c $< -o $@
 

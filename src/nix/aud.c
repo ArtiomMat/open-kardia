@@ -25,7 +25,7 @@ aud_init(unsigned int _sample_rate)
   // Open device into pcm
   if ((err = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
   {
-    printf("aud_init(): Opening PCM device failed: %s\n", snd_strerror(err));
+    fprintf(stderr, "aud_init(): Opening PCM device failed. '%s' -ALSA\n", snd_strerror(err));
     return 0;
   }
 
@@ -42,7 +42,7 @@ aud_init(unsigned int _sample_rate)
   // Send params to the pcm device
   if ((err = snd_pcm_hw_params(pcm, params)) < 0)
   {
-    printf("aud_init(): Sending parameters to PCM device failed: %s\n", snd_strerror(err));
+    fprintf(stderr, "aud_init(): Sending parameters to PCM device failed. '%s' -ALSA\n", snd_strerror(err));
     return 0;
   }
 
@@ -50,10 +50,14 @@ aud_init(unsigned int _sample_rate)
   {
     snd_pcm_uframes_t frames;
     snd_pcm_hw_params_get_period_size(params, &frames, 0);
+    if (frames == 0)
+    {
+      fputs("aud_init(): Buffer failed to initialize.", stderr);
+      return 0;
+    }
     buf_size = frames * sizeof (*buf);
   }
   buf = malloc(sizeof (*buf) * buf_size);
-
 
   printf("aud_init(): Audio module initialized, %ld bytes allocated for %dHz.\n", sizeof (*buf) * buf_size, sample_rate);
 
@@ -63,6 +67,13 @@ aud_init(unsigned int _sample_rate)
 void
 aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect volume level
 {
+  #ifdef DEBUG
+  if (!buf_size)
+  {
+    return;
+  }
+  #endif
+  
   int write_size = MIN(sample_rate/15, buf_size);
   // How many samples per zig/zag in the sound wave
   int spz = __UINT8_MAX__ - freq + 1;
@@ -88,7 +99,7 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
 
   if ((err = snd_pcm_writei(pcm, buf, write_size)) != write_size)
   {
-    printf("aud_play(): Didn't write everything... error: %s\n", snd_strerror(err));
+    fprintf(stderr, "aud_play(): Didn't write everything... error: %s\n", snd_strerror(err));
   }
 }
 

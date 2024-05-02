@@ -69,7 +69,7 @@ static int
 x_error_handler(Display * d, XErrorEvent * e)
 {
   static char text[512];
-  printf("x_error_handler(): %hhu\n", e->error_code);
+  fprintf(stderr, "x_error_handler(): %hhu\n", e->error_code);
   XGetErrorText(d, e->error_code, text, 512);
   puts(text);
   return 0;
