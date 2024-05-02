@@ -1,7 +1,40 @@
-[window str='Example Window' min_w=100 min_h=100:
-  [otext str='What do you think?' align_x=l];
+window W_MAIN
+  str 'Example window'
 
-  [seperator];
+  w 300
+  h 200
+  min_w 300
+  min_h 200
 
-  (align_x=m) [button id=0 str='Cool'] [button id=1 text='Lame'];
-];
+  thing M_MAIN
+end
+
+map M_MAIN
+  w auto
+  h auto
+
+  row O_Q
+  row I_A
+
+  row B_CONFIRM B_NOPE
+end
+
+otext O_Q
+  str 'How old are you?'
+end
+
+itext I_A
+  type 'NUM'
+  str '18'
+end
+
+button B_CONFIRM
+  max_w 300
+  str 'Confirm'
+end
+
+button B_NOPE
+inherit B_CONFIRM
+  str 'Nope'
+end
+
