@@ -37,6 +37,7 @@ enum
   K_NODE_GRAD,
   K_EKG_GRAD,
   K_GUI_GRAD,
+  K_GUI_TITLE_COLO,
   K_GRADS_N,
 };
 

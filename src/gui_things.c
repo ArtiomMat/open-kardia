@@ -371,6 +371,8 @@ gui_on_vid(vid_event_t* e)
   return 1;
 }
 
+// i is the dimention of the size/pos vector
+// Can also be used to resize towards the bottom of the screen, i is for that
 static void
 resize_right(int i, int max_r)
 {
@@ -379,7 +381,8 @@ resize_right(int i, int max_r)
   gui_window.size[i] = gui_window.window.size_0[i] + mouse_delta;
   gui_window.size[i] = MIN(MAX(gui_window.size[i], gui_window.min_size[i]), max_r - gui_window.pos[i]);
 }
-
+// i is the dimention of the size/pos vector
+// Can also be used to resize to the top of the screen
 static void
 resize_left(int i, int min_l)
 {

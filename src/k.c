@@ -107,12 +107,12 @@ k_init()
          mix_push1(K_GUI_GRAD, 100,100,40);
          mix_push1(K_GUI_GRAD, 160,160,80);
   next = mix_push1(K_GUI_GRAD, 235,235,180);*/
-  mix_push1(K_GUI_GRAD, 20,20,10);
-  mix_push1(K_GUI_GRAD, 80,80,30);
-  mix_push1(K_GUI_GRAD, 130,130,60);
-  mix_push1(K_GUI_GRAD, 180,180,80);
-  next = mix_push1(K_GUI_GRAD, 255,255,200);
-
+  mix_push1(K_GUI_GRAD, 20,20,20);
+  mix_push1(K_GUI_GRAD, 80,80,80);
+  mix_push1(K_GUI_GRAD, 130,130,130);
+  mix_push1(K_GUI_GRAD, 180,180,180);
+  mix_push1(K_GUI_GRAD, 255,255,255);
+  next = mix_push1(K_GUI_TITLE_COLO, 10,25,200);
 }
 
 // draws and flows end at -1
@@ -253,6 +253,7 @@ main(int args_n, const char** args)
   {
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
   }
+  gui_window.color = mix_pickl(K_GUI_TITLE_COLO);
   gui_init(100, 100, "Open Kardia", NULL, k_font);
   
   for (int i = 0; i < 2; i++)

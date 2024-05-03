@@ -34,9 +34,6 @@ mix_push1(int i, int r, int g, int b);
 extern unsigned char
 mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2);
 
-/**
- * Returns an index for a color in the palette 
- */
 static inline unsigned char
 mix_pick(int i, int x, int max_x)
 {
@@ -45,6 +42,24 @@ mix_pick(int i, int x, int max_x)
     x = max_x;
   }
   return mix_grads[i].start + ((mix_grads[i].n - 1) * x / max_x);
+}
+
+/**
+ * Pick leftest color
+ */
+static inline unsigned char
+mix_pickl(int i)
+{
+  return mix_grads[i].start;
+}
+
+/**
+ * Pick rightest color
+ */
+static inline unsigned char
+mix_pickr(int i)
+{
+  return mix_grads[i].n - 1;
 }
 
 // NOTE THAT N MUST BE POSITIVE FOR INTEGER N USE MIX_SH()!

@@ -83,6 +83,8 @@ enum
   
   GUI_T_PARENT_WIDTH  = 0b1000000, // Cannot be paired with AUTO_WIDTH
   GUI_T_PARENT_HEIGHT = 0b10000000, // Cannot be paired with AUTO_HEIGHT
+  
+  GUI_T_HIDE          =,
 };
 
 enum
@@ -194,6 +196,7 @@ typedef struct gui_thing
   short pos[2]; // If overriden by flags the position is automatically modified by GUI.
   short flags;
   char type;
+  unsigned char color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
   unsigned char id; // Mainly so you can identify stuff, you can use the same ID for multiple things
   union
   {
@@ -294,6 +297,12 @@ gui_recache_thing(gui_thing_t* thing);
 
 extern void
 gui_free();
+
+extern int
+gui_open(const char* fp);
+// Returns an index
+extern unsigned char
+gui_find(const char* id);
 
 // This function is the starting point of any drawn thing.
 // the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
