@@ -16,18 +16,6 @@ node_t node_all[NODE_MAX];
 
 static int draw_flow;
 
-static void
-put_square(int color, int _x, int _y, int size)
-{
-  for (int x = MAX(0, _x - size/2); x < K_VID_SIZE && x <= _x + size/2; x++)
-  {
-    for (int y = MAX(0, _y - size/2); y < K_VID_SIZE && y <= _y + size/2; y++)
-    {
-      vid_set(color, x + y * K_VID_SIZE);
-    }
-  }
-}
-
 // X is between(including) XI and XF, essentially the closer X is to XF, the more the color will be that of the right node.
 static unsigned char
 color_for(node_t* left, node_t* right, int x, int xi, int xf)
@@ -38,7 +26,7 @@ color_for(node_t* left, node_t* right, int x, int xi, int xf)
   // We need to left get the picks for each node
   left_pick = mix_pick(grad_i, left->ion, left->bias);
   right_pick = mix_pick(grad_i, right->ion, right->bias);
-  
+
   // Then we return the color between them depending where x is
   return left_pick + (right_pick - left_pick) * (x-xi) / xf;
 }
@@ -46,15 +34,15 @@ color_for(node_t* left, node_t* right, int x, int xi, int xf)
 void
 node_draw_line(node_t* root_node, node_t* next)
 {
-  
+
   int xi, yi, xf, yf;
   xi = FIPTOI(root_node->pos[0]);
   yi = FIPTOI(root_node->pos[1]);
   xf = FIPTOI(next->pos[0]);
   yf = FIPTOI(next->pos[1]);
-  
+
   // gui_draw_line(xi, yi, xf, yf, 255);
-  
+
   if (xi == xf)
   {
     node_t* b = root_node->pos[1] < next->pos[1] ? root_node : next;
@@ -95,7 +83,7 @@ node_draw_line(node_t* root_node, node_t* next)
       for (fip_t i = 0; i < abs_slope; i += ITOFIP(1))
       {
         fip_t set_y = FIPTOI(sign * i + y);
-        
+
         if (set_y >= vid_size[1] || set_y < 0)
         {
           break;
@@ -175,7 +163,7 @@ node_beat()
       }
 
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
-      
+
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
       int real_flow = FIP_MUL(node->flow, clk_tick_time);
       if (real_flow >= node->ion)
@@ -209,7 +197,7 @@ void
 node_draw(int flow)
 {
   draw_flow = flow;
-  
+
   for (int i = 0; i < NODE_MAX; i++)
   {
     node_t* node = &node_all[i];

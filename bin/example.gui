@@ -1,13 +1,12 @@
+#T
+
 window W_MAIN
   str 'Example window'
-
   w 300
   h 200
   min_w 300
   min_h 200
-
   thing M_MAIN
-end
 
 map M_MAIN
   w auto
@@ -17,24 +16,19 @@ map M_MAIN
   row I_A
 
   row B_CONFIRM B_NOPE
-end
 
 otext O_Q
   str 'How old are you?'
-end
 
 itext I_A
   type 'NUM'
   str '18'
-end
 
 button B_CONFIRM
   max_w 300
   str 'Confirm'
-end
 
 button B_NOPE
-inherit B_CONFIRM
+  inherit B_CONFIRM
   str 'Nope'
-end
 

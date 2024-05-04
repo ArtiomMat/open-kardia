@@ -55,13 +55,13 @@ vid_free()
   free(vid_colors);
 
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
-  
+
   if (vid_nix_image)
     XDestroyImage(vid_nix_image);
   vid_nix_image = 0;
 
   XCloseDisplay(vid_nix_dsp);
-  
+
   puts("vid_free(): Video module freed.");
 }
 
@@ -108,7 +108,7 @@ vid_init(int _vid_w, int _vid_h)
 
   XSetWindowAttributes attribs = {0};
   attribs.event_mask = KeyPressMask | KeyReleaseMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask | StructureNotifyMask;
-  
+
   vid_nix_window = XCreateWindow(
     vid_nix_dsp,
     RootWindow(vid_nix_dsp, vid_nix_scr),
@@ -120,9 +120,9 @@ vid_init(int _vid_w, int _vid_h)
     CWBorderPixel | CWEventMask,
     &attribs
   );
-  
+
   // XDefineCursor(vid_nix_dsp, vid_nix_window, createnullcursor(vid_nix_dsp, vid_nix_window));
-  
+
   // GC Creation, before mapping.
   XGCValues xgcvalues;
   xgcvalues.graphics_exposures = False;
@@ -166,7 +166,7 @@ vid_init(int _vid_w, int _vid_h)
     return 0;
   }
 
-  vid_pixels = vid_nix_image->data;
+  vid_pixels = (unsigned char*) vid_nix_image->data;
 
   // Limit window size
   XSizeHints size_hints;
@@ -197,7 +197,7 @@ vid_init(int _vid_w, int _vid_h)
   {
     fprintf(stderr, "vid_init(): Could not find refresh rate, so defaulting to %hdHz!", rates[0] = 30);
   }
-  
+
   printf("vid_init(): Video module initialized, Screen refresh rate %hdHz.\n", rates[0]);
   return rates[0];
 }
@@ -222,7 +222,6 @@ vid_run()
 {
   XEvent xe;
   vid_event_t e = {.type = _VID_E_NULL};
-  static int mouse = 0, mousex = 0, mousey = 0;
 
   while (XPending(vid_nix_dsp))
   {
@@ -232,7 +231,7 @@ vid_run()
     {
       case ClientMessage:
       if (!(
-        xe.xclient.message_type == XInternAtom(vid_nix_dsp, "WM_PROTOCOLS", True) && 
+        xe.xclient.message_type == XInternAtom(vid_nix_dsp, "WM_PROTOCOLS", True) &&
         (Atom)xe.xclient.data.l[0] == vid_nix_wmdeletewnd_atom
       ))
         break;
@@ -240,12 +239,12 @@ vid_run()
       case DestroyNotify:
       e.type = VID_E_CLOSE;
       break;
-      
+
       case KeyPress:
       e.type = VID_E_PRESS;
       e.press.code = xkeymap[xe.xkey.keycode];
       break;
-      
+
       case KeyRelease:
       e.type = VID_E_RELEASE;
       e.release.code = xkeymap[xe.xkey.keycode];
@@ -311,7 +310,7 @@ vid_wipe(int color)
   // printf("%d,%d\n", x, y);
   // XGetWindowAttributes(vid_nix_dsp, vid_nix_window, &xwa);
 
-  
+
   // XImage* scr_image = XGetImage(vid_nix_dsp, root_window, x, y, vid_size[0], vid_size[1], AllPlanes, XYPixmap);
 
   for (int i = 0; i < vid_size[1]*vid_size[0]; i++)

@@ -1,15 +1,11 @@
 #include "clk.h"
 
+#include <stdio.h>
+
 fip_t clk_target_tick_time;
 fip_t clk_tick_time;
 
-static fip_t begin_time; 
-
-#ifdef __linux__
-  #include "nix/clk.c"
-#elif _WIN32
-  #include "win/clk.c"
-#endif
+static fip_t begin_time;
 
 void
 clk_begin_tick()
@@ -29,7 +25,7 @@ clk_end_tick()
     clk_tick_time = clk_target_tick_time;
     return 0;
   }
-  
+
   #ifdef DEBUG
     puts("SKIP");
   #endif

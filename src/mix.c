@@ -39,7 +39,6 @@ mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2)
     int dg = (g2-g)/(n-1);
     int db = (b2-b)/(n-1);
 
-    int R = r, G = g, B = b;
     // n-1 because at the last I do it manually
     for (int j = 0; j < n-1; j++)
     {

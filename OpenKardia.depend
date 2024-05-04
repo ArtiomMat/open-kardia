@@ -1,0 +1,179 @@
+# depslib dependency file v1.0
+1714819508 source:/home/doomguy/CodeblocksStuff/OpenKardia/help.c
+	<stdio.h>
+	<X11/Xlib.h>
+
+1714819539 source:/home/doomguy/CodeblocksStuff/OpenKardia/main.c
+	<stdio.h>
+	<stdlib.h>
+	"help.h"
+
+1714819345 /home/doomguy/CodeblocksStuff/OpenKardia/help.h
+
+1714821833 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/aud.c
+
+1714824807 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/cfg.c
+	"cfg.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
+1714824791 /home/doomguy/CodeblocksStuff/OpenKardia/inc//cfg.h
+
+1714824776 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/clk.c
+	"clk.h"
+	<stdio.h>
+
+1714474549 /home/doomguy/CodeblocksStuff/OpenKardia/inc//clk.h
+	"fip.h"
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//fip.h
+
+1714821807 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/com.c
+	"com.h"
+	<string.h>
+	<stdio.h>
+
+1714824629 /home/doomguy/CodeblocksStuff/OpenKardia/inc//com.h
+
+1714824654 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/edit.c
+	"edit.h"
+	"vid.h"
+	"k.h"
+	"com.h"
+	<stdio.h>
+	<stdlib.h>
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//edit.h
+	"vid.h"
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//vid.h
+
+1714822605 /home/doomguy/CodeblocksStuff/OpenKardia/inc//k.h
+	"node.h"
+	"fip.h"
+	"gui.h"
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//node.h
+	"fip.h"
+
+1714824063 /home/doomguy/CodeblocksStuff/OpenKardia/inc//gui.h
+	"vid.h"
+
+1714402481 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/ekg.c
+	"ekg.h"
+	"vid.h"
+	"node.h"
+	"k.h"
+	"aud.h"
+	"clk.h"
+	"gui.h"
+	"mix.h"
+	<stdio.h>
+	<stdlib.h>
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//ekg.h
+	"k.h"
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//aud.h
+
+1714732489 /home/doomguy/CodeblocksStuff/OpenKardia/inc//mix.h
+
+1714402481 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/ev.c
+	"ev.h"
+	<stdlib.h>
+
+1714402481 /home/doomguy/CodeblocksStuff/OpenKardia/inc//ev.h
+	<stddef.h>
+
+1714818168 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/gui_font.c
+	"gui.h"
+	"k.h"
+	"com.h"
+	<stdio.h>
+	<stdlib.h>
+
+1714823816 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/gui_open.c
+	"gui.h"
+	<stdio.h>
+
+1714822147 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/k.c
+	"vid.h"
+	"fip.h"
+	"node.h"
+	"edit.h"
+	"clk.h"
+	"k.h"
+	"ekg.h"
+	"aud.h"
+	"gui.h"
+	"com.h"
+	"mix.h"
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+
+1714402481 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/mix.c
+	"mix.h"
+	"vid.h"
+	<stdio.h>
+
+1714824629 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/nix/aud.c
+	"aud.h"
+	"clk.h"
+	"com.h"
+	<alsa/asoundlib.h>
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+
+1714824821 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/gui_things.c
+	"gui.h"
+	"fip.h"
+	"com.h"
+	"mix.h"
+	<stdlib.h>
+	<stddef.h>
+	<string.h>
+	<stdio.h>
+
+1714507826 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/nix/clk.c
+	"clk.h"
+	<time.h>
+	<stdio.h>
+
+1714508379 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/nix/com.c
+	"com.h"
+	<stdio.h>
+	<unistd.h>
+
+1714824890 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/nix/vid.c
+	"vid.h"
+	<stdlib.h>
+	<stdio.h>
+	<unistd.h>
+	<X11/Xlib.h>
+	<X11/Xlib.h>
+	<X11/Xutil.h>
+	<X11/keysym.h>
+	<X11/extensions/Xrandr.h>
+
+1714824692 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/node.c
+	"vid.h"
+	"node.h"
+	"fip.h"
+	"k.h"
+	"clk.h"
+	"ekg.h"
+	"gui.h"
+	"mix.h"
+	"com.h"
+	<string.h>
+	<stdlib.h>
+	<stdio.h>
+
+1714821845 source:/home/doomguy/CodeblocksStuff/OpenKardia/src/vid.c
+	<stddef.h>
+	<stdlib.h>
+	"vid.h"
+

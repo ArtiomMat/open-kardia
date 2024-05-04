@@ -19,7 +19,7 @@ enum
   GUI_E_HOVER, // Buttons
   GUI_E_PRESS, // Buttons
   GUI_E_RELEASE, // Buttons
-  
+
   GUI_E_RELOCATE, // The user is moving a window
   GUI_E_HIDE, // The user hid the window
   GUI_E_SHOW, // The user opened/showed the window
@@ -32,29 +32,29 @@ enum
 {
   // FLAGS
 
-  GUI_WND_INVISIBLE = 0b1, // The window itself becomes completely invisible and non interactable, things are still drawn
-  GUI_WND_FIX_SIZE = 0b10, // The window cannot be resized
-  GUI_WND_HIDE = 0b100, // The window is hidden and not drawn! including things!
-  GUI_WND_XRAY = 0b1000, // Show what is behind the window, only in the content area, essenitally does not render content. DEPRECATED!
+  GUI_WND_INVISIBLE = 1<<0, // The window itself becomes completely invisible and non interactable, things are still drawn
+  GUI_WND_FIX_SIZE = 1<<1, // The window cannot be resized
+  GUI_WND_HIDE = 1<<2, // The window is hidden and not drawn! including things!
+  GUI_WND_XRAY = 1<<3, // Show what is behind the window, only in the content area, essenitally does not render content. DEPRECATED!
 
-  GUI_WND_UNFOCUSED = 0b10000,
+  GUI_WND_UNFOCUSED = 1<<4,
 
-  GUI_WND_RELOCATING = 0b100000, // The window is currently being moved, for internal use
-  GUI_WND_RESIZING = 0b1111000000, // The window is currently being resized, for internal use
-  GUI_WND_RESIZING_L = 0b1000000000,
-  GUI_WND_RESIZING_R = 0b0100000000,
-  GUI_WND_RESIZING_T = 0b0010000000,
-  GUI_WND_RESIZING_B = 0b0001000000,
+  GUI_WND_RELOCATING = 1<<5, // The window is currently being moved, for internal use
+  GUI_WND_RESIZING = ((1<<6) | (1<<7) | (1<<8) | (1<<9)), // The window is currently being resized, for internal use
+  GUI_WND_RESIZING_L = 1<<6,
+  GUI_WND_RESIZING_R = 1<<7,
+  GUI_WND_RESIZING_T = 1<<8,
+  GUI_WND_RESIZING_B = 1<<9,
 };
 
 enum
 {
   GUI_POS_LEFT=-1,
   GUI_POS_TOP=GUI_POS_LEFT,
-  
+
   GUI_POS_RIGHT=-2,
   GUI_POS_BOTTOM=GUI_POS_RIGHT,
-  
+
   GUI_SIZE_FILL=-1, // Can be used for both
   GUI_SIZE_SMART=-2, // Can be used for both
 };
@@ -73,18 +73,18 @@ enum
 
   // FLAGS
 
-  GUI_T_LEFT          = 0b1, // Align the thing to the left of its parent
-  GUI_T_RIGHT         = 0b10, // Align the thing to the right of its parent
-  GUI_T_TOP           = 0b100, // Align the thing to the top of its parent
-  GUI_T_BOTTOM        = 0b1000, // Align the thing to the bottom of its parent
-  
-  GUI_T_AUTO_WIDTH    = 0b10000,
-  GUI_T_AUTO_HEIGHT   = 0b100000,
-  
-  GUI_T_PARENT_WIDTH  = 0b1000000, // Cannot be paired with AUTO_WIDTH
-  GUI_T_PARENT_HEIGHT = 0b10000000, // Cannot be paired with AUTO_HEIGHT
-  
-  GUI_T_HIDE          =,
+  GUI_T_LEFT          = 1<<1, // Align the thing to the left of its parent
+  GUI_T_RIGHT         = 1<<2, // Align the thing to the right of its parent
+  GUI_T_TOP           = 1<<3, // Align the thing to the top of its parent
+  GUI_T_BOTTOM        = 1<<4, // Align the thing to the bottom of its parent
+
+  GUI_T_AUTO_WIDTH    = 1<<5,
+  GUI_T_AUTO_HEIGHT   = 1<<6,
+
+  GUI_T_PARENT_WIDTH  = 1<<7, // Cannot be paired with AUTO_WIDTH
+  GUI_T_PARENT_HEIGHT = 1<<8, // Cannot be paired with AUTO_HEIGHT
+
+  GUI_T_HIDE          = 1<<9,
 };
 
 enum
@@ -127,6 +127,19 @@ typedef struct
   };
 } gui_font_t;
 
+extern int
+gui_open_font(gui_font_t* f, const char* fp, int priority);
+extern void
+gui_close_font(gui_font_t* f);
+// Returns a pointer to the glyph, it is structured in row0,row1,...
+// Note that it is in compressed bit form that needs to be expanded into a bitmap if you wish
+extern void*
+gui_get_glyph(gui_font_t* f, int g);
+// Unlike height not straight forward manually
+extern int
+gui_get_font_width(gui_font_t* f);
+
+
 /**
  * Used religiously in various shit, and it is just a base struct for multi prupose use, like gui_film_t, cached image of the window, x button, etc.
 */
@@ -142,7 +155,7 @@ typedef struct gui_bmap
 typedef struct gui_thing
 {
   struct gui_thing* next;
-  
+
   union
   {
     /*struct gui_table
@@ -159,7 +172,7 @@ typedef struct gui_thing
       unsigned char color;
       unsigned short line_size; // in characters. 0 for unlimited line size
     } text; // Uses str as text
-    
+
     gui_bmap_t bmap;
 
     struct gui_button
@@ -176,7 +189,7 @@ typedef struct gui_thing
       unsigned short width; // 0 for an automatically determined width
     } slider;
   };
-  
+
   const char* str;
   int flags;
   char type;
@@ -208,20 +221,20 @@ typedef struct gui_thing
       unsigned char* cols_n; // Gives number of columns per each row index.
       unsigned char rows_n;
     } map;
-    
+
     struct
     {
       unsigned char thing;
       // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
       // For internal use
       short mouse_rel[2];
-      // The size before we began resizing, for internal use, crucial for calculating resizing for good UX 
+      // The size before we began resizing, for internal use, crucial for calculating resizing for good UX
       short size_0[2];
       int flags;
     } window;
-    
+
     gui_bmap_t bmap;
-    
+
     struct
     {
       char pressed;
@@ -229,7 +242,7 @@ typedef struct gui_thing
     struct
     {
       char ticked;
-    } tick;
+    } tickbox;
     struct gui_slider
     {
       unsigned short value; // 0 is the far left, maximum value is the right
@@ -269,17 +282,8 @@ extern gui_thing_t gui_window;
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
 
-extern int
-gui_open_font(gui_font_t* f, const char* fp, int priority);
-extern void
-gui_close_font(gui_font_t* f);
-// Returns a pointer to the glyph, it is structured in row0,row1,...
-// Note that it is in compressed bit form that needs to be expanded into a bitmap if you wish
-extern void*
-gui_get_glyph(gui_font_t* f, int g);
-// Unlike height not straight forward manually
-extern int
-gui_get_font_width(gui_font_t* f);
+extern gui_thing_t* things;
+extern int gui_things_n;
 
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!
@@ -297,7 +301,21 @@ gui_recache_thing(gui_thing_t* thing);
 
 extern void
 gui_free();
+// Turn a text gui file into binary, setting out to NULL makes out=fp
+// Optimized to not do it again if the file is already a binary
+// Returns 1 if succeeded, 0 otherwise
+extern int
+gui_to_bin(const char* fp, const char* out);
+// Reverse a binary gui file into text, setting out to NULL makes out=fp
+// Optimized to not do it again if the file is already a text
+// Returns 1 if succeeded, 0 otherwise
+extern int
+gui_to_txt(const char* fp, const char* out);
 
+// NOTE IT CALLS GUI_FREE() WITH BIN_WRITE=0!!!
+// Automatically calls gui_free() if gui_things_n != 0.
+// If a file begins with "#T\n" it's a text GUI file, takes more time to parse it.
+// If a file begins with "#B\n" it's a binary GUI file, fastest parsing.
 extern int
 gui_open(const char* fp);
 // Returns an index
@@ -327,7 +345,7 @@ gui_on_vid(vid_event_t* event);
 // Free draw, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
 /**
- * Draw a font on the screen, 
+ * Draw a font on the screen,
 */
 extern void
 gui_draw_font(gui_font_t* f, int x, int y, int g, unsigned char color);

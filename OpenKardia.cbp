@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="OpenKardia" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug-NIX">
+				<Option output="bin/Debug/OpenKardia" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++17" />
+					<Add option="-D DEBUG" />
+					<Add option="-ggdb" />
+					<Add option="-Og" />
+				</Compiler>
+				<Linker>
+					<Add library="X11" />
+					<Add library="Xrandr" />
+					<Add library="asound" />
+					<Add library="m" />
+				</Linker>
+			</Target>
+			<Target title="Release-NIX">
+				<Option output="bin/Release/OpenKardia" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="X11" />
+					<Add library="Xrandr" />
+					<Add library="asound" />
+					<Add library="m" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-pedantic" />
+			<Add option="-Wall" />
+			<Add option="-std=c++98" />
+			<Add directory="/home/doomguy/CodeblocksStuff/OpenKardia/inc/" />
+		</Compiler>
+		<Unit filename="inc/aud.h" />
+		<Unit filename="inc/cfg.h" />
+		<Unit filename="inc/clk.h" />
+		<Unit filename="inc/com.h" />
+		<Unit filename="inc/edit.h" />
+		<Unit filename="inc/ekg.h" />
+		<Unit filename="inc/ev.h" />
+		<Unit filename="inc/fip.h" />
+		<Unit filename="inc/gui.h" />
+		<Unit filename="inc/k.h" />
+		<Unit filename="inc/mix.h" />
+		<Unit filename="inc/node.h" />
+		<Unit filename="inc/vid.h" />
+		<Unit filename="src/aud.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/cfg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/clk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/com.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/edit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ekg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gui_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gui_open.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gui_things.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/k.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/mix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/nix/aud.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/nix/clk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/nix/com.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/nix/vid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/node.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/vid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/win/aud.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/win/clk.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/win/com.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/win/vid.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>

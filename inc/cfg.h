@@ -7,8 +7,8 @@
 // The values of the enum represent the shift not the flag itself.
 enum
 {
-  CFG_F_NOSET = 0b1, // The variable is readonly, value provided by file is the only one.
-  CFG_F_PRIVATE = 0b10, // The variable is only meant for the program to interact with, not for the user of the program. Useful for programs with a developer console.
+  CFG_F_NOSET = 1<<0, // The variable is readonly, value provided by file is the only one.
+  CFG_F_PRIVATE = 1<<1, // The variable is only meant for the program to interact with, not for the user of the program. Useful for programs with a developer console.
 
 };
 

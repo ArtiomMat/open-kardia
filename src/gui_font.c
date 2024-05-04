@@ -10,7 +10,6 @@ enum
   PSF1_MODE512 = 1,
   PSF1_MODEHASTAB = 2,
   PSF1_MODESEQ = 4,
-
   PSF2_HAS_UNICODE_TABLE = 1,
 };
 enum

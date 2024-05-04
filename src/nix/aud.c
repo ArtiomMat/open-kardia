@@ -21,7 +21,7 @@ static unsigned int sample_rate;
 int
 aud_init(unsigned int _sample_rate)
 {
-  sample_rate = _sample_rate;  
+  sample_rate = _sample_rate;
   // Open device into pcm
   if ((err = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
   {
@@ -73,15 +73,15 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
     return;
   }
   #endif
-  
-  int write_size = MIN(sample_rate/15, buf_size);
+
+  int write_size = min(sample_rate/15, buf_size);
   // How many samples per zig/zag in the sound wave
   int spz = __UINT8_MAX__ - freq + 1;
   int amp16 = amp * (__INT16_MAX__ / __UINT8_MAX__);
   int jps = 2*amp16 / spz; // How much we jump per sample
 
   buf[0] = 0; // We start at 0
-  
+
   // Set all samples to the desired level (0-127 for 8-bit signed)
   for (int i = 1, sign = -1; i < write_size; i++)
   {
@@ -91,7 +91,7 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
       sample = amp16 * sign;
       sign = -sign;
     }
-    
+
     buf[i] = sample;
   }
 

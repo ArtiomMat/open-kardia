@@ -3,12 +3,6 @@
 
 #include "vid.h"
 
-#ifdef __linux__
-  #include "nix/vid.c"
-#elif _WIN32
-  #include "win/vid.c"
-#endif
-
 unsigned char (*vid_colors)[3] = NULL;
 
 unsigned char* vid_pixels = NULL;

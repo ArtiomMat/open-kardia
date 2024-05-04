@@ -45,12 +45,6 @@ _com_init_dir()
   return 1;
 }
 
-#ifdef __linux__
-  #include "nix/com.c"
-#elif _WIN32
-  #include "win/com.c"
-#endif
-
 int
 com_arg(const char* str)
 {

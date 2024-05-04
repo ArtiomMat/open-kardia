@@ -1,27 +1,13 @@
-// Common functionality module, a m 
+// Common functionality module, a m
 
 #pragma once
 
 #define COM_PATH_SIZE 512
 
-#ifndef MAX
-  #define MAX(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-   _a > _b ? _a : _b; })
-#endif
-
-#ifndef MIN
-  #define MIN(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-   _a < _b ? _a : _b; })
-#endif
-
 // Little endian
 #ifdef __x86_64__
   #define COM_LILE 1
-  
+
   static inline unsigned short
   com_big16(unsigned short _x)
   {
@@ -57,7 +43,7 @@
     y.a[1] = x.a[2];
     y.a[2] = x.a[1];
     y.a[3] = x.a[0];
-    
+
     return y.i;
   }
   static inline unsigned long long
@@ -81,7 +67,7 @@
     y.a[5] = x.a[2];
     y.a[6] = x.a[1];
     y.a[7] = x.a[0];
-    
+
     return y.i;
   }
 
@@ -154,7 +140,7 @@
     y.a[1] = x.a[2];
     y.a[2] = x.a[1];
     y.a[3] = x.a[0];
-    
+
     return y.i;
   }
   static inline unsigned long long
@@ -178,10 +164,22 @@
     y.a[5] = x.a[2];
     y.a[6] = x.a[1];
     y.a[7] = x.a[0];
-    
+
     return y.i;
   }
 #endif
+
+static inline long long
+max(long long a, long long b)
+{
+  return a > b ? a : b;
+}
+
+static inline long long
+min(long long a, long long b)
+{
+  return a > b ? b : a;
+}
 
 // The directory in which the executable is located
 extern char com_dir[COM_PATH_SIZE];

@@ -60,11 +60,11 @@ char*
 cfg_gets(cfg_id_t id)
 {
   static char s[VAR_MAX_S];
-  switch (vars[id].type == TYPE_I)
+  if (vars[id].type == TYPE_I)
   {
     sprintf(s, "%lli", vars[id].i);
   }
-  
+
   return vars[id].s;
 }
 long long
@@ -74,7 +74,7 @@ cfg_geti(cfg_id_t id)
   {
     return atoll(vars[id].s);
   }
-  
+
   return vars[id].i;
 }
 int
@@ -86,7 +86,7 @@ cfg_init(const char* fp)
     fprintf(stderr, "cfg_init(): '%s' does not exist.", fp);
     return 0;
   }
-  
+
   // Setup vars_n
   var_t v = {0}; // Temporary variable for syntax validation
   int word = 0, i = 0; // Word index, i is relative to the word's start
@@ -99,7 +99,7 @@ cfg_init(const char* fp)
     {
       if (i == 0 && c == '[')
       {
-        
+
       }
     }
     if (c == '\n')
@@ -113,11 +113,11 @@ cfg_init(const char* fp)
       return 0;
     }
   }
-  
+
   // Setup vars
   rewind(f);
   vars = malloc(sizeof (*vars) * vars_n);
-  
+
   return 0; // TODO: Make it 1
 }
 
