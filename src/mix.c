@@ -35,7 +35,6 @@ mix_push(int i, int r, int g, int b)
   return push_start;
 }
 
-// TODO: MAke it actually read the last push1() and then do a gradient, and also rename it to mix_gradient(). Essentially it goes to vid_colors[push_start-1] and just makes a gradient from that color to r2g2b2. This will make making more complex gradient easier.
 unsigned char
 mix_push_gradient(int i, int n, int r2, int g2, int b2)
 {
