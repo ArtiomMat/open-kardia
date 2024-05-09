@@ -21,6 +21,12 @@ extern struct mix_shift
 } mix_shifts[256];
 
 /**
+ * Just sets a vid_colors[color] to the rgb value, this doesn't have anything to do with mix_grads, just for a single line modification.
+ */
+extern void
+mix_set(int color, int r, int g, int b);
+
+/**
  * Push a single color into the gradient of index I in vid_colors.
  * Returns the index that comes after this last pushed color.
 */

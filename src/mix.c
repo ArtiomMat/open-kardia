@@ -9,6 +9,14 @@ static int push_start = 0; // Where we start this current push
 
 struct mix_shift mix_shifts[256] = {0};
 
+void
+mix_set(int color, int r, int g, int b)
+{
+  vid_colors[color][0] = r;
+  vid_colors[color][1] = g;
+  vid_colors[color][2] = b;
+}
+
 unsigned char
 mix_push1(int i, int r, int g, int b)
 {
@@ -20,10 +28,7 @@ mix_push1(int i, int r, int g, int b)
 
   // Add 1 to n
   mix_grads[i].n++;
-
-  vid_colors[push_start][0] = r;
-  vid_colors[push_start][1] = g;
-  vid_colors[push_start][2] = b;
+  mix_set(push_start, r, g, b);
   mix_shifts[push_start].grad_i = i;
 
   push_start++;

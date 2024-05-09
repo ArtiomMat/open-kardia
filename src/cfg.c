@@ -1,8 +1,5 @@
 #include "cfg.h"
 
-// Honeslty no clue, not even gonna question it, got it from IBM
-#define _OPEN_SYS_ITOA_EXT
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +8,8 @@
 #define VAR_MAX_NAME 32
 // To be able to contain a full blown unisnged long long
 #define VAR_MAX_S 32
+
+#define LINE_MAX 128
 
 enum
 {
@@ -24,7 +23,6 @@ typedef struct
   char name[VAR_MAX_NAME];
   union
   {
-    unsigned long long u;
     long long i;
     char s[VAR_MAX_S];
   };
@@ -35,29 +33,44 @@ typedef struct
 static var_t* vars;
 static int vars_n;
 
+
+extern int
+cfg_find(const char* name)
+{
+  int id;
+
+  for (id = 0; id < vars_n; id++)
+  {
+    if (vars[id].flags & _CFG_F_FOUND)
+    {
+      continue;
+    }
+
+    if (!strcmp(name, vars[id].name))
+    {
+      vars[id].flags |= _CFG_F_FOUND;
+      return id;
+    }
+  }
+  return -1;
+}
+
 void
-cfg_sets(cfg_id_t id, const char* str)
+cfg_sets(int id, const char* str)
 {
   strncpy(vars[id].s, str, VAR_MAX_S);
   vars[id].type = TYPE_S;
 }
 
 void
-cfg_seti(cfg_id_t id, long long x)
+cfg_seti(int id, long long x)
 {
   vars[id].i = x;
   vars[id].type = TYPE_I;
 }
 
-extern void
-cfg_setu(cfg_id_t id, unsigned long long u)
-{
-  vars[id].u = u;
-  vars[id].type = TYPE_U;
-}
-
 char*
-cfg_gets(cfg_id_t id)
+cfg_gets(int id)
 {
   static char s[VAR_MAX_S];
   if (vars[id].type == TYPE_I)
@@ -68,7 +81,7 @@ cfg_gets(cfg_id_t id)
   return vars[id].s;
 }
 long long
-cfg_geti(cfg_id_t id)
+cfg_geti(int id)
 {
   if (vars[id].type == TYPE_S)
   {
@@ -77,6 +90,13 @@ cfg_geti(cfg_id_t id)
 
   return vars[id].i;
 }
+
+static void
+parse_line()
+{
+
+}
+
 int
 cfg_init(const char* fp)
 {
@@ -87,37 +107,50 @@ cfg_init(const char* fp)
     return 0;
   }
 
-  // Setup vars_n
-  var_t v = {0}; // Temporary variable for syntax validation
-  int word = 0, i = 0; // Word index, i is relative to the word's start
-  int vn = 0, vd = 0; // name and data indices of v respectively.
-  vars_n = 1;
+  char line[LINE_MAX];
+  int lines_n = 1; // How many lines we got
   int c;
-  while ((c = fgetc(f)) != EOF)
+
+  // Setup vars_n and check syntax
   {
-    if (word == 0)
+    int i = 0;
+
+    while ((c = getc(f)) != EOF)
     {
-      if (i == 0 && c == '[')
+      // Make sure i is within range
+      if (i >= LINE_MAX)
       {
+        fprintf(stderr, "cfg_init(): Line %d is impractically long, skipping it.\n", lines_n);
+
+        // Skip until we either hit EOF or until it's newline, to allow to just recover gracefully from the error
+        while ((c = getc(f)) != EOF)
+        {
+          if (c == '\n')
+          {
+            break;
+          }
+        }
+
+        continue;
+      }
+
+      c = getc(f);
+
+      // That's it we are done with the line
+      if (c == '\n')
+      {
+        line[i] = 0;
 
       }
-    }
-    if (c == '\n')
-    {
-      word = i = 0;
-      vars_n++;
-    }
-    if (vars_n > CFG_VAR_LIMIT)
-    {
-      fprintf(stderr, "cfg_init(): '%s' may be either invalid, or has too many variables.", fp);
-      return 0;
     }
   }
 
   // Setup vars
   rewind(f);
   vars = malloc(sizeof (*vars) * vars_n);
+  lines_n = 1;
 
-  return 0; // TODO: Make it 1
+  fclose(f);
+  return 1; // TODO: Make it 1
 }
 

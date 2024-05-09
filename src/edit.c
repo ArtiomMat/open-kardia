@@ -65,12 +65,12 @@ edit_run()
     int c;
     if (in_square(k_mouse[0], k_mouse[1], x, y, 7))
     {
-      c = NODE_DEPOL_C;
+      c = 1;
       hover_node_i = i;
     }
     else
     {
-      c = NODE_POL_C;
+      c = 0;
     }
     put_square(c, x, y, 7);
   }

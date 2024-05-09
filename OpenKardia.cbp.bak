@@ -44,6 +44,12 @@
 					<Add library="m" />
 				</Linker>
 			</Target>
+			<Target title="Release-WIN">
+				<Option platforms="Windows;" />
+				<Option output="OpenKardia" prefix_auto="1" extension_auto="1" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-pedantic" />
@@ -51,69 +57,142 @@
 			<Add option="-std=c++98" />
 			<Add directory="/home/doomguy/CodeblocksStuff/OpenKardia/inc/" />
 		</Compiler>
-		<Unit filename="inc/aud.h" />
-		<Unit filename="inc/cfg.h" />
-		<Unit filename="inc/clk.h" />
-		<Unit filename="inc/com.h" />
-		<Unit filename="inc/edit.h" />
-		<Unit filename="inc/ekg.h" />
-		<Unit filename="inc/ev.h" />
-		<Unit filename="inc/fip.h" />
-		<Unit filename="inc/gui.h" />
-		<Unit filename="inc/k.h" />
-		<Unit filename="inc/mix.h" />
-		<Unit filename="inc/node.h" />
-		<Unit filename="inc/vid.h" />
+		<Unit filename="inc/aud.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/cfg.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/clk.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/com.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/edit.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/ekg.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/ev.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/fip.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/gui.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/k.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/mix.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/node.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
+		<Unit filename="inc/vid.h">
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
+		</Unit>
 		<Unit filename="src/cfg.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/clk.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/com.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/edit.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/ekg.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/ev.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/gui_font.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/gui_open.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/gui_things.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/k.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/mix.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/nix/aud.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/nix/clk.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/nix/com.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/nix/vid.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/node.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/vid.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug-NIX" />
+			<Option target="Release-NIX" />
 		</Unit>
 		<Unit filename="src/win/aud.c">
 			<Option compilerVar="CC" />

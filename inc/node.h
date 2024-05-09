@@ -1,4 +1,4 @@
-// Node module, includes logic for everything node related, for how 
+// Node module, includes logic for everything node related, for how
 
 #pragma once
 
@@ -13,16 +13,6 @@
 // At max ionization the muscle fully contracts
 #define NODE_MAX_ION (8 << FIP_FRAC_BITS)
 #define NODE_MAX_FLOW (NODE_MAX_ION*256)
-
-#define NODE_DEPOL_C_R 255
-#define NODE_DEPOL_C_G 80
-#define NODE_DEPOL_C_B 70
-#define NODE_DEPOL_C k_pickc(NODE_DEPOL_C_R,NODE_DEPOL_C_G,NODE_DEPOL_C_B)
-
-#define NODE_POL_C_R 70
-#define NODE_POL_C_G 80
-#define NODE_POL_C_B 255
-#define NODE_POL_C k_pickc(NODE_POL_C_R,NODE_POL_C_G,NODE_POL_C_B)
 
 typedef struct node_s
 {

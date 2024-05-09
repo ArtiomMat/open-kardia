@@ -93,7 +93,7 @@ k_init()
 {
   mix_push(K_NODE_GRAD, 32, 255,100,0, 0,100,255);
   mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
-  int next;
+
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
   /*       mix_push1(K_GUI_GRAD, 60,60,10);
          mix_push1(K_GUI_GRAD, 80,80,30);
@@ -105,7 +105,7 @@ k_init()
   mix_push1(K_GUI_GRAD, 130,130,130);
   mix_push1(K_GUI_GRAD, 180,180,180);
   mix_push1(K_GUI_GRAD, 255,255,255);
-  next = mix_push1(K_GUI_TITLE_COLO, 10,25,200);
+  mix_set(255, 0,0,0);
 }
 
 // draws and flows end at -1
@@ -156,6 +156,7 @@ main(int args_n, const char** args)
 
   static const char* fp = "NULL";
   const char* font_fp = K_FONT_REL_FP;
+  puts(font_fp);
 
   int fps = -1;
 
@@ -246,16 +247,15 @@ main(int args_n, const char** args)
   {
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
   }
-  gui_window.color = mix_pickl(K_GUI_TITLE_COLO);
+  gui_window.text_color = 255;
   gui_init(100, 100, "Open Kardia", NULL, k_font);
 
   for (int i = 0; i < 2; i++)
   {
     gui_window.pos[i] = vid_size[i]/2 - gui_window.size[i]/2;
   }
-  // gui_set_flag(GUI_WND_UNFOCUSED, 1);
 
-  aud_init(16000);
+  aud_init();
 
   // Set clk rate to fps if it was initialized by user otherwise screen rate
   clk_init(ITOFIP(1) / (fps == -1 ? screen_rate : fps));
@@ -299,16 +299,15 @@ main(int args_n, const char** args)
   {
     clk_begin_tick();
 
-    vid_wipe(mix_grads[K_EKG_GRAD].start);
 
-    node_draw(flow_mode);
-    ekg_draw();
-
-
-    vid_run();
     node_beat();
+    vid_run();
 
-    gui_draw(&gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
+    vid_wipe(mix_grads[K_EKG_GRAD].start);
+      node_draw(flow_mode);
+      ekg_draw();
+      gui_draw(&gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
+    vid_refresh();
 
     #if 0
     if (count < sizeof(times))
@@ -326,7 +325,6 @@ main(int args_n, const char** args)
     }
     #endif
 
-    vid_refresh();
 
     clk_end_tick();
   }

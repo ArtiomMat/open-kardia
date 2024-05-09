@@ -4,7 +4,7 @@
 
 // Please initialize clk because we need the tick time
 extern int
-aud_init(unsigned int sample_rate);
+aud_init();
 extern void
 aud_free();
 // Plays a "short" beep for an implementation defined time with the frequency and amplitude specified.

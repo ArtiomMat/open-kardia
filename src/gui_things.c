@@ -51,6 +51,8 @@ int gui_things_n = 0;
 int (*gui_on)(gui_event_t* event) = NULL;
 
 static gui_bmap_t main_map;
+//
+static gui_bmap_t thing_map;
 
 static unsigned char
 get_shade(int i)
@@ -188,10 +190,10 @@ gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
   font = _font;
   font_w = gui_get_font_width(font);
 
-  gui_window.str = (char*) title;
-  if (gui_window.str == NULL)
+  gui_window.text = (char*) title;
+  if (gui_window.text == NULL)
   {
-    gui_window.str = "\xFF";
+    gui_window.text = "\xFF";
   }
 
   gui_window.type = GUI_T_WINDOW;
@@ -209,7 +211,7 @@ gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
 
   // gui_window.content_cache = NULL;
 
-  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.str);
+  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.text);
 }
 
 void
@@ -424,7 +426,7 @@ text_in_rect(int width, int height)
 
 // Safe to pass NULL as string
 static int
-draw_str(const char* str, int l, int t, int r, int b)
+draw_str(unsigned char color, const char* str, int l, int t, int r, int b)
 {
   if (str == NULL)
   {
@@ -446,7 +448,7 @@ draw_str(const char* str, int l, int t, int r, int b)
         nl = 1;
         continue;
       }
-      gui_draw_font(font, x, y, str[i], get_shade(4));
+      gui_draw_font(font, x, y, str[i], color);
     }
   }
   return i;
@@ -514,7 +516,7 @@ gui_draw_window(int l, int t, int r, int b)
   gui_draw_font(font, xx, xy,  '/', get_shade(0));
 
   // Window title text
-  draw_str(gui_window.str, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
+  draw_str(gui_window.text_color, gui_window.text, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
 
   // Three dots on the corner
   //gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height-2, '.', get_shade(3));
@@ -523,7 +525,7 @@ gui_draw_window(int l, int t, int r, int b)
 
   // Drawing the things and shit
   static gui_thing_t th = {0};
-  th.str = "Ouah";
+  th.text = "Ouah";
   th.type = GUI_T_TICKBOX;
   th.button.pressed = 0;
   gui_draw(&th, CONTENT_LEFT,CONTENT_TOP, CONTENT_RIGHT,CONTENT_TOP+font->height+1);
@@ -581,7 +583,7 @@ gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
 
   if (yes_text)
   {
-    draw_str(t->str, left, top, right, bottom);
+    draw_str(t->text_color, t->text, left, top, right, bottom);
   }
 }
 

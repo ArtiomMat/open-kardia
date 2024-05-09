@@ -2,65 +2,48 @@
 #include "clk.h"
 #include "com.h"
 
-#include <alsa/asoundlib.h>
+#include <pulse/error.h>
+#include <pulse/simple.h>
+#include <pulse/pulseaudio.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <math.h>
 
+#define BUF_SIZE 1024
+
 static int err;
 
+/*
 static snd_pcm_t* pcm;
 static snd_pcm_hw_params_t* params;
 static int16_t* buf;
-static int buf_size;
+static int BUF_SIZE;
+*/
 
-static unsigned int sample_rate;
+static pa_simple* client;
+static pa_sample_spec ss;
+static int error;
+
+static int16_t buf[BUF_SIZE];
 
 int
-aud_init(unsigned int _sample_rate)
+aud_init()
 {
-  sample_rate = _sample_rate;
-  // Open device into pcm
-  if ((err = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+  // Setup the sample spec
+  ss.format = PA_SAMPLE_S16LE;
+  ss.rate = 16000;
+  ss.channels = 1;
+  
+  // Connect to server
+  client = pa_simple_new(NULL, "AUD", PA_STREAM_PLAYBACK, NULL, "AUD_STREAM", &ss, NULL, NULL, &error);
+
+  if (client == NULL)
   {
-    fprintf(stderr, "aud_init(): Opening PCM device failed. '%s' -ALSA\n", snd_strerror(err));
+    fprintf(stderr, "aud_init(): Failed to connect to server, '%s' -PulseAudio\n", pa_strerror(error));
     return 0;
   }
-
-  // Allocate params
-  snd_pcm_hw_params_alloca(&params);
-  snd_pcm_hw_params_any(pcm, params);
-
-  // Setup params
-  snd_pcm_hw_params_set_access(pcm, params, SND_PCM_ACCESS_RW_INTERLEAVED); // read/write access
-  snd_pcm_hw_params_set_format(pcm, params, SND_PCM_FORMAT_S16_LE); // 8 bit signed samples
-  snd_pcm_hw_params_set_channels(pcm, params, 1); // Just one channel
-  snd_pcm_hw_params_set_rate_near(pcm, params, &sample_rate, 0); // Sample  rate
-
-  // Send params to the pcm device
-  if ((err = snd_pcm_hw_params(pcm, params)) < 0)
-  {
-    fprintf(stderr, "aud_init(): Sending parameters to PCM device failed. '%s' -ALSA\n", snd_strerror(err));
-    return 0;
-  }
-
-  // Calculate and allocate buf size using "period size", no clue, but that's what it do
-  {
-    snd_pcm_uframes_t frames;
-    snd_pcm_hw_params_get_period_size(params, &frames, 0);
-    if (frames == 0)
-    {
-      fputs("aud_init(): Buffer failed to initialize.", stderr);
-      return 0;
-    }
-    buf_size = frames * sizeof (*buf);
-  }
-  buf = malloc(sizeof (*buf) * buf_size);
-
-  printf("aud_init(): Audio module initialized, %ld bytes allocated for %dHz.\n", sizeof (*buf) * buf_size, sample_rate);
-
   return 1;
 }
 
@@ -68,13 +51,13 @@ void
 aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect volume level
 {
   #ifdef DEBUG
-  if (!buf_size)
+  if (!BUF_SIZE)
   {
     return;
   }
   #endif
 
-  int write_size = min(sample_rate/15, buf_size);
+  int write_size = BUF_SIZE;
   // How many samples per zig/zag in the sound wave
   int spz = __UINT8_MAX__ - freq + 1;
   int amp16 = amp * (__INT16_MAX__ / __UINT8_MAX__);
@@ -94,12 +77,10 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
 
     buf[i] = sample;
   }
-
-  snd_pcm_prepare(pcm);
-
-  if ((err = snd_pcm_writei(pcm, buf, write_size)) != write_size)
+  
+  if (pa_simple_write(client, buf, write_size, &error) < 0)
   {
-    fprintf(stderr, "aud_play(): Didn't write everything... error: %s\n", snd_strerror(err));
+    fprintf(stderr, "aud_play(): Failed to write data, '%s' -PulseAudio\n", pa_strerror(error));
   }
 }
 
@@ -107,8 +88,11 @@ aud_play(unsigned char freq, unsigned char amp) // Rename parameter to reflect v
 void
 aud_free()
 {
-  snd_pcm_close(pcm);
-  free(buf);
-  puts("aud_free(): Audio module freed.");
+  if (client != NULL)
+  {
+    pa_simple_free(client);
+    puts("aud_free(): Audio module freed.");
+  }
+  fputs("aud_free(): Nothing to free.", stderr);
 }
 

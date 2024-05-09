@@ -188,9 +188,9 @@ vid_init(int _vid_w, int _vid_h)
     fputs("vid_init(): Could not get screen info, extra screen information not available.", stderr);
   }
 
-  int sizes_n;
+//  int sizes_n;
   int rates_n;
-  XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
+//  XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
 
   short* rates = XRRConfigRates(screen_info, 0, &rates_n);
   if (screen_info == NULL)

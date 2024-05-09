@@ -3,16 +3,18 @@
 #include <windows.h>
 #include <stdio.h>
 
+static int res;
+
 // Initialize right before the loop
 void
 clk_init(fip_t initial_tick_time)
 {
   TIMECAPS tc;
   timeGetDevCaps(&tc, sizeof (tc));
-  
+
   int res = tc.wPeriodMin; // in milliseconds
   timeBeginPeriod(tc.wPeriodMin);
-  
+
   printf("clk_init(): Cloak module initialized, %dns resolution.\n", res*1000000);
 }
 
@@ -21,6 +23,11 @@ clk_wait(fip_t secs)
 {
   unsigned long long m = FIP_FRAC(secs) * (1 << FIP_FRAC_BITS) / 1000;
   Sleep(m);
+}
+
+void clk_free()
+{
+  timeEndPeriod(tc.wPeriodMin);
 }
 
 fip_t

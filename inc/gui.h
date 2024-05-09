@@ -203,28 +203,28 @@ typedef struct gui_thing gui_thing_t;
 
 typedef struct gui_thing
 {
-  char* str; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
+  char* text; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
   short min_size[2], max_size[2]; // Always valid and no flag can make it unused!
   short size[2]; // If overriden by flags the size is automatically modified by GUI.
   short pos[2]; // If overriden by flags the position is automatically modified by GUI.
   short flags;
   char type;
-  unsigned char color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
-  unsigned char id; // Mainly so you can identify stuff, you can use the same ID for multiple things
+  unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
+  const char* id; // The string based ID
   union
   {
     // A map contains rows and columns, it's like a table, but it's actually dynamic in number of columns per row.
     // It would be benefitial to have another column based map, but that's what you got, deal with it.
     struct
     {
-      unsigned char* indices;
+      int* things_i;
       unsigned char* cols_n; // Gives number of columns per each row index.
       unsigned char rows_n;
     } map;
 
     struct
     {
-      unsigned char thing;
+      int thing_i;
       // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
       // For internal use
       short mouse_rel[2];
@@ -249,7 +249,6 @@ typedef struct gui_thing
     } slider;
   };
 } gui_thing_t;
-
 
 typedef struct
 {
@@ -290,15 +289,6 @@ extern int gui_things_n;
 extern void
 gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font);
 
-// Essentially rerenders and reinitializes the entire content_cache of the window, this is done when things are moved around the window, should not be called too much.
-extern void
-gui_recache_all();
-
-// If you modified a thing without fucking with its width and height directly or indirectly, you need to call this to recache it into the window cache bitmap.
-// If you changed the size, you must use gui_recache_all()
-extern void
-gui_recache_thing(gui_thing_t* thing);
-
 extern void
 gui_free();
 // Turn a text gui file into binary, setting out to NULL makes out=fp
@@ -312,14 +302,12 @@ gui_to_bin(const char* fp, const char* out);
 extern int
 gui_to_txt(const char* fp, const char* out);
 
-// NOTE IT CALLS GUI_FREE() WITH BIN_WRITE=0!!!
 // Automatically calls gui_free() if gui_things_n != 0.
-// If a file begins with "#T\n" it's a text GUI file, takes more time to parse it.
-// If a file begins with "#B\n" it's a binary GUI file, fastest parsing.
+// Only opens
 extern int
-gui_open(const char* fp);
-// Returns an index
-extern unsigned char
+gui_open_thing(const char* fp);
+// Returns an  id
+extern int
 gui_find(const char* id);
 
 // This function is the starting point of any drawn thing.
@@ -342,11 +330,8 @@ gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color);
 extern int
 gui_on_vid(vid_event_t* event);
 
-// Free draw, in pixels not in grid units.
+// Draw font, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
-/**
- * Draw a font on the screen,
-*/
 extern void
 gui_draw_font(gui_font_t* f, int x, int y, int g, unsigned char color);
 
