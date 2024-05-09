@@ -91,8 +91,11 @@ on_vid(vid_event_t* e)
 static void
 k_init()
 {
-  mix_push(K_NODE_GRAD, 32, 255,100,0, 0,100,255);
-  mix_push(K_EKG_GRAD, 32, 0,0,0, 0,255,100);
+  mix_push(K_NODE_GRAD, 255,100,0);
+  mix_push_gradient(K_NODE_GRAD, 31, 0,100,255);
+  
+  mix_push(K_EKG_GRAD, 0,0,0);
+  mix_push_gradient(K_EKG_GRAD, 31, 0,255,100);
 
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
   /*       mix_push1(K_GUI_GRAD, 60,60,10);
@@ -100,11 +103,13 @@ k_init()
          mix_push1(K_GUI_GRAD, 100,100,40);
          mix_push1(K_GUI_GRAD, 160,160,80);
   next = mix_push1(K_GUI_GRAD, 235,235,180);*/
-  mix_push1(K_GUI_GRAD, 20,20,20);
-  mix_push1(K_GUI_GRAD, 80,80,80);
-  mix_push1(K_GUI_GRAD, 130,130,130);
-  mix_push1(K_GUI_GRAD, 180,180,180);
-  mix_push1(K_GUI_GRAD, 255,255,255);
+  
+  mix_push(K_GUI_GRAD, 20,20,20);
+  mix_push(K_GUI_GRAD, 80,80,80);
+  mix_push(K_GUI_GRAD, 130,130,130);
+  mix_push(K_GUI_GRAD, 180,180,180);
+  mix_push(K_GUI_GRAD, 255,255,255);
+  
   mix_set(255, 0,0,0);
 }
 
@@ -303,12 +308,13 @@ main(int args_n, const char** args)
     node_beat();
     vid_run();
 
-    vid_wipe(mix_grads[K_EKG_GRAD].start);
+    vid_wipe(1);
       node_draw(flow_mode);
       ekg_draw();
       gui_draw(&gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
     vid_refresh();
-
+    
+    
     #if 0
     if (count < sizeof(times))
     {

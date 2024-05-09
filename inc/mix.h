@@ -31,14 +31,14 @@ mix_set(int color, int r, int g, int b);
  * Returns the index that comes after this last pushed color.
 */
 extern unsigned char
-mix_push1(int i, int r, int g, int b);
+mix_push(int i, int r, int g, int b);
 
 /**
- * Initialize a gradient of index I in vid_colors, generates a gradient that goes from RGB to R2G2B2, at index of the last pushed gradient.
+ * Initialize a gradient of index I in mix_grads, the last pushed color is the initial color, and it pushes N more colors that ransition into R2 G2 B2. So if N=1 it would actually be literally the same as doing mix_push(i, r2, g2, b2)
  * Returns the index that comes after this last pushed gradient.
  */
 extern unsigned char
-mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2);
+mix_push_gradient(int i, int n, int r2, int g2, int b2);
 
 static inline unsigned char
 mix_pick(int i, int x, int max_x)

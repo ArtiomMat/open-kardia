@@ -18,7 +18,7 @@ mix_set(int color, int r, int g, int b)
 }
 
 unsigned char
-mix_push1(int i, int r, int g, int b)
+mix_push(int i, int r, int g, int b)
 {
   // If it's the first push for this gradient we need to init the start
   if (mix_grads[i].n == 0)
@@ -35,9 +35,19 @@ mix_push1(int i, int r, int g, int b)
   return push_start;
 }
 
+// TODO: MAke it actually read the last push1() and then do a gradient, and also rename it to mix_gradient(). Essentially it goes to vid_colors[push_start-1] and just makes a gradient from that color to r2g2b2. This will make making more complex gradient easier.
 unsigned char
-mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2)
+mix_push_gradient(int i, int n, int r2, int g2, int b2)
 {
+  // Setup the starting point
+  int r=0, g=0, b=0;
+  if (push_start) // We need push_start to be something actually
+  {
+    r = vid_colors[push_start - 1][0];
+    g = vid_colors[push_start - 1][1];
+    b = vid_colors[push_start - 1][2];
+  }
+  
   if (n > 1)
   {
     int dr = (r2-r)/(n-1);
@@ -47,20 +57,16 @@ mix_push(int i, int n, int r, int g, int b, int r2, int g2, int b2)
     // n-1 because at the last I do it manually
     for (int j = 0; j < n-1; j++)
     {
-      // vid_colors[j + push_start][0] = r;
-      // vid_colors[j + push_start][1] = g;
-      // vid_colors[j + push_start][2] = b;
-      // mix_shifts[j + push_start].grad_i = i;
-      mix_push1(i, r, g, b);
       r += dr;
       g += dg;
       b += db;
+      
+      mix_push(i, r, g, b);
     }
 
-    // I do it because there may sometimes be rounding errors in dr/g/b that lead to just below the desired last value
-    mix_push1(i, r2,g2,b2);
+    // Because there may sometimes be rounding errors in dr/g/b that lead to just below/above the desired last value
+    mix_push(i, r2,g2,b2);
 
-    push_start += n;
   }
   else
   {
