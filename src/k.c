@@ -254,11 +254,11 @@ main(int args_n, const char** args)
   }
   gui_window.text_color = 255;
   gui_init(100, 100, "Open Kardia", NULL, k_font);
-
   for (int i = 0; i < 2; i++)
   {
     gui_window.pos[i] = vid_size[i]/2 - gui_window.size[i]/2;
   }
+  gui_set_flag(GUI_WND_HIDE, 1);
 
   aud_init();
 
@@ -308,7 +308,7 @@ main(int args_n, const char** args)
     node_beat();
     vid_run();
 
-    vid_wipe(1);
+    vid_wipe(254);
       node_draw(flow_mode);
       ekg_draw();
       gui_draw(&gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);

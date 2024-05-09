@@ -1,16 +1,28 @@
-# The operating system that the binary should go to: nix/win/mac/bsd
+# The operating system that the binary should go to: nix/win
 BIN_OS = nix
 
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -O3 -Iinc -ggdb -D DEBUG
+LIBS =
 
+# Compiling for Linux
 ifeq ($(BIN_OS),nix)
-	# Libraries
-	LIBS = -lX11 -lXrandr -lm -lpulse -lpulse-simple
+	# Compiling via windows is a lost cause
+	ifeq ($(OS),Windows_NT)
+$(error Please compile the program with WSL, it's easiest.)
+	endif
+	
+	LIBS += -lX11 -lXrandr -lm -lpulse -lpulse-simple
+# Otherwise compiling for Windows
 else ifeq ($(BIN_OS),win)
-	#TODO
-	LIBS = -lgdi32
+
+	# Gonna need to use mingw cross compiler
+	ifeq ($(shell uname -s),Linux)
+		CC = x86_64-w64-mingw32-gcc
+	endif
+	
+	LIBS += -lgdi32
 endif
 
 # Source directories

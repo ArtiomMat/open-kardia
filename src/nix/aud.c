@@ -92,7 +92,8 @@ aud_free()
   {
     pa_simple_free(client);
     puts("aud_free(): Audio module freed.");
+    return;
   }
-  fputs("aud_free(): Nothing to free.", stderr);
+  fputs("aud_free(): Nothing to free.\n", stderr);
 }
 

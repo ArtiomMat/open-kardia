@@ -1,22 +1,14 @@
 ============
  OpenKardia
 ============
+ 
+ A simulation of a heart, essentially complete, but working on a GUI to add also.
+ 
+ Maybe will abandon this project and work on the GUI somewhere else.
 
-Uses the unlicense.
+===========
+ Compiling
+===========
 
-A simulation of a heart, once I get the GUI module working for an editor.
-
-====================
- Compiling on Linux
-====================
-
-Recommended to just have CodeBlocks.
-
-cbp2make on linux can turn the project into a makefile and you can compile it easily.
-
-======================
- Compiling on Windows
-======================
-
-Sorry pal, gonna need CodeBlocks.
+ Simple stuff, go into the makefile, you will see the first variable is BIN_OS, you set it to the appropriate os you want based on the comment there nix for Linux, win for Windows.
 
