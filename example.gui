@@ -30,3 +30,8 @@ button B_NOPE
   inherit B_CONFIRM
   str 'Nope'
 
+window W_MAIN
+  str 'example window'
+  
+  child
+lol

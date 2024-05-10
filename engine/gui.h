@@ -310,7 +310,7 @@ extern gui_thing_t*
 gui_open_thing(const char* fp);
 // Searches through the root thing, returns the pointer to the thing with this ID, 
 extern gui_thing_t*
-gui_find(gui_thing_t*const char* id);
+gui_find(gui_thing_t* root, const char* id);
 
 // This function is the starting point of any drawn thing.
 // the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
