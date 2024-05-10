@@ -3,6 +3,6 @@
 *.swp
 *.o
 *.so
-OpenKardia
-OpenKardia.exe
+kardia
+kardia.exe
 
