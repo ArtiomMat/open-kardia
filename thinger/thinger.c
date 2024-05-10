@@ -119,6 +119,7 @@ int main(int args_n, const char** args)
       {
         if (c == '\'')
         {
+          // TODO: We also need slash_depth variable for how many slashes were before the ' to detect if we aren't actually wanting to close it up. And if it's odd then we don't want to close it yet \\\ means we don't \\ means we do, ykwis?
           in_string = !in_string; // Just swap it. works.
         }
         
