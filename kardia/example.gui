@@ -1,0 +1,32 @@
+window W_MAIN
+  str 'Example window'
+  w 300
+  h 200
+  min_w 300
+  min_h 200
+  child M_MAIN
+
+map M_MAIN
+  w auto
+  h auto
+
+  row O_Q
+  row I_A
+
+  row B_CONFIRM B_NOPE
+
+otext O_Q
+  str 'How old are you?'
+
+itext I_A
+  type 'NUM'
+  str '18'
+
+button B_CONFIRM
+  max_w 300
+  str 'Confirm'
+
+button B_NOPE
+  inherit B_CONFIRM
+  str 'Nope'
+

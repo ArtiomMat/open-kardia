@@ -3,8 +3,8 @@
 *.swp
 *.o
 *.so
-kardia
+*/kardia
 kardia.exe
-thinger
+*/thinger
 thinger.exe
 
