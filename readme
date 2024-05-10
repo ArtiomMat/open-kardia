@@ -10,5 +10,7 @@
  Compiling
 ===========
 
- Simple stuff, go into the makefile, you will see the first variable is BIN_OS, you set it to the appropriate os you want based on the comment there nix for Linux, win for Windows.
+ There is the main makefile for kardia/thinger/etc, the binaries that work on top of the engine, all you do is enter it and change the PROJECT_NAME to the right one you want to compile.
+ 
+ You also need to compile the engine, enter the directory and just make. also read the readme there for more info.
 

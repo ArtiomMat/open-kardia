@@ -253,12 +253,6 @@ typedef struct gui_thing
   };
 } gui_thing_t;
 
-// A GUI domain contains it's own list of things, each with a memory location unique to the entire module.
-typedef struct
-{
-  gui_thing_t* things;
-} gui_domain_t;
-
 typedef struct
 {
   int type;
@@ -311,13 +305,12 @@ gui_to_bin(const char* fp, const char* out);
 extern int
 gui_to_txt(const char* fp, const char* out);
 
-// Automatically calls gui_free() if gui_things_n != 0.
 // Only opens
-extern int
+extern gui_thing_t*
 gui_open_thing(const char* fp);
-// Returns an  id
-extern int
-gui_find(const char* id);
+// Searches through the root thing, returns the pointer to the thing with this ID, 
+extern gui_thing_t*
+gui_find(gui_thing_t*const char* id);
 
 // This function is the starting point of any drawn thing.
 // the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.

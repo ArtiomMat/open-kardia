@@ -1,0 +1,12 @@
+========
+ ENGINE
+========
+
+ THE ENGINE.
+
+===========
+ Compiling
+===========
+
+ Run make, you can cross compile by changine the PLATFORM variable, read the comment in the makefile for more info.
+
