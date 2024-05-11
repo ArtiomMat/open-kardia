@@ -1,4 +1,4 @@
-window W_MAIN
+t window W_MAIN 
   str 'Example window'
   w 300
   h 200
@@ -6,32 +6,27 @@ window W_MAIN
   min_h 200
   child M_MAIN
 
-map M_MAIN
+t map M_MAIN
   w auto
   h auto
-
   row O_Q
   row I_A
-
   row B_CONFIRM B_NOPE
 
-otext O_Q
+t otext O_Q
   str 'How old are you?'
 
-itext I_A
+t intext I_A
   type 'NUM'
   str '18'
 
-button B_CONFIRM
+t button B_CONFIRM
   max_w 300
   str 'Confirm'
 
-button B_NOPE
+t button B_NOPE
   inherit B_CONFIRM
   str 'Nope'
 
-window W_MAIN
-  str 'example window'
-  
-  child
-lol
+ 
+   

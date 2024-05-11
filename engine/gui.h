@@ -153,59 +153,12 @@ typedef struct gui_bmap
   int flags;
 } gui_bmap_t;
 
-#if 0
-
-typedef struct gui_thing
-{
-  struct gui_thing* next;
-
-  union
-  {
-    /*struct gui_table
-    {
-      struct gui_table_e
-      {
-        struct gui_thing_s* t;
-      }* e;
-      int cols, rows;
-    } table;*/
-
-    struct gui_text
-    {
-      unsigned char color;
-      unsigned short line_size; // in characters. 0 for unlimited line size
-    } text; // Uses str as text
-
-    gui_bmap_t bmap;
-
-    struct gui_button
-    {
-      char pressed; // 1 for pressed, 0 for not
-    } button;
-    struct gui_tick
-    {
-      char ticked;
-    } tickbox;
-    struct gui_slider
-    {
-      unsigned short value; // 0 is obviously the far left, maximum value is the right
-      unsigned short width; // 0 for an automatically determined width
-    } slider;
-  };
-
-  const char* str;
-  int flags;
-  char type;
-  unsigned short size[2];
-  // short pos_cache[2]; // Cached position of the thing in the content_cache of the window, to quickly draw it.
-} gui_thing_t;
-
-#endif
-
 typedef struct gui_thing gui_thing_t;
 
 typedef struct gui_thing
 {
+  struct gui_thing* prev, * next;
+  
   char* text; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
   short min_size[2], max_size[2]; // Always valid and no flag can make it unused!
   short size[2]; // If overriden by flags the size is automatically modified by GUI.
@@ -220,23 +173,26 @@ typedef struct gui_thing
     // It would be benefitial to have another column based map, but that's what you got, deal with it.
     struct
     {
-      struct gui_thing* things_i;
+      struct gui_thing** things;
       unsigned char* cols_n; // Gives number of columns per each row index.
       unsigned char rows_n;
     } map;
 
     struct
     {
-      int thing_i;
-      // The relative coordinates of the mouse to the x and y of the window when it was first pressed on the title bar
+      // The relative coordinates of the mouse to the x and y of the window when it was pressed on the title bar on the previous frame
       // For internal use
       short mouse_rel[2];
-      // The size before we began resizing, for internal use, crucial for calculating resizing for good UX
+      // The size last frame, for internal use, crucial for calculating resizing for good UX
       short size_0[2];
       int flags;
     } window;
 
-    gui_bmap_t bmap;
+    struct
+    {
+      const char* fp;
+      gui_bmap_t bmap;
+    } bmap;
 
     struct
     {
@@ -284,8 +240,8 @@ extern gui_thing_t gui_window;
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
 
+// A linked list don't forget
 extern gui_thing_t* things;
-extern int gui_things_n;
 
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!

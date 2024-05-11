@@ -1,0 +1,77 @@
+// A program for compiling GUI text code
+
+#include <stdio.h>
+
+#include "gui.h"
+#include "com.h"
+
+#define LINE_MAX 1024
+
+typedef struct
+{
+  
+};
+
+// Compare until C is met, or null terminator.
+// Returns the index where the two words end(at C or null terminator) if found that a=b, otherwise 0.
+static int
+wrdcmp(const char* a, const char* b, char c)
+{
+  int i = 0;
+  while (*a == *b)
+  {
+    if (!(*a) || *a == c) // *b is C or 0 too
+    {
+      return i;
+    }
+    a++;
+    b++;
+    i++;
+  }
+  // Maybe the loop terminated because one ended early but the other too with another character
+  if ((!(*a) && *b == c) || (!(*b) || *a == c))
+  {
+    return i;
+  }
+  return 0;
+}
+
+int
+main(int args_n, const char** args)
+{
+  if (args_n < 2)
+  {
+    fprintf(stderr, "Usage: %s <output file>\n", args[0]);
+    return 1;
+  }
+  
+  outfp = args[1];
+  
+  // Output check if exists
+  FILE* out = fopen(outfp, "r");
+  if (out != NULL)
+  {
+    
+    fclose(out);
+    
+    /* TODO: Uncommentint c = fgetc(stdin);
+    
+    printf("%s already exists, override it? [Y/n] ", outfp);
+    fflush(stdout);
+    
+    if (c != 'Y')
+    {
+      puts("Exiting.");
+      return 0;
+    }*/
+  }
+  
+  // Reopen or open output for writing
+  out = fopen(outfp, "wb");
+  
+  
+  
+  fclose(out);
+  return 0;
+}
+
