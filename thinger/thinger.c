@@ -17,7 +17,7 @@ enum
   CBUTTON,
   CTICKBOX,
   CSLIDER,
-  
+
   CX,
   CY,
   CH,
@@ -26,13 +26,13 @@ enum
   CWMAX,
   CHMIN,
   CHMAX,
-  
+
   CTEXT,
-  
+
   CFORMAT,
   CROW,
   CCHILD,
-  
+
 };
 
 const char* cmdstrs[] =
@@ -44,7 +44,7 @@ const char* cmdstrs[] =
   "button",
   "tickbox",
   "slider",
-  
+
   "x",
   "y",
   "w",
@@ -53,9 +53,9 @@ const char* cmdstrs[] =
   "h",
   "hmin",
   "hmax",
-  
+
   "text",
-  
+
   "format"
   "row",
   "child",
@@ -83,7 +83,7 @@ typedef struct thing
     } itext;
     struct
     {
-      char child[64];
+      char todo;
     } map;
     struct
     {
@@ -123,7 +123,7 @@ wrdcmp(const char* a, const char* b, char c)
 static void
 parse_line(const char* line, int linen)
 {
-  
+
 }
 
 int
@@ -134,7 +134,7 @@ main(int args_n, const char** args)
     fprintf(stderr, "Usage: %s <input file> [output file]\n", args[0]);
     return 1;
   }
-  
+
   const char* outfp;
   if (args_n < 3)
   {
@@ -145,43 +145,43 @@ main(int args_n, const char** args)
   {
     outfp = args[2];
   }
-  
+
   FILE* in = fopen(args[1], "rb");
   if (in == NULL)
   {
     fprintf(stderr, "%s does not exist.\n", args[1]);
     return 1;
   }
-  
+
   // Output check if exists
   FILE* out = fopen(outfp, "r");
   if (out != NULL)
   {
     fclose(out);
-    
+
     /* TODO: Uncommentint c = fgetc(stdin);
-    
+
     printf("%s already exists, override it? [Y/n] ", outfp);
     fflush(stdout);
-    
+
     if (c != 'Y')
     {
       puts("Exiting.");
       return 0;
     }*/
   }
-  
+
   // Reopen or open output for writing
   out = fopen(outfp, "wb");
-  
+
   // char line[LINE_MAX];
   lines = malloc(sizeof (line_t));
   lines->next = NULL;
   lines->prev = NULL;
-  
+
   // The current line
   line_t* line = lines;
-  
+
   int lines_n = 1; // How many lines we got
   int c;
 
@@ -197,7 +197,7 @@ main(int args_n, const char** args)
     {
       fprintf(stderr, "Line %d: Impractically long.\n", lines_n);
       return 1;
-      
+
       #if 0
       // Skip until we either hit EOF or until it's newline, to allow to just recover gracefully from the error
       while ((c = getc(f)) != EOF)
@@ -211,12 +211,12 @@ main(int args_n, const char** args)
       continue;
       #endif
     }
-    
-    
+
+
     // Still going
     if (c != '\n' && c != EOF)
     {
-      
+
       // So if we are outside a string, and there are extra spaces, just skip them.
       if (!in_string && (c==' ' || c=='\t'))
       {
@@ -241,11 +241,11 @@ main(int args_n, const char** args)
         {
           slash_depth = 0;
         }
-        
+
         had_space = 0;
         line->str[i++] = c;
       }
-      
+
     }
     // We are done with this line, parse it now.
     else
@@ -255,15 +255,15 @@ main(int args_n, const char** args)
         fprintf(stderr, "Line %d: String did not terminate with '\n", lines_n);
         return 1;
       }
-        
+
       // We may have finished with a trailing space, so remove it
       if (i > 1 && line->str[i-1] == ' ')
       {
         --i;
       }
-      
+
       line->str[i] = 0;
-      
+
       if (i > 0)
       {
         line->real = lines_n;
@@ -273,40 +273,40 @@ main(int args_n, const char** args)
       {
         line->next = NULL;
       }
-      
+
       // That was the last line, so if there was a next we remove it
       if (c == EOF)
       {
         free(line->next);
         line->next = NULL;
-        
+
         if (i == 0) // We need to also free it if it was empty
         {
           if (line->prev != NULL)
           {
             line->prev->next = NULL;
           }
-          
+
           free(line);
         }
-        
+
         break;
       }
-      
+
       // If it's NULL it means i=0 so reuse the current line object
       if (line->next != NULL)
       {
         line->next->prev = line;
         line = line->next;
       }
-      
+
       // RESET EVERYTHING
       i = 0;
       had_space = 1;
       lines_n++;
     }
   }
-  
+
   // Count how many things we have!
   things_n = 0;
   for (line_t* l = lines; l != NULL; l = l->next)
@@ -318,7 +318,9 @@ main(int args_n, const char** args)
   }
 
   things = malloc(sizeof(thing_t) * things_n);
-  
+
+
+
   fclose(in);
   fclose(out);
   return 0;
