@@ -241,7 +241,7 @@ extern gui_thing_t gui_window;
 extern int gui_title_h;
 
 // A linked list don't forget
-extern gui_thing_t* things;
+extern gui_thing_t* gui_things;
 
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!

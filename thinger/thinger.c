@@ -29,6 +29,7 @@ enum
   
   CTEXT,
   
+  CFORMAT,
   CROW,
   CCHILD,
   
@@ -55,6 +56,7 @@ const char* cmdstrs[] =
   
   "text",
   
+  "format"
   "row",
   "child",
 };
@@ -73,9 +75,25 @@ typedef struct thing
   int type;
   char id[64];
   int x, y, w, h, wmax, wmin, hmax, hmin;
+  union
+  {
+    struct
+    {
+      char format;
+    } itext;
+    struct
+    {
+      char child[64];
+    } map;
+    struct
+    {
+      char child[64];
+    } window;
+  };
 } thing_t;
 
-gui_thing_t* root;
+thing_t* things;
+int things_n = 0;
 
 // Compare until C is met, or null terminator.
 // Returns the index where the two words end(at C or null terminator) if found that a=b, otherwise 0.
@@ -289,11 +307,17 @@ main(int args_n, const char** args)
     }
   }
   
-  // Now we parse!
+  // Count how many things we have!
+  things_n = 0;
   for (line_t* l = lines; l != NULL; l = l->next)
   {
-    printf("%d[%s]\n", l->real, l->str);
+    if (l->str[0] == 't' && l->str[1] == ' ')
+    {
+      things_n++;
+    }
   }
+
+  things = malloc(sizeof(thing_t) * things_n);
   
   fclose(in);
   fclose(out);

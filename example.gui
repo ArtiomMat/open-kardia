@@ -17,7 +17,7 @@ t otext O_Q
   str 'How old are you?'
 
 t intext I_A
-  type 'NUM'
+  type 'ANS'
   str '18'
 
 t button B_CONFIRM
@@ -27,6 +27,3 @@ t button B_CONFIRM
 t button B_NOPE
   inherit B_CONFIRM
   str 'Nope'
-
- 
-   
