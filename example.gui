@@ -16,8 +16,8 @@ t map M_MAIN
 t otext O_Q
   str 'How old are you?'
 
-t intext I_A
-  type 'ANS'
+t itext I_A
+  type '*'
   str '18'
 
 t button B_CONFIRM

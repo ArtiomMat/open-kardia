@@ -1,10 +1,12 @@
 // A program for compiling GUI text code
 
+#include "../engine/gui.h"
+
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "gui.h"
-#include "com.h"
+#include <stdio.h>
 
 #define LINE_MAX 1024
 
@@ -56,7 +58,7 @@ const char* cmdstrs[] =
 
   "text",
 
-  "format"
+  "format",
   "row",
   "child",
 };
@@ -73,7 +75,9 @@ line_t* lines = NULL;
 typedef struct thing
 {
   int type;
+  // id[0]=0 means that the thing has no id and cannot be identified(NOT THAT IT IS AN)
   char id[64];
+
   int x, y, w, h, wmax, wmin, hmax, hmin;
   union
   {
@@ -87,7 +91,7 @@ typedef struct thing
     } map;
     struct
     {
-      char child[64];
+      char child_id[64];
     } window;
   };
 } thing_t;
@@ -119,11 +123,14 @@ wrdcmp(const char* a, const char* b, char c)
   return 0;
 }
 
-// Takes the line and the linen which is how many chracters there are including null terminator.
-static void
-parse_line(const char* line, int linen)
+// Returns index where C was found or NULL terminator
+static int
+wrdlen(const char* a, char c)
 {
-
+  int i;
+  for (i = 0; a[i] && a[i] != c; i++)
+  {}
+  return i;
 }
 
 int
@@ -211,7 +218,6 @@ main(int args_n, const char** args)
       continue;
       #endif
     }
-
 
     // Still going
     if (c != '\n' && c != EOF)
@@ -319,10 +325,81 @@ main(int args_n, const char** args)
 
   things = malloc(sizeof(thing_t) * things_n);
 
+  // Now we actually setup all the things
+  int thing_i = -1;
+  for (line_t* l = lines; l != NULL; l = l->next)
+  {
+    char* str = l->str;
+    if (str[0] == 't' && str[1] == ' ')
+    {
+      thing_i++;
 
+      str += 2;
+      int end;
+      if ((end = wrdcmp("window", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_WINDOW;
+      }
+      else if ((end = wrdcmp("map", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_MAP;
+      }
+      else if ((end = wrdcmp("button", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_BUTTON;
+      }
+      else if ((end = wrdcmp("itext", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_ITEXT;
+      }
+      else if ((end = wrdcmp("otext", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_OTEXT;
+      }
+      else
+      {
+        str[ wrdlen(str, ' ') ] = 0;
+
+        fprintf(stderr, "Line %d: Unknown type used '%s'.\n", l->real, str);
+        return 1;
+      }
+
+      str += end;
+
+      if (str[0] == 0) // Meaning the line ended and there is no ID
+      {
+        fprintf(stderr, "Line %d: Thing must have an ID.\n", l->real);
+        return 1;
+      }
+
+      // Now just copy the stuff
+      str++;
+      int id_len = wrdlen(str, ' ');
+      strncpy(things[thing_i].id, str, id_len);
+    }
+    // PARSING ALL THE OTHER PARAMETERS ***IF*** WE ARE INSIDE A THING
+    else if (thing_i >= 0)
+    {
+      int end;
+      if ((end = wrdcmp("str", str, ' ')))
+      {
+        str += end;
+      }
+      else if ((end = wrdcmp("x", str, ' ')))
+      {
+        str += end;
+      }
+      else
+      {
+        str[ wrdlen(str, ' ') ] = 0;
+
+        fprintf(stderr, "Line %d: Unknown command '%s'.\n", l->real, str);
+        return 1;
+      }
+    }
+  }
 
   fclose(in);
   fclose(out);
   return 0;
 }
-

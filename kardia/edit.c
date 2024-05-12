@@ -1,7 +1,7 @@
 #include "edit.h"
-#include "vid.h"
 #include "k.h"
-#include "com.h"
+#include "../engine/com.h"
+#include "../engine/fip.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +24,9 @@ static int
 in_square(int x, int y, int s_x, int s_y,int size)
 {
   return (x >= s_x - size/2) && (x <= s_x + size/2) && (y >= s_y - size/2) && (y <= s_y + size/2);
+  ({1;});
 }
+
 
 int
 edit_on_vid(vid_event_t* e)
