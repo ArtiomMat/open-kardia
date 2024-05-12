@@ -76,7 +76,8 @@ typedef struct thing
 {
   int type;
   // id[0]=0 means that the thing has no id and cannot be identified(NOT THAT IT IS AN)
-  char id[64];
+  char* id;
+  char* str; // Allocated to fit the string
 
   int x, y, w, h, wmax, wmin, hmax, hmin;
   union
@@ -91,7 +92,7 @@ typedef struct thing
     } map;
     struct
     {
-      char child_id[64];
+      char* child_id;
     } window;
   };
 } thing_t;
@@ -100,7 +101,8 @@ thing_t* things;
 int things_n = 0;
 
 // Compare until C is met, or null terminator.
-// Returns the index where the two words end(at C or null terminator) if found that a=b, otherwise 0.
+// Returns the index where the two words end(at C or null terminator) if found that a=b.
+// Otherwise returns 0 if a!=b.
 static int
 wrdcmp(const char* a, const char* b, char c)
 {
@@ -131,6 +133,112 @@ wrdlen(const char* a, char c)
   for (i = 0; a[i] && a[i] != c; i++)
   {}
   return i;
+}
+
+// n is the size of the buffer dst.
+// Returns 0 if did not succeed(src was too long).
+static int
+wrdcpy(char* dst, const char* src, int n, char c)
+{
+  for (int i = 0; i < n; i++)
+  {
+    // If we have the last ' then we good
+    if (src[i] == c && src[i] == 0)
+    {
+      dst[i] = 0;
+      return 1;
+    }
+    dst[i] = src[i];
+  }
+  return 0;
+}
+
+// Extracts a word by malloc()-ing it into *out.
+// Returns the number of characters written(not including null terminator), essentially same output as wrdlen(src, c)
+// Returns 0 if there was an issue or there is literally no word.
+static int
+extract_wrd(const char* src, char** out, char c)
+{
+  int len = wrdlen(src, c);
+  if (len)
+  {
+    int n = len + 1;
+    *out = malloc(n);
+    wrdcpy(*out, src, n, c);
+    return len;
+  }
+  return 0;
+}
+
+// n is the size of dst as an entire buffer.
+// Copies a string that is in "'XXX'\0" format as "XXX\0".
+// Returns 0 if did not succeed!
+static int
+guistrcpy(char* dst, const char* src, int n)
+{
+  // Skip first
+  if (src[0] == '\'')
+  {
+    src++;
+  }
+  
+  for (int i = 0; src[i] && i < n; i++)
+  {
+    // If we have the last ' then we good
+    if (src[i] == '\'' && src[i+1] == 0)
+    {
+      dst[i] = 0;
+      return 1;
+    }
+    dst[i] = src[i];
+  }
+
+  // If we get to N or src ends incorrectly we break and return 0
+  return 0;
+}
+
+// Returns the exact (N - 1) needed in guistrcpy(), N-1 because it returns length rather than general size with the null terminator.
+// Returns -1 if it's not a correct format.
+static int
+guistrlen(const char* src)
+{
+  // Skip first
+  if (src[0] == '\'')
+  {
+    src++;
+  }
+  
+  for (int i = 0; src[i]; i++)
+  {
+    // If we have the last ' then we good
+    if (src[i] == '\'' && src[i+1] == 0)
+    {
+      return i;
+    }
+  }
+
+  // If we get to N or src ends incorrectly we break and return 0
+  return -1;
+}
+
+// Extracts a guistr by malloc()-ing it
+// Returns NULL if the string is invalid
+static char*
+extract_guistr(const char* src)
+{
+  int len = guistrlen(src);
+  
+  if (len > 0)
+  {
+    int n = len + 1;
+    char* str = malloc(n);
+    
+    guistrcpy(str, src, n);
+
+    return str;
+  }
+
+  return NULL;
 }
 
 int
@@ -374,8 +482,16 @@ main(int args_n, const char** args)
 
       // Now just copy the stuff
       str++;
-      int id_len = wrdlen(str, ' ');
-      strncpy(things[thing_i].id, str, id_len);
+      extract_wrd(str, &things[thing_i].id, ' ');
+
+      // Setup defaults
+      things[thing_i].str = NULL;
+      things[thing_i].x = 0;
+      things[thing_i].y = 0;
+      things[thing_i].wmax = 100000;
+      things[thing_i].hmax = 100000;
+      things[thing_i].hmin = 1;
+      things[thing_i].wmin = 1;
     }
     // PARSING ALL THE OTHER PARAMETERS ***IF*** WE ARE INSIDE A THING
     else if (thing_i >= 0)
@@ -383,7 +499,8 @@ main(int args_n, const char** args)
       int end;
       if ((end = wrdcmp("str", str, ' ')))
       {
-        str += end;
+        str += end + 1;
+        puts(extract_guistr(str));
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
@@ -398,7 +515,7 @@ main(int args_n, const char** args)
       }
     }
   }
-
+  
   fclose(in);
   fclose(out);
   return 0;
