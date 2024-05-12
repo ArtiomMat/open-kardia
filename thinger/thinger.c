@@ -70,7 +70,7 @@ typedef struct line_s
   int real; // The real line it's in(1 is the first not 0)
 } line_t;
 
-line_t* lines = NULL;
+static line_t* lines = NULL;
 
 typedef struct thing
 {
@@ -97,8 +97,12 @@ typedef struct thing
   };
 } thing_t;
 
-thing_t* things;
-int things_n = 0;
+static thing_t* things;
+static int things_n = 0;
+
+// Buffer for aiding with parsing, mainly used for extracting words/strings in the file.
+// Not thread safe, shouldn't be an issue here, but just noting, it's used by functions like wrdtoi.
+static char aidbuf[LINE_MAX];
 
 // Compare until C is met, or null terminator.
 // Returns the index where the two words end(at C or null terminator) if found that a=b.
@@ -168,6 +172,18 @@ extract_wrd(const char* src, char** out, char c)
     return len;
   }
   return 0;
+}
+
+// Returns 0 if there was an error parsing the integer, otherwise 1.
+static int
+wrdtoi(const char* src, int* i, char c)
+{
+  if (!wrdcpy(aidbuf, src, LINE_MAX, c))
+  {
+    return 0;
+  }
+
+  // TODO
 }
 
 // n is the size of dst as an entire buffer.
@@ -500,11 +516,11 @@ main(int args_n, const char** args)
       if ((end = wrdcmp("str", str, ' ')))
       {
         str += end + 1;
-        puts(extract_guistr(str));
+        things[thing_i].str = extract_guistr(str);
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
-        str += end;
+        str += end + 1;
       }
       else
       {
