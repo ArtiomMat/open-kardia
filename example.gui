@@ -1,5 +1,7 @@
 t window W_MAIN 
   str 'Example window'
+  x 10
+  y 1
   w 300
   h 200
   min_w 300

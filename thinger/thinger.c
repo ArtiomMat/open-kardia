@@ -147,7 +147,7 @@ wrdcpy(char* dst, const char* src, int n, char c)
   for (int i = 0; i < n; i++)
   {
     // If we have the last ' then we good
-    if (src[i] == c && src[i] == 0)
+    if (src[i] == c || src[i] == 0)
     {
       dst[i] = 0;
       return 1;
@@ -174,7 +174,7 @@ extract_wrd(const char* src, char** out, char c)
   return 0;
 }
 
-// Returns 0 if there was an error parsing the integer, otherwise 1.
+// Returns 0 if there was an error parsing the integer, otherwise >0.
 static int
 wrdtoi(const char* src, int* i, char c)
 {
@@ -183,11 +183,11 @@ wrdtoi(const char* src, int* i, char c)
     return 0;
   }
 
-  // TODO
+  return sscanf(aidbuf, "%i", i);
 }
-
+// 
 // n is the size of dst as an entire buffer.
-// Copies a string that is in "'XXX'\0" format as "XXX\0".
+// Copies a string that is in "'...'\0" format as "...\0".
 // Returns 0 if did not succeed!
 static int
 guistrcpy(char* dst, const char* src, int n)
@@ -521,6 +521,12 @@ main(int args_n, const char** args)
       else if ((end = wrdcmp("x", str, ' ')))
       {
         str += end + 1;
+        if (!wrdtoi(str, &things[thing_i].x, ' '))
+        {
+_int_err:
+          fprintf(stderr, "Line %d: x requires integer, not '%s'.\n", l->real, str);
+          return 1;
+        }
       }
       else
       {
