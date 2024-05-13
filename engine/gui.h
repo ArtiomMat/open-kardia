@@ -99,6 +99,24 @@ enum
 
 typedef struct
 {
+  int magic; // 72 b5 4a 86
+  int version;
+  int size; // Header size
+  int flags;
+  int length; // how many glyphs
+  int glyph_size;
+  int height;
+  int width;
+} gui_psf2_t;
+typedef struct
+{
+  short magic; // 36 04
+  char mode;
+  unsigned char size;
+} gui_psf1_t;
+
+typedef struct
+{
   // Union because depends on priority
   void* data; // For speed priority
   void* fd; // For memory priority, internally a FILE*
@@ -109,24 +127,9 @@ typedef struct
   unsigned char height; // In actual pixels
   union
   {
-    struct psf2_s
-    {
-      int magic; // 72 b5 4a 86
-      int version;
-      int size; // Header size
-      int flags;
-      int length; // how many glyphs
-      int glyph_size;
-      int height;
-      int width;
-    } psf2;
+    gui_psf1_t psf1;
+    gui_psf2_t psf2;
     int __array[8]; // For quickly swapping endian
-    struct psf1_s
-    {
-      short magic; // 36 04
-      char mode;
-      unsigned char size;
-    } psf1;
   };
 } gui_font_t;
 
@@ -202,7 +205,7 @@ typedef struct gui_thing
     {
       char ticked;
     } tickbox;
-    struct gui_slider
+    struct
     {
       unsigned short value; // 0 is the far left, maximum value is the right
     } slider;

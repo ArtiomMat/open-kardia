@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "vid.h"
+#include "../engine/vid.h"
 
 // Assumes that all modules were initialized, should only be called by the main module.
 // Allows for NULL

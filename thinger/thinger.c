@@ -101,8 +101,11 @@ static thing_t* things;
 static int things_n = 0;
 
 // Buffer for aiding with parsing, mainly used for extracting words/strings in the file.
-// Not thread safe, shouldn't be an issue here, but just noting, it's used by functions like wrdtoi.
+// Not thread safe, shouldn't be an issue here, but just noting, it's used by functions like extract_int.
 static char aidbuf[LINE_MAX];
+
+// Used for error printing by global functions like extract_ functions.
+static int current_line = 0;
 
 // Compare until C is met, or null terminator.
 // Returns the index where the two words end(at C or null terminator) if found that a=b.
@@ -142,7 +145,7 @@ wrdlen(const char* a, char c)
 // n is the size of the buffer dst.
 // Returns 0 if did not succeed(src was too long).
 static int
-wrdcpy(char* dst, const char* src, int n, char c)
+wrdcpy(char* restrict dst, const char* restrict src, int n, char c)
 {
   for (int i = 0; i < n; i++)
   {
@@ -161,7 +164,7 @@ wrdcpy(char* dst, const char* src, int n, char c)
 // Returns the number of characters written(not including null terminator), essentially same output as wrdlen(src, c)
 // Returns 0 if there was an issue or there is literally no word.
 static int
-extract_wrd(const char* src, char** out, char c)
+extract_wrd(const char* restrict src, char* restrict* out, char c)
 {
   int len = wrdlen(src, c);
   if (len)
@@ -171,26 +174,61 @@ extract_wrd(const char* src, char** out, char c)
     wrdcpy(*out, src, n, c);
     return len;
   }
+  fprintf(stderr, "Line %d: Expected word but found nothing.\n", current_line);
   return 0;
 }
 
-// Returns 0 if there was an error parsing the integer, otherwise >0.
+// Test if str is an integer(includes negative).
+// The string must be and integer until the null terminator, C is the seperator.
+// Returns 0 if it isn't.
 static int
-wrdtoi(const char* src, int* i, char c)
+test_wrd_int(const char* str, int c)
 {
-  if (!wrdcpy(aidbuf, src, LINE_MAX, c))
+  // Skip spaces, if we reach *str=0 we will detect it no worries
+  for (; *str == c; str++)
+  {}
+
+  if (*str == '-')
+  {
+    str++;
+  }
+  
+  if (*str == 0)
   {
     return 0;
   }
 
-  return sscanf(aidbuf, "%i", i);
+  for (; *str && (*str != c); str++)
+  {
+    if (*str < '0' || *str > '9')
+    {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+// Expects src to be an integer until a space or a null terminator
+// Returns 0 if there was an error parsing the integer, otherwise 1.
+static int
+extract_int(const char* src, int* i, char c)
+{
+  if (!test_wrd_int(src, c))
+  {
+    fprintf(stderr, "Line %d: Expected integer not '%s'.\n", current_line, src);
+    return 0;
+  }
+  
+  *i = atoi(src);
+
+  return 1;
 }
 // 
 // n is the size of dst as an entire buffer.
 // Copies a string that is in "'...'\0" format as "...\0".
 // Returns 0 if did not succeed!
 static int
-guistrcpy(char* dst, const char* src, int n)
+guistrcpy(char* restrict dst, const char* restrict src, int n)
 {
   // Skip first
   if (src[0] == '\'')
@@ -238,23 +276,24 @@ guistrlen(const char* src)
 }
 
 // Extracts a guistr by malloc()-ing it
-// Returns NULL if the string is invalid
-static char*
-extract_guistr(const char* src)
+// Returns 0 if the string is invalid
+static int
+extract_guistr(const char* restrict src, char* restrict* out)
 {
   int len = guistrlen(src);
   
   if (len > 0)
   {
     int n = len + 1;
-    char* str = malloc(n);
+    *out = malloc(n);
     
-    guistrcpy(str, src, n);
+    guistrcpy(*out, src, n);
 
-    return str;
+    return 1;
   }
 
-  return NULL;
+  fprintf(stderr, "Line %d: String required, not '%s'.\n", current_line, src);
+  return 0;
 }
 
 int
@@ -449,11 +488,13 @@ main(int args_n, const char** args)
 
   things = malloc(sizeof(thing_t) * things_n);
 
-  // Now we actually setup all the things
+  // Locate now all the t commands and just setup for now the IDs, type and reset the values of all the things to defaults.
   int thing_i = -1;
   for (line_t* l = lines; l != NULL; l = l->next)
   {
     char* str = l->str;
+    current_line = l->real;
+
     if (str[0] == 't' && str[1] == ' ')
     {
       thing_i++;
@@ -484,7 +525,7 @@ main(int args_n, const char** args)
       {
         str[ wrdlen(str, ' ') ] = 0;
 
-        fprintf(stderr, "Line %d: Unknown type used '%s'.\n", l->real, str);
+        fprintf(stderr, "Line %d: Unknown thing type used '%s'.\n", current_line, str);
         return 1;
       }
 
@@ -492,13 +533,16 @@ main(int args_n, const char** args)
 
       if (str[0] == 0) // Meaning the line ended and there is no ID
       {
-        fprintf(stderr, "Line %d: Thing must have an ID.\n", l->real);
+        fprintf(stderr, "Line %d: Thing must have an ID.\n", current_line);
         return 1;
       }
 
       // Now just copy the stuff
       str++;
-      extract_wrd(str, &things[thing_i].id, ' ');
+      if (!extract_wrd(str, &things[thing_i].id, ' '))
+      {
+        return 1;
+      }
 
       // Setup defaults
       things[thing_i].str = NULL;
@@ -509,6 +553,20 @@ main(int args_n, const char** args)
       things[thing_i].hmin = 1;
       things[thing_i].wmin = 1;
     }
+  }
+  
+  // Now we actually setup all the things
+  thing_i = -1;
+  for (line_t* l = lines; l != NULL; l = l->next)
+  {
+    char* str = l->str;
+    current_line = l->real;
+    // This time we just increment
+    if (str[0] == 't' && str[1] == ' ')
+    {
+      thing_i++;
+      puts(things[thing_i].id);
+    }
     // PARSING ALL THE OTHER PARAMETERS ***IF*** WE ARE INSIDE A THING
     else if (thing_i >= 0)
     {
@@ -516,15 +574,24 @@ main(int args_n, const char** args)
       if ((end = wrdcmp("str", str, ' ')))
       {
         str += end + 1;
-        things[thing_i].str = extract_guistr(str);
+        if (!extract_guistr(str, &things[thing_i].str))
+        {
+          return 1;
+        }
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
         str += end + 1;
-        if (!wrdtoi(str, &things[thing_i].x, ' '))
+        if (!extract_int(str, &things[thing_i].x, ' '))
         {
-_int_err:
-          fprintf(stderr, "Line %d: x requires integer, not '%s'.\n", l->real, str);
+          return 1;
+        }
+      }
+      else if ((end = wrdcmp("y", str, ' ')))
+      {
+        str += end + 1;
+        if (!extract_int(str, &things[thing_i].y, ' '))
+        {
           return 1;
         }
       }
@@ -532,9 +599,13 @@ _int_err:
       {
         str[ wrdlen(str, ' ') ] = 0;
 
-        fprintf(stderr, "Line %d: Unknown command '%s'.\n", l->real, str);
+        fprintf(stderr, "Line %d: Unknown command '%s'.\n", current_line, str);
         return 1;
       }
+    }
+    else
+    {
+      fprintf(stderr, "Line %d: Junk.\n", current_line);
     }
   }
   

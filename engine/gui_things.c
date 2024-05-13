@@ -46,7 +46,6 @@ int gui_title_h = 0;
 unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
 
 gui_thing_t* things;
-int gui_things_n = 0;
 
 int (*gui_on)(gui_event_t* event) = NULL;
 

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "node.h"
-#include "fip.h"
-#include "gui.h"
+#include "../engine/fip.h"
+#include "../engine/gui.h"
 
 // #include "k_endian.h"
 
