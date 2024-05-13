@@ -382,29 +382,51 @@ main(int args_n, const char** args)
       #endif
     }
 
-    // Still going
+    // Still going, if c=';' we have a comment
     if (c != '\n' && c != EOF)
     {
-
-      // So if we are outside a string, and there are extra spaces, just skip them.
-      if (!in_string && (c==' ' || c=='\t'))
+      if (!in_string)
       {
-        if (!had_space) // Don't skip if first space
+        // If it's the first space after the word don't skip, otherwise skip
+        if (c==' ' || c=='\t')
         {
-          line->str[i++] = ' ';
-          had_space = 1;
+          // Inside to eat the else downtown
+          if (!had_space)
+          {
+            line->str[i++] = ' ';
+            had_space = 1;
+          }
+        }
+        else if (c=='\'')
+        {
+          line->str[i++] = '\'';
+          in_string = 1;
+        }
+        // A comment!
+        else if (c=='#')
+        {
+          while (c != '\n' && c != EOF)
+          {
+            c = getc(in);
+          }
+          goto _finish_up_line;
+        }
+        else
+        {
+          line->str[i++] = c;
+          had_space = 0;
         }
       }
-      else
+      else // (in_string)
       {
         // Only if a there was an even number of slashes can we exit the string
         if (c == '\'' && slash_depth % 2 == 0)
         {
-          in_string = !in_string;
+          in_string = 0;
         }
         else if (c == '\\')
         {
-          slash_depth++; // Just swap it. works.
+          slash_depth++;
         }
         else
         {
@@ -419,6 +441,8 @@ main(int args_n, const char** args)
     // We are done with this line, parse it now.
     else
     {
+      _finish_up_line:
+
       if (in_string) // Means that we did not end the string, the interpreter needs to be certain the last ' is the end.
       {
         fprintf(stderr, "Line %d: String did not terminate with '\n", lines_n);
@@ -465,6 +489,8 @@ main(int args_n, const char** args)
       // If it's NULL it means i=0 so reuse the current line object
       if (line->next != NULL)
       {
+        printf("[%s]\n", line->str);
+
         line->next->prev = line;
         line = line->next;
       }

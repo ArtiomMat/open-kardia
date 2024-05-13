@@ -18,6 +18,7 @@ t map M_MAIN
   row
   col I_A
 
+  # Buttons and shit
   row
   col B_CONFIRM
   col B_NOPE
