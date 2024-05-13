@@ -66,7 +66,7 @@ enum
 {
   // TYPES
   GUI_T_WINDOW,
-  GUI_T_MAP,
+  GUI_T_ROWMAP,
   GUI_T_ITEXT,
   GUI_T_OTEXT,
   GUI_T_BMAP,
@@ -172,14 +172,14 @@ typedef struct gui_thing
   const char* id; // The string based ID
   union
   {
-    // A map contains rows and columns, it's like a table, but it's actually dynamic in number of columns per row.
-    // It would be benefitial to have another column based map, but that's what you got, deal with it.
+    // A row map contains rows and columns, it's like a table, but it's actually dynamic in number of columns per row.
+    // Maybe I will add a column map some other time.
     struct
     {
       struct gui_thing** things;
       unsigned char* cols_n; // Gives number of columns per each row index.
       unsigned char rows_n;
-    } map;
+    } rowmap;
 
     struct
     {

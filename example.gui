@@ -1,5 +1,5 @@
 t window W_MAIN 
-  str 'Example window'
+  str 'Example \n window'
   x 10
   y 10
   w 300
@@ -8,7 +8,7 @@ t window W_MAIN
   min_h 200
   child M_MAIN
 
-t map M_MAIN
+t rowmap M_MAIN
   w auto
   h auto
   

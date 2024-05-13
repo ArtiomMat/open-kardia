@@ -88,11 +88,13 @@ typedef struct thing
     } itext;
     struct
     {
-      char todo;
+      int rows_n;
+      int* cols_n; // rows_n elements here, provides the number of columns per given row index
+      int* children; // Flattened array of all child indices
     } map;
     struct
     {
-      char* child_id;
+      int child; // Index of child
     } window;
   };
 } thing_t;
@@ -102,7 +104,7 @@ static int things_n = 0;
 
 // Buffer for aiding with parsing, mainly used for extracting words/strings in the file.
 // Not thread safe, shouldn't be an issue here, but just noting, it's used by functions like extract_int.
-static char aidbuf[LINE_MAX];
+// static char aidbuf[LINE_MAX];
 
 // Used for error printing by global functions like extract_ functions.
 static int current_line = 0;
@@ -531,9 +533,9 @@ main(int args_n, const char** args)
       {
         things[thing_i].type = GUI_T_WINDOW;
       }
-      else if ((end = wrdcmp("map", str, ' ')))
+      else if ((end = wrdcmp("rowmap", str, ' ')))
       {
-        things[thing_i].type = GUI_T_MAP;
+        things[thing_i].type = GUI_T_ROWMAP;
       }
       else if ((end = wrdcmp("button", str, ' ')))
       {
@@ -571,13 +573,14 @@ main(int args_n, const char** args)
       }
 
       // Setup defaults
-      things[thing_i].str = NULL;
+      things[thing_i].str = "NULL";
       things[thing_i].x = 0;
       things[thing_i].y = 0;
       things[thing_i].wmax = 100000;
       things[thing_i].hmax = 100000;
       things[thing_i].hmin = 1;
       things[thing_i].wmin = 1;
+      things[thing_i].itext.format = 0;
     }
   }
   

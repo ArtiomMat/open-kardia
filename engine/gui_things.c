@@ -190,10 +190,10 @@ gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
   font_w = gui_get_font_width(font);
 
   gui_window.text = (char*) title;
-  if (gui_window.text == NULL)
-  {
-    gui_window.text = "\xFF";
-  }
+  // if (gui_window.text == NULL)
+  // {
+  //   gui_window.text = "\xFF";
+  // }
 
   gui_window.type = GUI_T_WINDOW;
 
@@ -217,7 +217,7 @@ void
 gui_free()
 {
   // TODO: Actually free stuff
-  gui_things_n = 0;
+  // gui_things_n = 0;
   // free(gui_window.content_cache);
 }
 
@@ -425,9 +425,9 @@ text_in_rect(int width, int height)
 
 // Safe to pass NULL as string
 static int
-draw_str(unsigned char color, const char* str, int l, int t, int r, int b)
+draw_text(unsigned char color, const char* text, int l, int t, int r, int b)
 {
-  if (str == NULL)
+  if (text == NULL)
   {
     return 0;
   }
@@ -438,16 +438,16 @@ draw_str(unsigned char color, const char* str, int l, int t, int r, int b)
     int nl = 0;
     for (int x = l+1; x+font_w < r && !nl; i++, x+=font_w)
     {
-      if (!str[i])
+      if (!text[i])
       {
         return i;
       }
-      else if (str[i] == '\n')
+      else if (text[i] == '\n')
       {
         nl = 1;
         continue;
       }
-      gui_draw_font(font, x, y, str[i], color);
+      gui_draw_font(font, x, y, text[i], color);
     }
   }
   return i;
@@ -515,7 +515,7 @@ gui_draw_window(int l, int t, int r, int b)
   gui_draw_font(font, xx, xy,  '/', get_shade(0));
 
   // Window title text
-  draw_str(gui_window.text_color, gui_window.text, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
+  draw_text(gui_window.text_color, gui_window.text, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
 
   // Three dots on the corner
   //gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height-2, '.', get_shade(3));
@@ -549,7 +549,7 @@ gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
     yes_text = 0;
     break;
 
-    case GUI_T_MAP:
+    case GUI_T_ROWMAP:
 
     break;
 
@@ -582,7 +582,7 @@ gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
 
   if (yes_text)
   {
-    draw_str(t->text_color, t->text, left, top, right, bottom);
+    draw_text(t->text_color, t->text, left, top, right, bottom);
   }
 }
 
