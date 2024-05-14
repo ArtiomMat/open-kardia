@@ -1,14 +1,15 @@
-#include "vid.h"
-#include "fip.h"
+#include "../engine/vid.h"
+#include "../engine/fip.h"
+#include "../engine/clk.h"
+#include "../engine/aud.h"
+#include "../engine/gui.h"
+#include "../engine/com.h"
+#include "../engine/mix.h"
+
 #include "node.h"
 #include "edit.h"
-#include "clk.h"
 #include "k.h"
 #include "ekg.h"
-#include "aud.h"
-#include "gui.h"
-#include "com.h"
-#include "mix.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -263,7 +264,7 @@ main(int args_n, const char** args)
   aud_init();
 
   // Set clk rate to fps if it was initialized by user otherwise screen rate
-  clk_init(ITOFIP(1) / (fps == -1 ? screen_rate : fps));
+  clk_init(1000 / (fps == -1 ? screen_rate : fps));
 
   node_init(NULL);
 
@@ -295,8 +296,8 @@ main(int args_n, const char** args)
   set_node(7, 200,120, -120,40, (int[]){-1}, 1, (int[]){1,-1});
 
 
-  // fip_t time = 0, count = 0;
-  // fip_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
+  // clk_time_t time = 0, count = 0;
+  // clk_time_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
 
   puts("\nRUNNING...\n");
 

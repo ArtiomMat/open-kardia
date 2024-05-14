@@ -1,6 +1,4 @@
-#include "aud.h"
-#include "clk.h"
-#include "com.h"
+#include "../aud.h"
 
 #include <pulse/error.h>
 #include <pulse/simple.h>
@@ -8,8 +6,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <math.h>
 
 #define BUF_SIZE 1024
 

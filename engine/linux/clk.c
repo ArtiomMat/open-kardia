@@ -1,11 +1,11 @@
-#include "clk.h"
+#include "../clk.h"
 
 #include <time.h>
 #include <stdio.h>
 
 // Initialize right before the loop
 void
-clk_init(fip_t initial_tick_time)
+clk_init(clk_time_t initial_tick_time)
 {
   clk_target_tick_time = clk_tick_time = initial_tick_time;
 
@@ -15,19 +15,19 @@ clk_init(fip_t initial_tick_time)
 }
 
 void
-clk_wait(fip_t secs)
+clk_wait(clk_time_t millis)
 {
   struct timespec req, rem;
-  req.tv_sec = FIPTOI(secs);
-  req.tv_nsec = FIP_FRAC(secs) * 1000000000L / (1 << FIP_FRAC_BITS);
+  req.tv_sec = millis / 1000;
+  req.tv_nsec = (millis % 1000) * 1000000;
   nanosleep(&req, &rem);
 }
 
-fip_t
+clk_time_t
 clk_now()
 {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);
-  return ITOFIP(tp.tv_sec) + (tp.tv_nsec * (1 << FIP_FRAC_BITS) / 1000000000L);
+  return (tp.tv_sec * 1000) + (tp.tv_nsec / 1000000);
 }
 

@@ -1,4 +1,4 @@
-#include "clk.h"
+#include "../clk.h"
 
 #include <windows.h>
 #include <stdio.h>

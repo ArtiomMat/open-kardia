@@ -4,6 +4,12 @@
 
  THE ENGINE.
 
+============
+ Technicals
+============
+
+ The engine is compiled with -ffast-math -O3, this can be disabled by just removing it from the makefile, I haven't tested the effect of such operations on the speed of the engine. From what I have read, you are able to compile your binary that uses the engine without -ffast-math. With that being said, you must be enformed that -ffast-math makes assumptions, one of them being that there are no infinities, no division by 0, etc. And it will not care if you make it divide by 0 in floats, it will keep going.
+
 ===========
  Compiling
 ===========

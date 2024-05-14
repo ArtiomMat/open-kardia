@@ -1,12 +1,12 @@
-#include "vid.h"
+#include "../engine/vid.h"
 #include "node.h"
-#include "fip.h"
+#include "../engine/fip.h"
 #include "k.h"
-#include "clk.h"
+#include "../engine/clk.h"
 #include "ekg.h"
-#include "gui.h"
-#include "mix.h"
-#include "com.h"
+#include "../engine/gui.h"
+#include "../engine/mix.h"
+#include "../engine/com.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -60,6 +60,7 @@ node_draw_line(node_t* root_node, node_t* next)
   }
   else
   {
+    
     node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
     node_t* r = l == root_node ? next : root_node;
 

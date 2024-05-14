@@ -1,11 +1,9 @@
 #include "clk.h"
 
-#include <stdio.h>
+clk_time_t clk_target_tick_time;
+clk_time_t clk_tick_time;
 
-fip_t clk_target_tick_time;
-fip_t clk_tick_time;
-
-static fip_t begin_time;
+static clk_time_t begin_time;
 
 void
 clk_begin_tick()
@@ -16,8 +14,8 @@ clk_begin_tick()
 int
 clk_end_tick()
 {
-  fip_t now = clk_now();
-  fip_t delta = now - begin_time;
+  clk_time_t now = clk_now();
+  clk_time_t delta = now - begin_time;
 
   if (delta < clk_target_tick_time)
   {
