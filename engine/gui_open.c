@@ -29,10 +29,10 @@ strcmpc(const char* a, const char* b, char c)
 int
 gui_open(const char* fp)
 {
-  if (gui_things_n)
-  {
-    gui_free();
-  }
+  // if (gui_things_n)
+  // {
+  //   gui_free();
+  // }
 
   FILE* f = fopen(fp, "rb");
 
