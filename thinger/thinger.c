@@ -5,8 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <stdio.h>
+#include <stdarg.h>
 
 #define LINE_MAX 1024
 
@@ -90,6 +89,7 @@ static line_t* lines = NULL;
 typedef struct thing
 {
   int type;
+  int mod; // If the thing was modified already, for inheritance to not break things
   // id[0]=0 means that the thing has no id and cannot be identified(NOT THAT IT IS AN)
   char* id;
   char* str; // Allocated to fit the string
@@ -124,6 +124,20 @@ static int things_n = 0;
 
 // Used for error printing by global functions like extract_ functions.
 static int current_line = 0;
+static const char* in_fp = NULL;
+
+// Doesn't actually exit(), but if fatal is enabled logged as E(rror), and otherwise as W(arning)
+static void
+logerr(int fatal, const char* restrict fmt, ...)
+{
+  va_list ap;
+
+  fprintf(stderr, "%s:%d: %s: ", in_fp, current_line, fatal ? "fatal" : "note");
+  
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+}
 
 // Compare until C is met, or null terminator.
 // Returns the index where the two words end(at C or null terminator) if found that a=b.
@@ -192,7 +206,7 @@ extract_wrd(const char* restrict src, char* restrict* out, char c)
     wrdcpy(*out, src, n, c);
     return len;
   }
-  fprintf(stderr, "Line %d: Expected word but found nothing.\n", current_line);
+  logerr(1, "Expected word but found nothing.\n");
   return 0;
 }
 
@@ -239,7 +253,7 @@ extract_int(const char* src, int* i, char c)
     return len;
   }
   
-  fprintf(stderr, "Line %d: Expected integer not '%s'.\n", current_line, src);
+  logerr(1, "Expected integer not '%s'.\n", src);
   return 0;
 }
 
@@ -277,7 +291,7 @@ guistrcpy(char* restrict dst, const char* restrict src, int n)
       {
         dst[j++] = '\\';
         dst[j] = src[i];
-        fprintf(stderr, "Line %d: Unknown combination of \\ and code, '\\%c', note that it is ignored.\n", current_line, src[i]);
+        logerr(0, "Unknown combination of \\ and code, '\\%c', note that it is ignored.\n", src[i]);
       }
     }
     else if (src[i] == '\'' && src[i+1] == 0)
@@ -337,7 +351,7 @@ extract_guistr(const char* restrict src, char* restrict* out)
     return len;
   }
 
-  fprintf(stderr, "Line %d: String required, not '%s'.\n", current_line, src);
+  logerr(1, "String required, not '%s'.\n", src);
   return 0;
 }
 
@@ -388,7 +402,7 @@ find_by_id(int thing_i, const char* id)
     }
   }
 
-  fprintf(stderr, "Line %d: Thing with ID '%s' does not exist.\n", current_line, id);
+  logerr(1, "Thing with ID '%s' does not exist.\n", id);
   return -1;
 }
 
@@ -424,6 +438,8 @@ main(int args_n, const char** args)
   {
     outfp = args[2];
   }
+
+  in_fp = args[1];
 
   FILE* in = fopen(args[1], "rb");
   if (in == NULL)
@@ -474,7 +490,7 @@ main(int args_n, const char** args)
     // Make sure i is within range
     if (i >= LINE_MAX)
     {
-      fprintf(stderr, "Line %d: Impractically long.\n", lines_n);
+      logerr(1, "Impractically long.\n", lines_n);
       return 1;
 
       #if 0
@@ -554,7 +570,7 @@ main(int args_n, const char** args)
 
       if (in_string) // Means that we did not end the string, the interpreter needs to be certain the last ' is the end.
       {
-        fprintf(stderr, "Line %d: String did not terminate with '\n", lines_n);
+        logerr(1, "String did not terminate with '\n", lines_n);
         return 1;
       }
 
@@ -598,7 +614,7 @@ main(int args_n, const char** args)
       // If it's NULL it means i=0 so reuse the current line object
       if (line->next != NULL)
       {
-        printf("[%s]\n", line->str);
+        // printf("[%s]\n", line->str);
 
         line->next->prev = line;
         line = line->next;
@@ -666,7 +682,7 @@ main(int args_n, const char** args)
             rows_n++;
             if (rows_n > ROWS_MAX)
             {
-              fprintf(stderr, "Line %d: Rows exceeded %d limit.\n", current_line, ROWS_MAX);
+              logerr(1, "Rows exceeded %d limit.\n", ROWS_MAX);
               return 1;
             }
           }
@@ -674,7 +690,7 @@ main(int args_n, const char** args)
           {
             if (!rows_n)
             {
-              fprintf(stderr, "Line %d: Putting columns before using the row command.\n", current_line);
+              logerr(1, "Putting columns before using the row command.\n");
               return 1;
             }
             
@@ -685,7 +701,7 @@ main(int args_n, const char** args)
 
         if (!rows_n)
         {
-          fprintf(stderr, "Line %d: A rowmap with no rows?\n", current_line);
+          logerr(1, "A rowmap with no rows?\n");
           return 1;
         }
 
@@ -724,7 +740,7 @@ main(int args_n, const char** args)
       {
         str[ wrdlen(str, ' ') ] = 0;
 
-        fprintf(stderr, "Line %d: Unknown thing type used '%s'.\n", current_line, str);
+        logerr(1, "Unknown thing type used '%s'.\n", str);
         return 1;
       }
 
@@ -732,7 +748,7 @@ main(int args_n, const char** args)
 
       if (str[0] == 0) // Meaning the line ended and there is no ID
       {
-        fprintf(stderr, "Line %d: Thing must have an ID.\n", current_line);
+        logerr(1, "Thing must have an ID.\n");
         return 1;
       }
 
@@ -749,6 +765,8 @@ main(int args_n, const char** args)
       things[thing_i].max_h = DEF_MAX_H;
       things[thing_i].min_w = DEF_MIN_W;
       things[thing_i].min_h = DEF_MIN_H;
+
+      things[thing_i].mod = 0;
     }
   }
   
@@ -764,7 +782,7 @@ main(int args_n, const char** args)
       // Make sure the window has a child
       if (things[thing_i].type == GUI_T_WINDOW && things[thing_i].window.child == DEF_CHILD)
       {
-        fprintf(stderr, "Line %d: Window '%s' was left with no child.\n", current_line, things[thing_i].id);
+        logerr(1, "Window '%s' was left with no child.\n", things[thing_i].id);
         return 1;
       }
 
@@ -783,11 +801,17 @@ main(int args_n, const char** args)
       }
       else if ((end = wrdcmp("inherits", str, ' ')))
       {
+        if (things[thing_i].mod)
+        {
+          logerr(1, "Must inherit before any initialization of the thing.\n");
+          return 1;
+        }
+
         str += end + 1;
         int i = a_find_by_id(thing_i, str);
         if (i >= thing_i)
         {
-          fprintf(stderr, "Line %d: Due to limitations of my sanity when making this compiler, '%s' must be initialized BEFORE the inherittor '%s'.\n", current_line, things[i].id, things[thing_i].id);
+          logerr(1, "Due to limitations of my sanity when making this compiler, '%s' must be initialized BEFORE the inherittor '%s'.\n", things[i].id, things[thing_i].id);
           return 1;
         }
       }
@@ -898,7 +922,7 @@ main(int args_n, const char** args)
             break;
 
             default:
-            fprintf(stderr, "Line %d: Unknown format option '%c'.\n", current_line, format[i]);
+            logerr(1, "Unknown format option '%c'.\n", format[i]);
             return 1;
           }
         }
@@ -913,13 +937,16 @@ main(int args_n, const char** args)
       {
         str[ wrdlen(str, ' ') ] = 0;
 
-        fprintf(stderr, "Line %d: Unknown command '%s'.\n", current_line, str);
+        logerr(1, "Unknown command '%s'.\n", str);
         return 1;
       }
+
+      // We modified the thing 100% so notify
+      things[thing_i].mod = 1;
     }
     else
     {
-      fprintf(stderr, "Line %d: Junk.\n", current_line);
+      logerr(1, "Junk.\n");
     }
   }
   
