@@ -32,5 +32,5 @@ t button B_CONFIRM
   str 'Confirm'
 
 t button B_NOPE
-  max_w 300
+  inherit 
   str 'Nope'

@@ -13,6 +13,18 @@
 #define ROWS_MAX 32
 #define COLS_MAX 32
 
+#define DEF_X 0
+#define DEF_Y 0
+#define DEF_W 64
+#define DEF_H 64
+#define DEF_MAX_W 9000
+#define DEF_MAX_H 9000
+#define DEF_MIN_W 1
+#define DEF_MIN_H 1
+#define DEF_STR "NULL"
+#define DEF_CHILD -1
+#define DEF_ITXT_FMT 0
+
 enum
 {
   CWINDOW,
@@ -627,6 +639,7 @@ main(int args_n, const char** args)
       if ((end = wrdcmp("window", str, ' ')))
       {
         things[thing_i].type = GUI_T_WINDOW;
+        things[thing_i].window.child = DEF_CHILD;
       }
       else if ((end = wrdcmp("rowmap", str, ' ')))
       {
@@ -701,7 +714,7 @@ main(int args_n, const char** args)
       {
         things[thing_i].type = GUI_T_ITEXT;
 
-        things[thing_i].itext.format = 0;
+        things[thing_i].itext.format = DEF_ITXT_FMT;
       }
       else if ((end = wrdcmp("otext", str, ' ')))
       {
@@ -729,18 +742,13 @@ main(int args_n, const char** args)
       // puts(things[thing_i].id);
 
       // Setup defaults
-      things[thing_i].str = "NULL";
-      things[thing_i].x = 0;
-      things[thing_i].y = 0;
-      things[thing_i].max_w = 100000;
-      things[thing_i].max_h = 100000;
-      things[thing_i].min_w = 1;
-      things[thing_i].min_h = 1;
-    }
-    // We want to count up the rows and shit
-    else if (things[thing_i].type == GUI_T_ROWMAP)
-    {
-      
+      things[thing_i].str = DEF_STR;
+      things[thing_i].x = DEF_X;
+      things[thing_i].y = DEF_Y;
+      things[thing_i].max_w = DEF_MAX_W;
+      things[thing_i].max_h = DEF_MAX_H;
+      things[thing_i].min_w = DEF_MIN_W;
+      things[thing_i].min_h = DEF_MIN_H;
     }
   }
   
@@ -753,6 +761,13 @@ main(int args_n, const char** args)
     // This time we just increment
     if (str[0] == 't' && str[1] == ' ')
     {
+      // Make sure the window has a child
+      if (things[thing_i].type == GUI_T_WINDOW && things[thing_i].window.child == DEF_CHILD)
+      {
+        fprintf(stderr, "Line %d: Window '%s' was left with no child.\n", current_line, things[thing_i].id);
+        return 1;
+      }
+
       thing_i++;
     }
     // PARSING ALL THE OTHER PARAMETERS ***IF*** WE ARE INSIDE A THING
@@ -765,6 +780,16 @@ main(int args_n, const char** args)
       {
         str += end + 1;
         a_extract_guistr(str, &things[thing_i].str);
+      }
+      else if ((end = wrdcmp("inherits", str, ' ')))
+      {
+        str += end + 1;
+        int i = a_find_by_id(thing_i, str);
+        if (i >= thing_i)
+        {
+          fprintf(stderr, "Line %d: Due to limitations of my sanity when making this compiler, '%s' must be initialized BEFORE the inherittor '%s'.\n", current_line, things[i].id, things[thing_i].id);
+          return 1;
+        }
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
