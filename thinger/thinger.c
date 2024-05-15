@@ -10,6 +10,9 @@
 
 #define LINE_MAX 1024
 
+#define ROWS_MAX 32
+#define COLS_MAX 32
+
 enum
 {
   CWINDOW,
@@ -79,7 +82,7 @@ typedef struct thing
   char* id;
   char* str; // Allocated to fit the string
 
-  int x, y, w, h, wmax, wmin, hmax, hmin;
+  int x, y, w, h, max_w, min_w, max_h, min_h;
   union
   {
     struct
@@ -88,10 +91,11 @@ typedef struct thing
     } itext;
     struct
     {
-      int rows_n;
       int* cols_n; // rows_n elements here, provides the number of columns per given row index
       int* children; // Flattened array of all child indices
-    } map;
+      int rows_n;
+      int row_i, child_i;
+    } rowmap;
     struct
     {
       int child; // Index of child
@@ -226,7 +230,7 @@ extract_int(const char* src, int* i, char c)
   fprintf(stderr, "Line %d: Expected integer not '%s'.\n", current_line, src);
   return 0;
 }
-// 
+
 // n is the size of dst as an entire buffer.
 // Copies a string that is in "'...'\0" format as "...\0".
 // Returns 0 if did not succeed!
@@ -323,6 +327,70 @@ extract_guistr(const char* restrict src, char* restrict* out)
 
   fprintf(stderr, "Line %d: String required, not '%s'.\n", current_line, src);
   return 0;
+}
+
+// asserted version
+static int
+a_extract_int(const char* src, int* i, char c)
+{
+  int ret = extract_int(src, i, c);
+  if (!ret)
+  {
+    exit(1);
+  }
+  return ret;
+}
+// asserted version
+static int
+a_extract_guistr(const char *restrict src, char *restrict *out)
+{
+  int ret = extract_guistr(src, out);
+  if (!ret)
+  {
+    exit(1);
+  }
+  return ret;
+}
+// asserted version
+static int
+a_extract_wrd(const char *restrict src, char *restrict *out, char c)
+{
+  int ret = extract_wrd(src, out, c);
+  if (!ret)
+  {
+    exit(1);
+  }
+  return ret;
+}
+
+// A thing_i is searching for another thing with the ID.
+// Returns -1 if not found.
+static int
+find_by_id(int thing_i, const char* id)
+{
+  for (int i = 0; i < things_n; i++)
+  {
+    if (i != thing_i && !strcmp(id, things[i].id))
+    {
+      return i;
+    }
+  }
+
+  fprintf(stderr, "Line %d: Thing with ID '%s' does not exist.\n", current_line, id);
+  return -1;
+}
+
+// asserted version
+static int
+a_find_by_id(int thing_i, const char* id)
+{
+  int ret = find_by_id(thing_i, id);
+  if (ret == -1)
+  {
+    exit(1);
+  }
+
+  return ret;
 }
 
 int
@@ -563,6 +631,67 @@ main(int args_n, const char** args)
       else if ((end = wrdcmp("rowmap", str, ' ')))
       {
         things[thing_i].type = GUI_T_ROWMAP;
+
+        int saved_line = current_line; // To be recovered later
+
+        int rows_n = 0;
+        int cols_n[COLS_MAX] = {0};
+        int total_cols_n = 0;
+
+        // Start looking up the row numbers
+        for (line_t* l2 = l->next; l2 != NULL; l2 = l2->next)
+        {
+          char* str2 = l2->str;
+          current_line = l2->real;
+          // That's it we got what we got
+          if (str2[0] == 't' && str2[1] == ' ')
+          {
+            break;
+          }
+          else if (wrdcmp("row", str2, ' '))
+          {
+            rows_n++;
+            if (rows_n > ROWS_MAX)
+            {
+              fprintf(stderr, "Line %d: Rows exceeded %d limit.\n", current_line, ROWS_MAX);
+              return 1;
+            }
+          }
+          else if (wrdcmp("col", str2, ' '))
+          {
+            if (!rows_n)
+            {
+              fprintf(stderr, "Line %d: Putting columns before using the row command.\n", current_line);
+              return 1;
+            }
+            
+            cols_n[rows_n-1]++;
+            total_cols_n++;
+          }
+        }
+
+        if (!rows_n)
+        {
+          fprintf(stderr, "Line %d: A rowmap with no rows?\n", current_line);
+          return 1;
+        }
+
+        // Then copy over
+        things[thing_i].rowmap.rows_n = rows_n;
+        things[thing_i].rowmap.cols_n = malloc(sizeof(*things[thing_i].rowmap.cols_n) * rows_n);
+        for (int i = 0; i < rows_n; i++)
+        {
+          things[thing_i].rowmap.cols_n[i] = cols_n[i];
+        }
+
+        // Also allocate the children
+        things[thing_i].rowmap.children = malloc(sizeof(*things[thing_i].rowmap.children) * total_cols_n);
+
+        current_line = saved_line;
+
+        // Also reset stuff
+        things[thing_i].rowmap.child_i = 0;
+        things[thing_i].rowmap.row_i = -1;
       }
       else if ((end = wrdcmp("button", str, ' ')))
       {
@@ -571,6 +700,8 @@ main(int args_n, const char** args)
       else if ((end = wrdcmp("itext", str, ' ')))
       {
         things[thing_i].type = GUI_T_ITEXT;
+
+        things[thing_i].itext.format = 0;
       }
       else if ((end = wrdcmp("otext", str, ' ')))
       {
@@ -594,20 +725,22 @@ main(int args_n, const char** args)
 
       // Now just copy the stuff
       str++;
-      if (!extract_wrd(str, &things[thing_i].id, ' '))
-      {
-        return 1;
-      }
+      a_extract_wrd(str, &things[thing_i].id, ' ');
+      // puts(things[thing_i].id);
 
       // Setup defaults
       things[thing_i].str = "NULL";
       things[thing_i].x = 0;
       things[thing_i].y = 0;
-      things[thing_i].wmax = 100000;
-      things[thing_i].hmax = 100000;
-      things[thing_i].hmin = 1;
-      things[thing_i].wmin = 1;
-      things[thing_i].itext.format = 0;
+      things[thing_i].max_w = 100000;
+      things[thing_i].max_h = 100000;
+      things[thing_i].min_w = 1;
+      things[thing_i].min_h = 1;
+    }
+    // We want to count up the rows and shit
+    else if (things[thing_i].type == GUI_T_ROWMAP)
+    {
+      
     }
   }
   
@@ -621,36 +754,136 @@ main(int args_n, const char** args)
     if (str[0] == 't' && str[1] == ' ')
     {
       thing_i++;
-      puts(things[thing_i].id);
     }
     // PARSING ALL THE OTHER PARAMETERS ***IF*** WE ARE INSIDE A THING
     else if (thing_i >= 0)
     {
       int end;
+
+      // General commands
       if ((end = wrdcmp("str", str, ' ')))
       {
         str += end + 1;
-        if (!extract_guistr(str, &things[thing_i].str))
-        {
-          return 1;
-        }
+        a_extract_guistr(str, &things[thing_i].str);
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
         str += end + 1;
-        if (!extract_int(str, &things[thing_i].x, ' '))
-        {
-          return 1;
-        }
+        a_extract_int(str, &things[thing_i].x, ' ');
       }
       else if ((end = wrdcmp("y", str, ' ')))
       {
         str += end + 1;
-        if (!extract_int(str, &things[thing_i].y, ' '))
-        {
-          return 1;
-        }
+        a_extract_int(str, &things[thing_i].y, ' ');
       }
+      else if ((end = wrdcmp("w", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].w, ' ');
+      }
+      else if ((end = wrdcmp("min_w", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].min_w, ' ');
+      }
+      else if ((end = wrdcmp("max_w", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].max_w, ' ');
+      }
+      else if ((end = wrdcmp("h", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].h, ' ');
+      }
+      else if ((end = wrdcmp("min_h", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].min_h, ' ');
+      }
+      else if ((end = wrdcmp("max_h", str, ' ')))
+      {
+        str += end + 1;
+        a_extract_int(str, &things[thing_i].max_h, ' ');
+      }
+
+      // WINDOW specific commands
+      else if (things[thing_i].type == GUI_T_WINDOW && (end = wrdcmp("child", str, ' ')))
+      {
+        str += end + 1;
+        things[thing_i].window.child = a_find_by_id(thing_i, str);
+      }
+
+      // ROWMAP specific commands
+      else if (things[thing_i].type == GUI_T_ROWMAP && (end = wrdcmp("row", str, ' ')))
+      {
+        things[thing_i].rowmap.row_i++; // Starts at -1
+      }
+      else if (things[thing_i].type == GUI_T_ROWMAP && (end = wrdcmp("col", str, ' ')))
+      {
+        str += end + 1;
+
+        things[thing_i].rowmap.children
+        [
+          things[thing_i].rowmap.child_i
+        ] = a_find_by_id(thing_i, str);
+
+        // puts(things[things[thing_i].rowmap.children[things[thing_i].rowmap.child_i]].id);
+
+        things[thing_i].rowmap.child_i++; // Starts at 0
+      }
+
+      // ITEXT specific commands
+      else if (things[thing_i].type == GUI_T_ITEXT && (end = wrdcmp("format", str, ' ')))
+      {
+        str += end + 1;
+
+        char* format;
+        int flags = GUI_ITXT_NONUM | GUI_ITXT_NOALP | GUI_ITXT_NOSYM | GUI_ITXT_NOSPC; // The flags (GUI_ITXT_*)
+        a_extract_guistr(str, &format);
+
+        for (int i = 0; format[i]; i++)
+        {
+          switch (format[i])
+          {
+            case 'n':
+            case 'N':
+            flags &= ~GUI_ITXT_NONUM;
+            break;
+            
+            case 'a':
+            case 'A':
+            flags &= ~GUI_ITXT_NOALP;
+            break;
+            
+            case 's':
+            case 'S':
+            flags &= ~GUI_ITXT_NOSYM;
+            break;
+            
+            case ' ':
+            case '\t':
+            flags &= ~GUI_ITXT_NOSPC;
+            break;
+            
+            case '*':
+            case 'x':
+            case 'X':
+            flags &= GUI_ITXT_PASSWORD;
+            break;
+
+            default:
+            fprintf(stderr, "Line %d: Unknown format option '%c'.\n", current_line, format[i]);
+            return 1;
+          }
+        }
+
+        things[thing_i].itext.format = flags;
+
+        free(format);
+      }
+
+      // Error!
       else
       {
         str[ wrdlen(str, ' ') ] = 0;

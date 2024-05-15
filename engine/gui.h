@@ -33,7 +33,7 @@ enum
 
 enum
 {
-  // FLAGS
+  // FLAGS FOR WINDOW
 
   GUI_WND_INVISIBLE = 1<<0, // The window itself becomes completely invisible and non interactable, things are still drawn
   GUI_WND_FIX_SIZE = 1<<1, // The window cannot be resized
@@ -48,6 +48,14 @@ enum
   GUI_WND_RESIZING_R = 1<<7,
   GUI_WND_RESIZING_T = 1<<8,
   GUI_WND_RESIZING_B = 1<<9,
+
+  // FORMAT STUFF FOR ITEXT
+
+  GUI_ITXT_PASSWORD = 1<<0, // Shown as ****
+  GUI_ITXT_NOALP = 1<<1, // No alphabet
+  GUI_ITXT_NONUM = 1<<2, // No numbers
+  GUI_ITXT_NOSYM = 1<<3, // No symbols
+  GUI_ITXT_NOSPC = 1<<4, // No white space
 };
 
 enum
@@ -196,6 +204,11 @@ typedef struct gui_thing
       const char* fp;
       gui_bmap_t bmap;
     } bmap;
+
+    struct
+    {
+      char format;
+    } itext;
 
     struct
     {
