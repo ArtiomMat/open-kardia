@@ -434,56 +434,10 @@ a_find_by_id(int thing_i, const char* id)
   return ret;
 }
 
-int
-main(int args_n, const char** args)
+// Parse the file nad initialialize LINES
+static void
+init_lines(FILE* in)
 {
-  if (args_n < 2)
-  {
-    fprintf(stderr, "Usage: %s <input file> [output file]\n", args[0]);
-    return 1;
-  }
-
-  const char* outfp;
-  if (args_n < 3)
-  {
-    puts("TODO");
-    return 1;
-  }
-  else
-  {
-    outfp = args[2];
-  }
-
-  in_fp = args[1];
-
-  FILE* in = fopen(args[1], "rb");
-  if (in == NULL)
-  {
-    fprintf(stderr, "%s does not exist.\n", args[1]);
-    return 1;
-  }
-
-  // Output check if exists
-  FILE* out = fopen(outfp, "r");
-  if (out != NULL)
-  {
-    fclose(out);
-
-    printf("'%s' already exists, override it? [Y/n] ", outfp);
-    fflush(stdout);
-
-    int c = fgetc(stdin);
-
-    if (c != 'Y')
-    {
-      puts("Exiting.");
-      return 0;
-    }
-  }
-
-  // Reopen or open output for writing
-  out = fopen(outfp, "wb");
-
   // char line[LINE_MAX];
   lines = malloc(sizeof (line_t));
   lines->next = NULL;
@@ -506,7 +460,7 @@ main(int args_n, const char** args)
     if (i >= LINE_MAX)
     {
       logerr(1, "Impractically long.\n", lines_n);
-      return 1;
+      exit(1);
 
       #if 0
       // Skip until we either hit EOF or until it's newline, to allow to just recover gracefully from the error
@@ -586,7 +540,7 @@ main(int args_n, const char** args)
       if (in_string) // Means that we did not end the string, the interpreter needs to be certain the last ' is the end.
       {
         logerr(1, "String did not terminate with '\n", lines_n);
-        return 1;
+        exit(1);
       }
 
       // We may have finished with a trailing space, so remove it
@@ -641,25 +595,12 @@ main(int args_n, const char** args)
       lines_n++;
     }
   }
+}
 
-  // Count how many things we have!
-  things_n = 0;
-  for (line_t* l = lines; l != NULL; l = l->next)
-  {
-    if (l->str[0] == 't' && l->str[1] == ' ')
-    {
-      if (things_n >= THINGS_MAX)
-      {
-        logerr(1, "Too many things, maximum is %d", THINGS_MAX);
-        return 1;
-      }
-      things_n++;
-    }
-  }
-
-  things = malloc(sizeof(thing_t) * things_n);
-
-  // Locate now all the t commands and just setup for now the IDs, type and reset the values of all the things to defaults.
+// Locate now all the t commands and just setup for now the IDs, type and reset the values of all the things to defaults.
+static void
+initial_init()
+{
   int thing_i = -1;
   for (line_t* l = lines; l != NULL; l = l->next)
   {
@@ -703,7 +644,7 @@ main(int args_n, const char** args)
             if (rows_n > ROWS_MAX)
             {
               logerr(1, "Rows exceeded %d limit.\n", ROWS_MAX);
-              return 1;
+              exit(1);
             }
           }
           else if (wrdcmp("col", str2, ' '))
@@ -711,7 +652,7 @@ main(int args_n, const char** args)
             if (!rows_n)
             {
               logerr(1, "Putting columns before using the row command.\n");
-              return 1;
+              exit(1);
             }
             
             cols_n[rows_n-1]++;
@@ -722,7 +663,7 @@ main(int args_n, const char** args)
         if (!rows_n)
         {
           logerr(1, "A rowmap with no rows?\n");
-          return 1;
+          exit(1);
         }
 
         // Then copy over
@@ -761,7 +702,7 @@ main(int args_n, const char** args)
         str[ wrdlen(str, ' ') ] = 0;
 
         logerr(1, "Unknown thing type used '%s'.\n", str);
-        return 1;
+        exit(1);
       }
 
       str += end;
@@ -769,7 +710,7 @@ main(int args_n, const char** args)
       if (str[0] == 0) // Meaning the line ended and there is no ID
       {
         logerr(1, "Thing must have an ID.\n");
-        return 1;
+        exit(1);
       }
 
       // Now just copy the stuff
@@ -789,9 +730,13 @@ main(int args_n, const char** args)
       things[thing_i].mod = 0;
     }
   }
-  
-  // Now we actually setup all the things
-  thing_i = -1;
+}
+
+// Deep initialization doesn't do any allocation(other than what extract_*() do), it simply parses all the commands
+static void
+deep_init()
+{
+  int thing_i = -1;
   for (line_t* l = lines; l != NULL; l = l->next)
   {
     char* str = l->str;
@@ -803,7 +748,7 @@ main(int args_n, const char** args)
       if (things[thing_i].type == GUI_T_WINDOW && things[thing_i].window.child == DEF_CHILD)
       {
         logerr(1, "Window '%s' was left with no child.\n", things[thing_i].id);
-        return 1;
+        exit(1);
       }
 
       thing_i++;
@@ -824,7 +769,7 @@ main(int args_n, const char** args)
         if (things[thing_i].mod)
         {
           logerr(1, "Must inherit before any initialization of the thing.\n");
-          return 1;
+          exit(1);
         }
 
         str += end + 1;
@@ -832,7 +777,7 @@ main(int args_n, const char** args)
         if (i >= thing_i)
         {
           logerr(1, "Due to limitations of my sanity when making this compiler, '%s' must be initialized BEFORE the inherittor '%s'.\n", things[i].id, things[thing_i].id);
-          return 1;
+          exit(1);
         }
 
         things[thing_i].str = things[i].str;
@@ -951,7 +896,7 @@ main(int args_n, const char** args)
 
             default:
             logerr(1, "Unknown format option '%c'.\n", format[i]);
-            return 1;
+            exit(1);
           }
         }
 
@@ -966,7 +911,7 @@ main(int args_n, const char** args)
         str[ wrdlen(str, ' ') ] = 0;
 
         logerr(1, "Unknown command '%s'.\n", str);
-        return 1;
+        exit(1);
       }
 
       // We modified the thing 100% so notify
@@ -977,8 +922,11 @@ main(int args_n, const char** args)
       logerr(1, "Junk.\n");
     }
   }
-  
-  // Now we finally write all the shit
+}
+
+static void
+write_out(FILE* out)
+{
   for (int i = 0; i < things_n; i++)
   {
     thing_t* t = &things[i];
@@ -1038,6 +986,80 @@ main(int args_n, const char** args)
       break;
     }
   }
+}
+
+int
+main(int args_n, const char** args)
+{
+  if (args_n < 2)
+  {
+    fprintf(stderr, "Usage: %s <input file> [output file]\n", args[0]);
+    return 1;
+  }
+
+  const char* outfp;
+  if (args_n < 3)
+  {
+    puts("TODO");
+    return 1;
+  }
+  else
+  {
+    outfp = args[2];
+  }
+
+  in_fp = args[1];
+
+  FILE* in = fopen(args[1], "rb");
+  if (in == NULL)
+  {
+    fprintf(stderr, "%s does not exist.\n", args[1]);
+    return 1;
+  }
+
+  // Output check if exists
+  FILE* out = fopen(outfp, "r");
+  if (out != NULL)
+  {
+    fclose(out);
+
+    printf("'%s' already exists, override it? [Y/n] ", outfp);
+    fflush(stdout);
+
+    int c = fgetc(stdin);
+
+    if (c != 'Y')
+    {
+      puts("Exiting.");
+      return 0;
+    }
+  }
+
+  // Reopen or open output for writing
+  out = fopen(outfp, "wb");
+
+  init_lines(in);
+
+  // Count how many things we have!
+  things_n = 0;
+  for (line_t* l = lines; l != NULL; l = l->next)
+  {
+    if (l->str[0] == 't' && l->str[1] == ' ')
+    {
+      if (things_n >= THINGS_MAX)
+      {
+        logerr(1, "Too many things, maximum is %d", THINGS_MAX);
+        return 1;
+      }
+      things_n++;
+    }
+  }
+
+  things = malloc(sizeof(thing_t) * things_n);
+
+  initial_init();
+  deep_init();
+  write_out(out);
 
   fclose(in);
   fclose(out);
