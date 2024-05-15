@@ -13,8 +13,6 @@
   #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
 #endif
 
-typedef int x ## FIP_DEF_FRAC_BITS ## _t;
-
 #define FIP_MUL(a,b) (((fip_t)(a)*(fip_t)(b)) >> FIP_FRAC_BITS)
 
 #define FIP_DIV(A,B) ((fip_t)((((long long)(A)) << FIP_FRAC_BITS) / ((long long)(B))))

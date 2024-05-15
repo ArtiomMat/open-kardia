@@ -3,7 +3,7 @@
 #pragma once
 
 // Measured in miliseconds
-typedef unsigned long long clk_time_t;
+typedef unsigned int clk_time_t;
 
 // The target tick time that we want, may not always be able to fufil this time, depending on the performance of the program and how high it is. Check clk_tick_time.
 // In seconds, the module uses this to decide how much it must wait at the end of the tick to fufil the time.
@@ -17,7 +17,7 @@ extern clk_time_t clk_tick_time;
 extern void
 clk_init(clk_time_t initial_tick_time);
 
-// Do not assume the starting time of this function(t0), it is system dependant.
+// Returns the time in miliseconds since initialization of the cloak module
 extern clk_time_t
 clk_now();
 

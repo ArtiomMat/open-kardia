@@ -282,7 +282,7 @@ main(int args_n, const char** args)
 
   // Middle cunt
   set_node(3, 170,170, -30,-10, (int[]){4,5,-1}, 3, (int[]){4,5,6,7,-1});
-  node_all[3].halt = FTOFIP(0.2f);
+  node_all[3].halt = 200;
   node_all[3].flow = ITOFIP(30);
 
   // Left lower cunt

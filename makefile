@@ -1,4 +1,4 @@
-PROJECT_NAME = kardia
+PROJECT_NAME = thinger
 
 # Directories
 SRC_DIR = $(PROJECT_NAME)

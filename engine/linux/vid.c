@@ -1,4 +1,4 @@
-#include "vid.h"
+#include "../vid.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -129,8 +129,6 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_gc = XCreateGC(vid_nix_dsp, vid_nix_window, GCGraphicsExposures, &xgcvalues );
 
   XSelectInput(vid_nix_dsp, vid_nix_window, attribs.event_mask);
-
-  vid_nix_window = vid_nix_window;
 
   // Set our custom WM_DELETE_WINDOW protocol
   XSetWMProtocols(vid_nix_dsp, vid_nix_window, &vid_nix_wmdeletewnd_atom, 1);

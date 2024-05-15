@@ -36,5 +36,3 @@ typedef struct
   unsigned char flags;
 } g3d_model_t;
 
-g3d
-

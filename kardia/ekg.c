@@ -1,11 +1,11 @@
 #include "ekg.h"
-#include "vid.h"
+#include "../engine/vid.h"
 #include "node.h"
 #include "k.h"
-#include "aud.h"
-#include "clk.h"
-#include "gui.h"
-#include "mix.h"
+#include "../engine/aud.h"
+#include "../engine/clk.h"
+#include "../engine/gui.h"
+#include "../engine/mix.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,7 +89,7 @@ read_into_buf()
       aud_play(240, ekg_amp);
       beep = 1;
 
-      ekg_bpm = FIPTOI(FIP_DIV(ITOFIP(60), time_since_beep));
+      ekg_bpm = 60000 / time_since_beep;
 
       time_since_beep = 0;
     }
@@ -97,17 +97,17 @@ read_into_buf()
   else
   {
     beep = 0;
-    if (time_since_beep >= ITOFIP(5) && think_dead == 0)
+    if (time_since_beep >= 5000 && think_dead == 0)
     {
       think_dead = 1;
       puts("I think the patient is dead...");
     }
-    else if (time_since_beep >= ITOFIP(10)  && think_dead == 1)
+    else if (time_since_beep >= 10000  && think_dead == 1)
     {
       think_dead = 2;
       puts("Time of death anyone?");
     }
-    else if (time_since_beep >= ITOFIP(15)  && think_dead == 2)
+    else if (time_since_beep >= 15000  && think_dead == 2)
     {
       think_dead = 3;
       puts("Poor thing...");

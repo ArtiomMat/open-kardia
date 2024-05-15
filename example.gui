@@ -1,5 +1,5 @@
 t window W_MAIN 
-  str 'Example \n window'
+  str 'Example\nwindow'
   x 10
   y 10
   w 300

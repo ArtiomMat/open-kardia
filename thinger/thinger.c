@@ -163,7 +163,7 @@ wrdcpy(char* restrict dst, const char* restrict src, int n, char c)
 }
 
 // Extracts a word by malloc()-ing it into *out.
-// Returns the number of characters written(not including null terminator), essentially same output as wrdlen(src, c)
+// Returns the number of characters written(not including null terminator), essentially same output as wrdlen(src, c).
 // Returns 0 if there was an issue or there is literally no word.
 static int
 extract_wrd(const char* restrict src, char* restrict* out, char c)
@@ -182,48 +182,49 @@ extract_wrd(const char* restrict src, char* restrict* out, char c)
 
 // Test if str is an integer(includes negative).
 // The string must be and integer until the null terminator, C is the seperator.
-// Returns 0 if it isn't.
+// Returns 0 if it isn't, otherwise the index of C or null terminator.
 static int
 test_wrd_int(const char* str, int c)
 {
+  int i = 0;
   // Skip spaces, if we reach *str=0 we will detect it no worries
-  for (; *str == c; str++)
+  for (; str[i] == c; i++)
   {}
 
-  if (*str == '-')
+  if (str[i] == '-')
   {
-    str++;
+    i++;
   }
   
-  if (*str == 0)
+  if (str[i] == 0)
   {
     return 0;
   }
 
-  for (; *str && (*str != c); str++)
+  for (; str[i] && (str[i] != c); i++)
   {
-    if (*str < '0' || *str > '9')
+    if (str[i] < '0' || str[i] > '9')
     {
       return 0;
     }
   }
-  return 1;
+  return i;
 }
 
 // Expects src to be an integer until a space or a null terminator
-// Returns 0 if there was an error parsing the integer, otherwise 1.
+// Returns 0 if there was an error parsing the integer, otherwise test_wrd_int(src) which would be non 0 for the valid integer.
 static int
 extract_int(const char* src, int* i, char c)
 {
-  if (!test_wrd_int(src, c))
+  int len = test_wrd_int(src, c);
+  if (len > 0)
   {
-    fprintf(stderr, "Line %d: Expected integer not '%s'.\n", current_line, src);
-    return 0;
+    *i = atoi(src);
+    return len;
   }
   
-  *i = atoi(src);
-
-  return 1;
+  fprintf(stderr, "Line %d: Expected integer not '%s'.\n", current_line, src);
+  return 0;
 }
 // 
 // n is the size of dst as an entire buffer.
@@ -238,22 +239,48 @@ guistrcpy(char* restrict dst, const char* restrict src, int n)
     src++;
   }
   
-  for (int i = 0; src[i] && i < n; i++)
+  for (int i = 0, j = 0; src[i] && i < n; i++, j++)
   {
     // If we have the last ' then we good
-    if (src[i] == '\'' && src[i+1] == 0)
+    if (src[i] == '\\')
+    {
+      i++;
+      if (src[i] == 'n')
+      {
+        dst[j] = '\n';
+      }
+      else if (src[i] == 't')
+      {
+        dst[j] = '\t';
+      }
+      else if (src[i] == '\\')
+      {
+        dst[j] = '\\';
+      }
+      else if (src[i] != '\'') // Not a character that just avoids confusion
+      {
+        dst[j++] = '\\';
+        dst[j] = src[i];
+        fprintf(stderr, "Line %d: Unknown combination of \\ and code, '\\%c', note that it is ignored.\n", current_line, src[i]);
+      }
+    }
+    else if (src[i] == '\'' && src[i+1] == 0)
     {
       dst[i] = 0;
       return 1;
     }
-    dst[i] = src[i];
+    else
+    {
+      dst[j] = src[i];
+    }
   }
 
   // If we get to N or src ends incorrectly we break and return 0
   return 0;
 }
 
-// Returns the exact (N - 1) needed in guistrcpy(), N-1 because it returns length rather than general size with the null terminator.
+// Returns the exact* (N - 1) needed in guistrcpy(), N-1 because it returns length rather than general size with the null terminator.
+// * - Not actually exact :) because it ignores \\ unlike strcpy which actually parses them.
 // Returns -1 if it's not a correct format.
 static int
 guistrlen(const char* src)
@@ -277,8 +304,8 @@ guistrlen(const char* src)
   return -1;
 }
 
-// Extracts a guistr by malloc()-ing it
-// Returns 0 if the string is invalid
+// Extracts a guistr by malloc()-ing it.
+// Returns 0 if the string is invalid, othersie guistrlen(src)
 static int
 extract_guistr(const char* restrict src, char* restrict* out)
 {
@@ -291,7 +318,7 @@ extract_guistr(const char* restrict src, char* restrict* out)
     
     guistrcpy(*out, src, n);
 
-    return 1;
+    return len;
   }
 
   fprintf(stderr, "Line %d: String required, not '%s'.\n", current_line, src);

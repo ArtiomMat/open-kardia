@@ -165,8 +165,9 @@ node_beat()
 
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
 
+      fip_t fip_clk_tick_time = (clk_tick_time*1000) / (1 << FIP_FRAC_BITS);
+      fip_t real_flow = FIP_MUL(node->flow, fip_clk_tick_time);
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
-      int real_flow = FIP_MUL(node->flow, clk_tick_time);
       if (real_flow >= node->ion)
       {
         send_halt = 1; // Because that's it this is the one
