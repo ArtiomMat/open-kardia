@@ -456,13 +456,6 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
 void
 gui_draw_window(gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
-  if (gui_window.window.flags & GUI_WND_HIDE)
-  {
-    return;
-  }
-
-  // HANDLE WINDOW LOGIC!
-
   // Move the window if necessary and other logic to keep track of movement
   if (gui_window.window.flags & GUI_WND_RELOCATING)
   {
@@ -534,6 +527,11 @@ gui_draw_window(gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 void
 gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
+  if (t->flags & GUI_T_HIDE)
+  {
+    return;
+  }
+
   int yes_text = 1;
   gui_u_t center_y = top + (bottom-top)/2;
   // int center_x = left + (right-left)/2;
