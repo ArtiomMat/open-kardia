@@ -91,11 +91,11 @@ cfg_geti(int id)
   return vars[id].i;
 }
 
-static void
-parse_line()
-{
+// static void
+// parse_line()
+// {
 
-}
+// }
 
 int
 cfg_init(const char* fp)

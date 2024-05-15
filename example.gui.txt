@@ -1,0 +1,35 @@
+t window W_MAIN 
+  str 'Example\nwindow'
+  x 10
+  y 10
+  w 300
+  h 200
+  min_w 300
+  min_h 200
+  child M_MAIN
+
+t rowmap M_MAIN
+  row
+  col O_Q
+  
+  row
+  col I_A
+
+  # Buttons and shit
+  row
+  col B_CONFIRM
+  col B_NOPE
+
+t otext O_Q
+  str 'How old are you?'
+
+t itext I_A
+  str '18'
+
+t button B_CONFIRM
+  max_w 300
+  str 'Confirm'
+
+t button B_NOPE
+  inherits B_CONFIRM
+  str 'Nope'

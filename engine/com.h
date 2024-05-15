@@ -1,5 +1,4 @@
 // Common functionality module, a m
-
 #pragma once
 
 #define COM_PATH_SIZE 512
@@ -86,7 +85,7 @@
   {
     return _x;
   }
-#elif
+#elif __arm__
   #define COM_BIGE 1
 
   static inline unsigned short
@@ -204,4 +203,3 @@ com_arg(const char* arg);
 // NOT THREAD SAFE IT USES ONE BUFFER ONLY!
 extern const char*
 com_relfp(const char* p);
-

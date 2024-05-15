@@ -4,6 +4,8 @@
 
 #include "vid.h"
 
+#include <stdint.h>
+
 // The width/height that the border adds to the window(includes both sides of the window, so gui_border_wh/2 is for one side, always divisable by 2)
 #define GUI_BORDER_WH (6 * 2)
 
@@ -14,6 +16,10 @@
 
 // How deep we can do recursion, 0 indicates a that the draw function can only be called once, meaning we can't go any deeper in a thing
 #define GUI_RECURSION_DEPTH 8
+
+// GUI unit, the unit is in pixel length
+// The size of the unit must allow for a value at least (2^10-1), while at the same time being signed to allow for special values up to -(2^3-1), which is why it's int16_t.
+typedef int16_t gui_u_t;
 
 enum
 {
@@ -29,7 +35,6 @@ enum
   GUI_E_FOCUS, // The user focused the window
   GUI_E_UNFOCUS, // The user unfocused the window
 };
-
 
 enum
 {
@@ -107,7 +112,7 @@ enum
 
 typedef struct
 {
-  int magic; // 72 b5 4a 86
+  unsigned int magic; // 72 b5 4a 86
   int version;
   int size; // Header size
   int flags;
@@ -118,7 +123,7 @@ typedef struct
 } gui_psf2_t;
 typedef struct
 {
-  short magic; // 36 04
+  unsigned short magic; // 36 04
   char mode;
   unsigned char size;
 } gui_psf1_t;
@@ -171,9 +176,9 @@ typedef struct gui_thing
   struct gui_thing* prev, * next;
   
   char* text; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
-  short min_size[2], max_size[2]; // Always valid and no flag can make it unused!
-  short size[2]; // If overriden by flags the size is automatically modified by GUI.
-  short pos[2]; // If overriden by flags the position is automatically modified by GUI.
+  gui_u_t min_size[2], max_size[2]; // Always valid and no flag can make it unused!
+  gui_u_t size[2]; // If overriden by flags the size is automatically modified by GUI.
+  gui_u_t pos[2]; // If overriden by flags the position is automatically modified by GUI.
   short flags;
   char type;
   unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
@@ -193,9 +198,9 @@ typedef struct gui_thing
     {
       // The relative coordinates of the mouse to the x and y of the window when it was pressed on the title bar on the previous frame
       // For internal use
-      short mouse_rel[2];
+      gui_u_t mouse_rel[2];
       // The size last frame, for internal use, crucial for calculating resizing for good UX
-      short size_0[2];
+      gui_u_t size_0[2];
       int flags;
     } window;
 
@@ -236,8 +241,8 @@ typedef struct
     } press, release;
     struct
     {
-      int delta[2]; // The intended move(without clamping to vid_size)
-      int normalized[2]; // Normalized move(clamped to the vid_size)
+      gui_u_t delta[2]; // The intended move(without clamping to vid_size)
+      gui_u_t normalized[2]; // Normalized move(clamped to the vid_size)
     } relocate;
   };
 } gui_event_t;
@@ -262,7 +267,7 @@ extern gui_thing_t* gui_things;
 // Requires vid_init()
 // If you change the order or the array of things itself you must gui_recache_all()!
 extern void
-gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font);
+gui_init(gui_u_t w, gui_u_t h, const char* title, gui_thing_t* thing, gui_font_t* _font);
 
 extern void
 gui_free();
@@ -287,7 +292,7 @@ gui_find(gui_thing_t* root, const char* id);
 // This function is the starting point of any drawn thing.
 // the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
 extern void
-gui_draw(gui_thing_t* t, int left, int top, int right, int bottom);
+gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom);
 
 extern void
 gui_set_flag(int flag, int yes);
@@ -295,7 +300,7 @@ extern void
 gui_toggle_flag(int flag);
 
 extern void
-gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color);
+gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color);
 
 /**
  * Event handler that must be called so GUI properly works.
@@ -307,11 +312,11 @@ gui_on_vid(vid_event_t* event);
 // Draw font, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.
 extern void
-gui_draw_font(gui_font_t* f, int x, int y, int g, unsigned char color);
+gui_draw_font(gui_font_t* f, gui_u_t x, gui_u_t y, int g, unsigned char color);
 
 // Draws on a grid, x and y are in grid units based on the font dimentions.
 static inline void
-gui_draw_fontg(gui_font_t* f, int x, int y, int g, unsigned char color)
+gui_draw_fontg(gui_font_t* f, gui_u_t x, gui_u_t y, int g, unsigned char color)
 {
   gui_draw_font(f, x * f->row_size * 8, y * f->height, g, color);
 }

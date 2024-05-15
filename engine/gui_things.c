@@ -74,7 +74,7 @@ send_event(gui_event_t* e)
 }
 
 static inline void
-draw_xline(int xi, int xf, int y, int color)
+draw_xline(gui_u_t xi, gui_u_t xf, gui_u_t y, int color)
 {
   int right = xi > xf ? xi : xf;
   int left = right == xi? xf : xi;
@@ -86,7 +86,7 @@ draw_xline(int xi, int xf, int y, int color)
 }
 
 static inline void
-draw_yline(int yi, int yf, int x, int color)
+draw_yline(gui_u_t yi, gui_u_t yf, gui_u_t x, int color)
 {
   int top = yi > yf ? yi : yf;
   int bottom = top == yi? yf : yi;
@@ -101,14 +101,14 @@ draw_yline(int yi, int yf, int x, int color)
  * Test if X_TEST and Y_TEST are within a rectangle.
 */
 static inline int
-in_rect(int x_test, int y_test, int left, int top, int right, int bottom)
+in_rect(gui_u_t x_test, gui_u_t y_test, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
   return x_test <= right && x_test >= left && y_test <= bottom && y_test >= top;
 }
 
 // Draws a rectangle with light being the color on the top and left, dark is right and bottom
 static inline void
-draw_rect(int left, int top, int right, int bottom, int light, int dark)
+draw_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark)
 {
   draw_xline(left, right, top, light);
   draw_xline(left, right, bottom, dark);
@@ -120,7 +120,7 @@ draw_rect(int left, int top, int right, int bottom, int light, int dark)
 // Extends draw_rect and also fills the rectangle.
 // If xray is enabled it avoids filling the rectangle there.
 static inline void
-draw_filled_rect(int left, int top, int right, int bottom, int light, int dark, int fill)
+draw_filled_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark, int fill)
 {
   draw_rect(left, top, right, bottom, light, dark);
   // Fill the mf now
@@ -184,7 +184,7 @@ get_thing_size(gui_thing_t* t, short out[2])
 
 
 void
-gui_init(int w, int h, const char* title, gui_thing_t* thing, gui_font_t* _font)
+gui_init(gui_u_t w, gui_u_t h, const char* title, gui_thing_t* thing, gui_font_t* _font)
 {
   font = _font;
   font_w = gui_get_font_width(font);
@@ -224,8 +224,8 @@ gui_free()
 static void
 save_mouse_rel()
 {
-  int mouse_x = min(max(mouse_pos[0], 0), vid_size[0]-1);
-  int mouse_y = min(max(mouse_pos[1], 0), vid_size[1]-1);
+  gui_u_t mouse_x = min(max(mouse_pos[0], 0), vid_size[0]-1);
+  gui_u_t mouse_y = min(max(mouse_pos[1], 0), vid_size[1]-1);
 
   gui_window.window.mouse_rel[0] = mouse_x - gui_window.pos[0];
   gui_window.window.mouse_rel[1] = mouse_y - gui_window.pos[1];
@@ -370,7 +370,7 @@ gui_on_vid(vid_event_t* e)
 // i is the dimention of the size/pos vector
 // Can also be used to resize towards the bottom of the screen, i is for that
 static void
-resize_right(int i, int max_r)
+resize_right(int i, gui_u_t max_r)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
@@ -380,7 +380,7 @@ resize_right(int i, int max_r)
 // i is the dimention of the size/pos vector
 // Can also be used to resize to the top of the screen
 static void
-resize_left(int i, int min_l)
+resize_left(int i, gui_u_t min_l)
 {
   int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
 
@@ -425,7 +425,7 @@ text_in_rect(int width, int height)
 
 // Safe to pass NULL as string
 static int
-draw_text(unsigned char color, const char* text, int l, int t, int r, int b)
+draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
   if (text == NULL)
   {
@@ -454,7 +454,7 @@ draw_text(unsigned char color, const char* text, int l, int t, int r, int b)
 }
 
 void
-gui_draw_window(int l, int t, int r, int b)
+gui_draw_window(gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
   if (gui_window.window.flags & GUI_WND_HIDE)
   {
@@ -510,7 +510,7 @@ gui_draw_window(int l, int t, int r, int b)
   draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(1));
 
   // X button text
-  int xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP+1;
+  gui_u_t xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP+1;
   gui_draw_font(font, xx, xy, '\\', get_shade(0));
   gui_draw_font(font, xx, xy,  '/', get_shade(0));
 
@@ -532,10 +532,10 @@ gui_draw_window(int l, int t, int r, int b)
 
 
 void
-gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
+gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
   int yes_text = 1;
-  int center_y = top + (bottom-top)/2;
+  gui_u_t center_y = top + (bottom-top)/2;
   // int center_x = left + (right-left)/2;
 
   #ifdef DEBUG
@@ -587,7 +587,7 @@ gui_draw(gui_thing_t* t, int left, int top, int right, int bottom)
 }
 
 void
-gui_draw_line(int xi, int yi, int xf, int yf, unsigned char color)
+gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color)
 {
   // Vertical line
   if (xi == xf)

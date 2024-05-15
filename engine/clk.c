@@ -1,5 +1,9 @@
 #include "clk.h"
 
+#ifdef DEBUG
+  #include <stdio.h>
+#endif
+
 clk_time_t clk_target_tick_time;
 clk_time_t clk_tick_time;
 

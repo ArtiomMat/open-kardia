@@ -1,11 +1,15 @@
 // A program for compiling GUI text code
 
 #include "../engine/gui.h"
+#include "../engine/com.h"
+#include <stdint.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
+#define THINGS_MAX 255
 
 #define LINE_MAX 1024
 
@@ -21,7 +25,7 @@
 #define DEF_MIN_W 1
 #define DEF_MIN_H 1
 #define DEF_STR "NULL"
-#define DEF_CHILD -1
+#define DEF_CHILD 0xFFFF
 #define DEF_ITXT_FMT 0
 
 enum
@@ -88,13 +92,24 @@ static line_t* lines = NULL;
 
 typedef struct thing
 {
-  int type;
-  int mod; // If the thing was modified already, for inheritance to not break things
   // id[0]=0 means that the thing has no id and cannot be identified(NOT THAT IT IS AN)
   char* id;
   char* str; // Allocated to fit the string
+  uint8_t type;
+  char mod; // If the thing was modified already, for inheritance to not break things
 
-  int x, y, w, h, max_w, min_w, max_h, min_h;
+  union
+  {
+    struct
+    {
+      gui_u_t 
+        x, y, 
+        w, min_w, max_w, 
+        h, min_h, max_h;
+    };
+    gui_u_t uarray[8];
+  };
+
   union
   {
     struct
@@ -103,20 +118,20 @@ typedef struct thing
     } itext;
     struct
     {
-      int* cols_n; // rows_n elements here, provides the number of columns per given row index
-      int* children; // Flattened array of all child indices
-      int rows_n;
+      uint8_t* cols_n; // rows_n elements here, provides the number of columns per given row index
+      uint16_t* children; // Flattened array of all child indices
+      uint8_t rows_n;
       int row_i, child_i;
     } rowmap;
     struct
     {
-      int child; // Index of child
+      uint16_t child; // Index of child
     } window;
   };
 } thing_t;
 
 static thing_t* things;
-static int things_n = 0;
+static uint16_t things_n = 0;
 
 // Buffer for aiding with parsing, mainly used for extracting words/strings in the file.
 // Not thread safe, shouldn't be an issue here, but just noting, it's used by functions like extract_int.
@@ -244,12 +259,12 @@ test_wrd_int(const char* str, int c)
 // Expects src to be an integer until a space or a null terminator
 // Returns 0 if there was an error parsing the integer, otherwise test_wrd_int(src) which would be non 0 for the valid integer.
 static int
-extract_int(const char* src, int* i, char c)
+extract_int(const char* src, gui_u_t* i, char c)
 {
   int len = test_wrd_int(src, c);
   if (len > 0)
   {
-    *i = atoi(src);
+    *i = (gui_u_t) atoi(src);
     return len;
   }
   
@@ -357,7 +372,7 @@ extract_guistr(const char* restrict src, char* restrict* out)
 
 // asserted version
 static int
-a_extract_int(const char* src, int* i, char c)
+a_extract_int(const char* src, gui_u_t* i, char c)
 {
   int ret = extract_int(src, i, c);
   if (!ret)
@@ -454,16 +469,16 @@ main(int args_n, const char** args)
   {
     fclose(out);
 
-    /* TODO: Uncommentint c = fgetc(stdin);
-
-    printf("%s already exists, override it? [Y/n] ", outfp);
+    printf("'%s' already exists, override it? [Y/n] ", outfp);
     fflush(stdout);
+
+    int c = fgetc(stdin);
 
     if (c != 'Y')
     {
       puts("Exiting.");
       return 0;
-    }*/
+    }
   }
 
   // Reopen or open output for writing
@@ -633,6 +648,11 @@ main(int args_n, const char** args)
   {
     if (l->str[0] == 't' && l->str[1] == ' ')
     {
+      if (things_n >= THINGS_MAX)
+      {
+        logerr(1, "Too many things, maximum is %d", THINGS_MAX);
+        return 1;
+      }
       things_n++;
     }
   }
@@ -814,6 +834,14 @@ main(int args_n, const char** args)
           logerr(1, "Due to limitations of my sanity when making this compiler, '%s' must be initialized BEFORE the inherittor '%s'.\n", things[i].id, things[thing_i].id);
           return 1;
         }
+
+        things[thing_i].str = things[i].str;
+        things[thing_i].x = things[i].x;
+        things[thing_i].y = things[i].y;
+        things[thing_i].max_w = things[i].max_w;
+        things[thing_i].max_h = things[i].max_h;
+        things[thing_i].min_w = things[i].min_w;
+        things[thing_i].min_h = things[i].min_h;
       }
       else if ((end = wrdcmp("x", str, ' ')))
       {
@@ -950,6 +978,67 @@ main(int args_n, const char** args)
     }
   }
   
+  // Now we finally write all the shit
+  for (int i = 0; i < things_n; i++)
+  {
+    thing_t* t = &things[i];
+
+    uint16_t u16;
+    int16_t i16;
+    int id_s, str_s;
+
+    fwrite(&t->type, 1, 1, out);
+
+    id_s = u16 = strlen(t->id);
+    u16 = com_lil16(u16);
+    fwrite(&u16, 2, 1, out);
+
+    str_s = u16 = strlen(t->str);
+    u16 = com_lil16(u16);
+    fwrite(&u16, 2, 1, out);
+
+    fwrite(t->id, id_s, 1, out);
+
+    fwrite(t->str, str_s, 1, out);
+
+    for (int i = 0; i < 8; i++)
+    {
+      i16 = t->uarray[i];
+      i16 = com_lil16(i16);
+      fwrite(t->uarray, 2, 1, out);
+    }
+
+    switch (t->type)
+    {
+      case GUI_T_ITEXT:
+      fwrite(&t->itext.format, 1, 1, out);
+      break;
+
+      case GUI_T_WINDOW:
+      u16 = com_lil16((uint16_t)t->window.child);
+      fwrite(&u16, 2, 1, out);
+      break;
+
+      case GUI_T_ROWMAP:
+      fwrite(&t->rowmap.rows_n, 1, 1, out);
+
+      int total_cols_n = 0;
+      for (int j = 0; j < t->rowmap.rows_n; j++)
+      {
+        total_cols_n += t->rowmap.cols_n[j];
+        fwrite(&t->rowmap.cols_n[j], 1, 1, out);
+      }
+
+      // Now write the 
+      for (int j = 0; j < total_cols_n; j++)
+      {
+        u16 = com_lil16((uint16_t)t->rowmap.children[j]);
+        fwrite(&u16, 1, 1, out);
+      }
+      break;
+    }
+  }
+
   fclose(in);
   fclose(out);
   return 0;

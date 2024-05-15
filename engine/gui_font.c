@@ -164,7 +164,7 @@ gui_get_glyph(gui_font_t* font, int g)
 }
 
 void
-gui_draw_font(gui_font_t* f, int _x, int _y, int g, unsigned char color)
+gui_draw_font(gui_font_t* f, gui_u_t _x, gui_u_t _y, int g, unsigned char color)
 {
   int add_x = _x < 0 ? -_x : 0;
   int add_y = _y < 0 ? -_y : 0;
