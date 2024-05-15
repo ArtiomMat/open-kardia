@@ -131,7 +131,7 @@ wrdcmp(const char* a, const char* b, char c)
     i++;
   }
   // Maybe the loop terminated because one ended early but the other too with another character
-  if ((!(*a) && *b == c) || (!(*b) || *a == c))
+  if ((!(*a) || *a == c) && (!(*b) || *b == c))
   {
     return i;
   }
