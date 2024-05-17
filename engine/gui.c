@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int gui_title_h = 0;
 unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
@@ -16,7 +17,8 @@ int font_w;
 // static gui_thing_t* focused_thing = NULL;
 
 gui_thing_t gui_window = {0};
-gui_thing_t* things = NULL;
+gui_thing_t* gui_things = NULL;
+static gui_thing_t* last_thing = NULL;
 
 gui_thing_t** gui_thing_refs;
 
@@ -47,6 +49,8 @@ gui_init(gui_font_t* _font)
 
   gui_thing_refs = calloc( vid_size[0] * vid_size[1], sizeof (gui_thing_t*));
 
+  gui_title_h = font->height + 2;
+
   printf("gui_init(): GUI module initialized.\n");
 }
 
@@ -74,8 +78,21 @@ gui_free(gui_thing_t* t)
     {
       t->prev->next = t->next;
     }
+    
+    // If it's the last thing
+    if (t == gui_things && t->next == NULL)
+    {
+      gui_things = NULL;
+    }
+
     free(t);
   }
+}
+
+int
+gui_on_vid(vid_event_t* e)
+{
+  return 0;
 }
 
 ////////////////////////////////////////////
@@ -278,8 +295,8 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
 ////////////////////////////////////////////
 
 // A window is not bound to a rectangle
-void
-gui_draw_window(gui_thing_t* t)
+static void
+draw_window(gui_thing_t* t)
 {
   draw_ref_rect(t, BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)));
 
@@ -288,10 +305,10 @@ gui_draw_window(gui_thing_t* t)
 
   // draw_filled_rect(CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)), get_shade(1), get_shade(1), get_shade(2));
 
-  //draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
+  // draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
 
   // Seperate x button from the rest of the title
-  draw_yline(TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)), get_shade(1));
+  // draw_yline(TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)), get_shade(1));
 
   // X button text
   gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
@@ -302,21 +319,43 @@ gui_draw_window(gui_thing_t* t)
   draw_text(get_shade(4), t->text, TITLE_LEFT((*t)), TITLE_TOP((*t)), X_LEFT((*t)), TITLE_BOTTOM((*t)));
 
   // Three dots on the corner
-  //gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height-2, '.', get_shade(3));
-  //gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
-  //gui_draw_font(font, BORDER_RIGHT((*t))-10, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height-2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT((*t))-10, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
 
-  // Drawing the things and shit
-  static gui_thing_t th = {0};
-  th.text = "Ouah";
-  th.type = GUI_T_TICKBOX;
-  th.button.pressed = 0;
-  gui_draw(&th, CONTENT_LEFT((*t)),CONTENT_TOP((*t)), CONTENT_RIGHT((*t)),CONTENT_TOP((*t))+font->height+1);
+  // Drawing the child
+  // printf("%p %p\n", t, t->window.child);
+  gui_draw(t->window.child, CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)));
+}
+
+static void
+draw_rowmap(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
+{
+  int i = 0;
+  int col_h = (bottom-top) / t->rowmap.rows_n;
+
+  for (int rowi = 0; rowi < t->rowmap.rows_n; rowi++)
+  {
+    int colsn = t->rowmap.cols_n[rowi];
+    int col_w = (right-left) / colsn;
+
+    for (int coli = 0; coli < colsn; coli++, i++)
+    {
+      int _left = left + coli * col_w;
+      int _top = top + rowi * col_h;
+      gui_draw(t->rowmap.things[i], _left, _top, _left + col_w, _top + col_h);
+    }
+  }
 }
 
 void
 gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
+  if (t == NULL)
+  {
+    return;
+  }
+  
   if (t->flags & GUI_T_HIDE)
   {
     return;
@@ -334,12 +373,16 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   {
     case GUI_T_WINDOW:
     {
-      gui_draw_window(t);
+      draw_window(t);
       yes_text = 0;
     }
     break;
 
     case GUI_T_ROWMAP:
+    {
+      draw_rowmap(t, left, top, right, bottom);
+      yes_text = 0;
+    }
     break;
 
     case GUI_T_OTEXT:
@@ -375,4 +418,133 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   {
     draw_text(get_shade(4), t->text, left, top, right, bottom);
   }
+}
+
+////////////////////////////////////////////
+//            THING OPEN STUFF
+////////////////////////////////////////////
+
+gui_thing_t*
+gui_open(const char* fp)
+{
+  FILE* f = fopen(fp, "rb");
+  uint16_t n;
+  uint16_t u16;
+
+  char magic[3];
+  fread(magic, 3, 1, f);
+  if (magic[0] != 'G' || magic[1] != 'U' || magic[2] != 'I')
+  {
+    fprintf(stderr, "gui_open(): Invalid GUI file '%s'.\n", fp);
+    return NULL;
+  }
+
+  fread(&n, 2, 1, f);
+  n = com_lil16(n);
+  gui_thing_t* buf = calloc(sizeof (*buf) * n, 1);
+
+  if (gui_things == NULL)
+  {
+    gui_things = buf;
+  }
+
+  for (int i = 0; i < n; i++, last_thing = &buf[i])
+  {
+    buf[i].prev = last_thing;
+    buf[i].next = (i < n-1) ? &buf[i+1] : NULL;
+
+    fread(&buf[i].type, 1, 1, f);
+    
+    uint16_t id_s, str_s;
+
+    fread(&id_s, 2, 1, f);
+    id_s = com_lil16(id_s);
+    buf[i].id = malloc(id_s);
+
+    fread(&str_s, 2, 1, f);
+    str_s = com_lil16(str_s);
+    buf[i].text = malloc(str_s);
+
+    fread(buf[i].id, id_s, 1, f);
+
+    fread(buf[i].text, str_s, 1, f);
+
+    fread(&buf[i].pos[0], 2, 1, f);
+    buf[i].pos[0] = com_lil16(buf[i].pos[0]);
+
+    fread(&buf[i].pos[1], 2, 1, f);
+    buf[i].pos[1] = com_lil16(buf[i].pos[1]);
+
+    for (int j = 0; j < 2; j++)
+    {
+      fread(&buf[i].size[j], 2, 1, f);
+      buf[i].size[j] = com_lil16(buf[i].size[j]);
+
+      fread(&buf[i].min_size[j], 2, 1, f);
+      buf[i].min_size[j] = com_lil16(buf[i].min_size[j]);
+
+      fread(&buf[i].max_size[j], 2, 1, f);
+      buf[i].max_size[j] = com_lil16(buf[i].max_size[j]);
+    }
+
+    switch(buf[i].type)
+    {
+      case GUI_T_ITEXT:
+      fread(&buf[i].itext.format, 1, 1, f);
+      break;
+
+      case GUI_T_WINDOW:
+      fread(&u16, 2, 1, f);
+      u16 = com_lil16(u16);
+      buf[i].window.child = &buf[u16];
+      break;
+
+      case GUI_T_ROWMAP:
+      fread(&buf[i].rowmap.rows_n, 1, 1, f);
+      buf[i].rowmap.cols_n = malloc(sizeof (uint8_t) * buf[i].rowmap.rows_n);
+
+      int total_cols = 0;
+      for (int j = 0; j < buf[i].rowmap.rows_n; j++)
+      {
+        fread(&buf[i].rowmap.cols_n[j], 1, 1, f);
+        total_cols += buf[i].rowmap.cols_n[j];
+      }
+      buf[i].rowmap.things = malloc(sizeof (gui_thing_t*) * total_cols);
+      
+      for (int j = 0; j < total_cols; j++)
+      {
+        fread(&u16, 2, 1, f);
+        u16 = com_lil16(u16);
+        buf[i].rowmap.things[j] = &buf[u16];
+      }
+      break;
+    }
+  }
+  printf( "gui_open(): Loaded %hu things from '%s'.\n", n, fp);
+
+  return buf;
+}
+
+gui_thing_t*
+gui_find(gui_thing_t* from, const char* id, char onetime)
+{
+  if (from == NULL)
+  {
+    from = gui_things;
+  }
+
+  for (gui_thing_t* _t = from; _t != NULL; _t = _t->next)
+  {
+    if (!(_t->flags & GUI_T_FOUND) && !strcmp(id, _t->id))
+    {
+      if (onetime)
+      {
+        _t->flags |= GUI_T_FOUND;
+      }
+
+      return _t;
+    }
+  }
+
+  return NULL;
 }

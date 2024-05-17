@@ -88,6 +88,7 @@ enum
   GUI_T_SLIDER,
 
   // FLAGS
+  GUI_T_FOUND         = 1<<0,
 
   GUI_T_LEFT          = 1<<1, // Align the thing to the left of its parent
   GUI_T_RIGHT         = 1<<2, // Align the thing to the right of its parent
@@ -182,7 +183,7 @@ typedef struct gui_thing
   short flags;
   char type;
   // unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
-  const char* id; // The string based ID
+  char* id; // The string based ID
   union
   {
     // A row map contains rows and columns, it's like a table, but it's actually dynamic in number of columns per row.
@@ -202,6 +203,7 @@ typedef struct gui_thing
       // The size last frame, for internal use, crucial for calculating resizing for good UX
       gui_u_t size_0[2];
       int flags;
+      struct gui_thing* child;
     } window;
 
     struct

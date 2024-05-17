@@ -105,7 +105,7 @@ k_init()
          mix_push1(K_GUI_GRAD, 160,160,80);
   next = mix_push1(K_GUI_GRAD, 235,235,180);*/
   
-  mix_push(K_GUI_GRAD, 20,20,20);
+  mix_push(K_GUI_GRAD, 40,40,40);
   mix_push(K_GUI_GRAD, 80,80,80);
   mix_push(K_GUI_GRAD, 130,130,130);
   mix_push(K_GUI_GRAD, 180,180,180);
@@ -245,21 +245,12 @@ main(int args_n, const char** args)
 
   k_init();
 
-  /*gui_thing_t gui_thing = {.type = GUI_T_TEXT};
-  gui_thing.str = "HELLO!";
-  gui_thing.text.color = 255;*/
-  // Set the GUI shades
+  gui_init(k_font);
   for (int i = 0; i < GUI_SHADES_N; i++)
   {
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
   }
-  gui_window.text_color = 255;
-  gui_init(100, 100, "Open Kardia", NULL, k_font);
-  for (int i = 0; i < 2; i++)
-  {
-    gui_window.pos[i] = vid_size[i]/2 - gui_window.size[i]/2;
-  }
-  gui_set_flag(GUI_WND_HIDE, 1);
+  gui_open(com_relfp("example.gui"));
 
   aud_init();
 
@@ -299,6 +290,8 @@ main(int args_n, const char** args)
   // clk_time_t time = 0, count = 0;
   // clk_time_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
 
+  printf("%hd %hd", gui_things[0].min_size[0], gui_things[0].min_size[1]);
+
   puts("\nRUNNING...\n");
 
   while(1)
@@ -312,7 +305,7 @@ main(int args_n, const char** args)
     vid_wipe(254);
       node_draw(flow_mode);
       ekg_draw();
-      gui_draw(&gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
+      gui_draw(&gui_things[0], 0,0, vid_size[0]-1, vid_size[1]-1);
     vid_refresh();
     
     

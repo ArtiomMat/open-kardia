@@ -927,21 +927,29 @@ deep_init()
 static void
 write_out(FILE* out)
 {
+  fputc('G', out);
+  fputc('U', out);
+  fputc('I', out);
+
+  uint16_t u16;
+  int16_t i16;
+
+  u16 = com_lil16((uint16_t)things_n);
+  fwrite(&u16, 2, 1, out);
+
   for (int i = 0; i < things_n; i++)
   {
     thing_t* t = &things[i];
 
-    uint16_t u16;
-    int16_t i16;
     int id_s, str_s;
 
     fwrite(&t->type, 1, 1, out);
 
-    id_s = u16 = strlen(t->id);
+    id_s = u16 = strlen(t->id) + 1;
     u16 = com_lil16(u16);
     fwrite(&u16, 2, 1, out);
 
-    str_s = u16 = strlen(t->str);
+    str_s = u16 = strlen(t->str) + 1;
     u16 = com_lil16(u16);
     fwrite(&u16, 2, 1, out);
 
@@ -953,7 +961,7 @@ write_out(FILE* out)
     {
       i16 = t->uarray[i];
       i16 = com_lil16(i16);
-      fwrite(t->uarray, 2, 1, out);
+      fwrite(&i16, 2, 1, out);
     }
 
     switch (t->type)
@@ -964,6 +972,7 @@ write_out(FILE* out)
 
       case GUI_T_WINDOW:
       u16 = com_lil16((uint16_t)t->window.child);
+      // printf("%hu\n", u16);
       fwrite(&u16, 2, 1, out);
       break;
 
@@ -981,7 +990,7 @@ write_out(FILE* out)
       for (int j = 0; j < total_cols_n; j++)
       {
         u16 = com_lil16((uint16_t)t->rowmap.children[j]);
-        fwrite(&u16, 1, 1, out);
+        fwrite(&u16, 2, 1, out);
       }
       break;
     }

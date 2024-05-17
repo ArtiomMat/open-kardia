@@ -25,10 +25,10 @@ thing_t
   uint8_t type
 
   uint16_t id_s : size of id
-  uint16_t str_s : size of str
+  uint16_t str_s : size of str AKA text
 
   uint8_t[id_s] id
-  uint8_t[str_s] str
+  uint8_t[str_s] str : AKA text
 
   gui_u_t x
   gui_u_t y
