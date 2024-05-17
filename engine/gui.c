@@ -176,7 +176,7 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
 {
   gui_u_t
     l = 0, t = 0,
-    r = vid_size[0], b = vid_size[1];
+    r = vid_size[0]-1, b = vid_size[1]-1;
   // Move the window if necessary and other logic to keep track of movement
   if (window->window.flags & GUI_WND_RELOCATING)
   {
