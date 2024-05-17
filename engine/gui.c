@@ -16,13 +16,21 @@ int font_w;
 // The currently focused thing, for instance a button, eg if enter is pressed we press it.
 // static gui_thing_t* focused_thing = NULL;
 
-gui_thing_t gui_window = {0};
 gui_thing_t* gui_things = NULL;
 static gui_thing_t* last_thing = NULL;
 
 gui_thing_t** gui_thing_refs;
 
 int gui_mouse_pos[2];
+
+static void
+send_event(gui_event_t* e)
+{
+  if (gui_on != NULL && !gui_on(e))
+  {
+    puts("FUCK!");
+  }
+}
 
 void
 gui_set_flag(gui_thing_t* t, int flag, int yes)
@@ -103,45 +111,349 @@ get_pointed_thing()
   return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+//                                  WINDOW ON
+//////////////////////////////////////////////////////////////////////////////////
+
 static void
-button_on_vid(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+save_mouse_rel(gui_thing_t* gui_window)
 {
-  switch(e->type)
+  gui_u_t mouse_x = min(max(gui_mouse_pos[0], 0), vid_size[0]-1);
+  gui_u_t mouse_y = min(max(gui_mouse_pos[1], 0), vid_size[1]-1);
+
+  gui_window->window.mouse_rel[0] = mouse_x - gui_window->pos[0];
+  gui_window->window.mouse_rel[1] = mouse_y - gui_window->pos[1];
+}
+
+// i is the dimention of the size/pos vector
+// Can also be used to resize towards the bottom of the screen, i is for that
+static void
+resize_right(gui_thing_t* gui_window, int i, gui_u_t max_r)
+{
+  int mouse_delta = gui_mouse_pos[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
+
+  gui_window->size[i] = gui_window->window.size_0[i] + mouse_delta;
+  gui_window->size[i] = min(max(gui_window->size[i], gui_window->min_size[i]), max_r + 1 - gui_window->pos[i]);
+}
+// i is the dimention of the size/pos vector
+// Can also be used to resize to the top of the screen
+static void
+resize_left(gui_thing_t* gui_window, int i, gui_u_t min_l)
+{
+  int mouse_delta = gui_mouse_pos[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
+
+  gui_window->pos[i] += mouse_delta;
+
+  if (gui_window->pos[i] < min_l)
   {
-    case VID_E_PRESS:
-    t->button.pressed = 1;
-    break;
-    case VID_E_RELEASE:
-    t->button.pressed = 0;
-    break;
+    mouse_delta -= gui_window->pos[i];
+    gui_window->pos[i] = 0;
   }
+
+  gui_window->size[i] = gui_window->window.size_0[i] - mouse_delta;
+
+  if (gui_window->size[i] < gui_window->min_size[i])
+  {
+    gui_window->pos[i] -= gui_window->min_size[i] - gui_window->size[i];
+    gui_window->size[i] = gui_window->min_size[i];
+  }
+
+  // So that in the next call to resize_left(), the size[i] does not return to be size_0(old). Since the X keeps updating, we need to shift the width with it, so that mouse_delta keeps being current. I know this is not really a good explanation, but just run this on a fucking paper, just shift the window do all the operations without this line, you will understand what I mean.
+  gui_window->window.size_0[i] = gui_window->size[i];
+}
+
+/**
+ * Test if X_TEST and Y_TEST are within a rectangle.
+*/
+static inline int
+in_rect(gui_u_t x_test, gui_u_t y_test, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
+{
+  return x_test <= right && x_test >= left && y_test <= bottom && y_test >= top;
+}
+
+static void
+window_on_move(gui_thing_t* window, gui_event_t* gui_e)
+{
+  gui_u_t
+    l = 0, t = 0,
+    r = vid_size[0], b = vid_size[1];
+  // Move the window if necessary and other logic to keep track of movement
+  if (window->window.flags & GUI_WND_RELOCATING)
+  {
+    gui_event_t e;
+    window->pos[0] = e.relocate.delta[0] = gui_mouse_pos[0]-window->window.mouse_rel[0];
+    window->pos[1] = e.relocate.delta[1] = gui_mouse_pos[1]-window->window.mouse_rel[1];
+
+    window->pos[0] = e.relocate.normalized[0] = min(max(window->pos[0], l), r+1-window->size[0]);
+    window->pos[1] = e.relocate.normalized[1] = min(max(window->pos[1], l), b+1-window->size[1]);
+    send_event(&e);
+  }
+  // Resize the window and keep track of resizing too
+  else if (window->window.flags & GUI_WND_RESIZING)
+  {
+    int flag = window->window.flags & GUI_WND_RESIZING;
+
+    if (flag & GUI_WND_RESIZING_R)
+    {
+      resize_right(window, 0, r);
+    }
+    else if (flag & GUI_WND_RESIZING_L)
+    {
+      resize_left(window, 0, l);
+    }
+
+    if (flag & GUI_WND_RESIZING_B)
+    {
+      resize_right(window, 1, b);
+    }
+    else if (flag & GUI_WND_RESIZING_T)
+    {
+      resize_left(window, 1, t);
+    }
+  }
+}
+
+// gui_e is a pointer to the gui event that would be sent, if its ->type is untouched nothing will be sent.
+static void
+window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
+{
+  // window_on_move(thing, gui_e);
+  // Inside of the title bar
+  if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], TITLE_LEFT((*thing)), TITLE_TOP((*thing)), TITLE_RIGHT((*thing)), TITLE_BOTTOM((*thing))))
+  {
+    if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
+    {
+      thing->window.flags |= GUI_WND_HIDE;
+      thing->window.flags |= GUI_WND_UNFOCUSED; // Also we unfocus so the user can interact again
+
+      (*gui_e).type = GUI_E_HIDE;
+      return;
+    }
+
+    thing->window.flags |= GUI_WND_RELOCATING;
+    save_mouse_rel(thing);
+
+    // We need to automatically focus back the window regardless, we don't reach this is middle clicked
+    thing->window.flags &= ~GUI_WND_UNFOCUSED;
+
+    thing->window.flags &= ~GUI_WND_UNFOCUSED;
+    (*gui_e).type = GUI_E_UNFOCUS;
+    return;
+  }
+  // Inside of the content zone
+  else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
+  {
+    thing->window.flags &= ~GUI_WND_UNFOCUSED;
+    (*gui_e).type = GUI_E_HIDE;
+    return;
+  }
+  // We are 100% either in border or outside the window alltogether
+  else
+  {
+    int flags_tmp = thing->window.flags; // Save the flag for future
+
+    // Right and left border
+    if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_RIGHT((*thing))+1 - GUI_RESIZE_BLEED, BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
+    {
+      thing->window.flags |= GUI_WND_RESIZING_R;
+    }
+    else if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), CONTENT_LEFT((*thing))-1 + GUI_RESIZE_BLEED, BORDER_BOTTOM((*thing))))
+    {
+      thing->window.flags |= GUI_WND_RESIZING_L;
+    }
+
+    // Top and bottom border, disconnected to combine the two in the corners
+    if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), TITLE_TOP((*thing))-1 + GUI_RESIZE_BLEED))
+    {
+      thing->window.flags |= GUI_WND_RESIZING_T;
+    }
+    else if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), CONTENT_BOTTOM((*thing))+1 - GUI_RESIZE_BLEED, BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
+    {
+      thing->window.flags |= GUI_WND_RESIZING_B;
+    }
+
+    // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
+    if (thing->window.flags != flags_tmp)
+    {
+      thing->window.size_0[0] = thing->size[0];
+      thing->window.size_0[1] = thing->size[1];
+
+      save_mouse_rel(thing);
+      thing->window.flags &= ~GUI_WND_UNFOCUSED;
+      (*gui_e).type = GUI_E_FOCUS;
+      return;
+    }
+    // 100% outside the window, if not already set we set and put the event for eaten
+    // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
+    else if (!(thing->window.flags & GUI_WND_UNFOCUSED))
+    {
+      thing->window.flags |= GUI_WND_UNFOCUSED;
+      (*gui_e).type = GUI_E_UNFOCUS;
+      return;
+    }
+  }
+}
+
+static void
+window_on_mrelease(gui_thing_t* thing, gui_event_t* gui_e)
+{
+  thing->window.flags &= ~GUI_WND_RELOCATING;
+  thing->window.flags &= ~GUI_WND_RESIZING;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//                                  BUTTON ON
+//////////////////////////////////////////////////////////////////////////////////
+
+static void
+button_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
+{
+  t->button.pressed = 1;
   gui_e->type = GUI_E_PRESS;
 }
 
 static void
-button_on_vid_last(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 {
   t->button.pressed = 0;
   gui_e->type = GUI_E_RELEASE;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+//                               ITEXT ON
+//////////////////////////////////////////////////////////////////////////////////
+
 static void
-tickbox_on_vid(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 {
-  switch(e->type)
+  if (!(t->itext.flags & GUI_ITXT_NOT_VIRGIN))
   {
-    case VID_E_PRESS:
-    t->tickbox.ticked = !t->tickbox.ticked;
-    break;
+    // TODO: Override all text
+    t->itext.flags |= GUI_ITXT_NOT_VIRGIN;
+  }
+  t->itext.flags |= GUI_ITXT_SELECTED;
+  gui_e->type = GUI_E_PRESS;
+}
+
+static void
+itext_on_press(gui_thing_t* t, gui_event_t* gui_e)
+{
+  if (gui_e->press.code != KEY_BS)
+  {
+    t->text[t->itext.cursor++] = gui_e->press.code;
+  }
+  else if (t->itext.cursor)
+  {
+    t->itext.cursor--;
   }
   gui_e->type = GUI_E_PRESS;
+}
+
+static void
+itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
+{
+  t->itext.flags &= ~GUI_ITXT_SELECTED;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//                               TICKBOX ON
+//////////////////////////////////////////////////////////////////////////////////
+
+static void
+tickbox_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
+{
+  t->tickbox.ticked = !t->tickbox.ticked;
+  gui_e->type = GUI_E_PRESS;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//                                GUI ON PIPE
+//////////////////////////////////////////////////////////////////////////////////
+
+static void
+thing_on_mrelease(gui_thing_t* released, gui_event_t* gui_e)
+{
+  switch (released->type)
+  {
+    case GUI_T_WINDOW:
+    window_on_mrelease(released, gui_e);
+    break;
+    case GUI_T_BUTTON:
+    button_on_mrelease(released, gui_e);
+    break;
+  }
+}
+
+static void
+thing_on_mpress(gui_thing_t* pressed, gui_event_t* gui_e)
+{
+  switch (pressed->type)
+  {
+    case GUI_T_WINDOW:
+    window_on_mpress(pressed, gui_e);
+    break;
+    case GUI_T_TICKBOX:
+    tickbox_on_mpress(pressed, gui_e);
+    break;
+    case GUI_T_BUTTON:
+    button_on_mpress(pressed, gui_e);
+    break;
+    case GUI_T_ITEXT:
+    itext_on_mpress(pressed, gui_e);
+    break;
+  }
+}
+
+static void
+thing_on_move(gui_thing_t* pressed, gui_event_t* gui_e)
+{
+  switch (pressed->type)
+  {
+    case GUI_T_WINDOW:
+    window_on_move(pressed, gui_e);
+    break;
+  }
+}
+
+static void
+thing_on_deselect(gui_thing_t* selected, gui_event_t* gui_e)
+{
+  switch (selected->type)
+  {
+    case GUI_T_ITEXT:
+    itext_on_deselect(selected, gui_e);
+    break;
+  }
+}
+
+// Test if it's a mouse or enter press, assumes e->type=VID_E_PRESS/RELEASE
+static int
+test_mpress(vid_event_t* e)
+{
+  return e->press.code == KEY_LMOUSE;
+}
+
+static void
+thing_on_press(gui_thing_t* selected, gui_event_t* gui_e)
+{
+  switch (selected->type)
+  {
+    case GUI_T_ITEXT:
+    itext_on_press(selected, gui_e);
+    break;
+  }
 }
 
 int
 gui_on_vid(vid_event_t* e)
 {
-  // Last thing that get_pointed_thing got
-  static gui_thing_t* last_t = NULL;
+  // pointed that got pressed
+  static gui_thing_t* pressed = NULL;
+  // Same as pressed, but ignores release, only a of a different thing changes it
+  static gui_thing_t* selected = NULL;
+  static gui_thing_t* pointed = NULL;
+
+  gui_event_t gui_e = {.type = _GUI_E_NULL};
 
   switch (e->type)
   {
@@ -149,43 +461,45 @@ gui_on_vid(vid_event_t* e)
     // We also limit it to avoid any possible segfault
     gui_mouse_pos[0] = e->move.x;
     gui_mouse_pos[1] = e->move.y;
-    break;
-  }
 
-  gui_event_t gui_e = {.type = _GUI_E_NULL};
-  
-  gui_thing_t* t = get_pointed_thing();
-
-  // Now pass on to the specific types
-  if (t != NULL)
-  {
-    if (last_thing != t)
+    pointed = get_pointed_thing();
+    // We should only change the pointed if we are not pressing anything
+    if (pressed != NULL)
     {
-      switch (last_thing->type)
+      thing_on_move(pressed, &gui_e);
+    }
+    
+    break;
+
+    case VID_E_RELEASE:
+    if (pressed != NULL && test_mpress(e))
+    {
+      thing_on_mrelease(pressed, &gui_e);
+      pressed = NULL;
+    }
+    break;
+
+    case VID_E_PRESS:
+    if (test_mpress(e))
+    {
+      pressed = pointed;
+
+      if (selected != NULL && pressed != selected)
       {
-        case GUI_T_BUTTON:
-        button_on_vid_last(last_thing, e, &gui_e);
-        break;
+        thing_on_deselect(selected, &gui_e);
+      }
+      selected = pressed;
+
+      if (pressed != NULL)
+      {
+        thing_on_mpress(pressed, &gui_e);
       }
     }
-
-    if (t->flags & GUI_T_HIDE)
+    else
     {
-      return 0;
+      thing_on_press(selected, &gui_e);
     }
-
-    switch (t->type)
-    {
-      case GUI_T_BUTTON:
-      button_on_vid(t, e, &gui_e);
-      break;
-
-      case GUI_T_TICKBOX:
-      tickbox_on_vid(t, e, &gui_e);
-      break;
-    }
-
-    last_thing = t;
+    break;
   }
 
   // Decide if we ate or not!
@@ -193,28 +507,28 @@ gui_on_vid(vid_event_t* e)
   {
     return 0;
   }
-  // send_event(&gui_e);
+  send_event(&gui_e);
   return 1;
 }
 
-////////////////////////////////////////////
-//             MISC DRAW
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                                     MISC DRAW
+//////////////////////////////////////////////////////////////////////////////////
 
 static unsigned char
 get_shade(int i)
 {
   // Return darker shade if unfocused
-  if (gui_window.window.flags & GUI_WND_UNFOCUSED)
-  {
-    return gui_shades[max(i - 1, 0)];
-  }
+  // if (gui_window.window.flags & GUI_WND_UNFOCUSED)
+  // {
+  //   return gui_shades[max(i - 1, 0)];
+  // }
   return gui_shades[i];
 }
 
-////////////////////////////////////////////
-//                LINES
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                                    LINES
+//////////////////////////////////////////////////////////////////////////////////
 
 static inline void
 draw_xline(gui_u_t xi, gui_u_t xf, gui_u_t y, int color)
@@ -293,10 +607,9 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
   }
 }
 
-
-////////////////////////////////////////////
-//                RECTS
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                                  RECTS
+//////////////////////////////////////////////////////////////////////////////////
 
 // Extends draw_rect and also fills the rectangle.
 // If xray is enabled it avoids filling the rectangle there.
@@ -339,9 +652,9 @@ draw_filled_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int l
   }
 }
 
-////////////////////////////////////////////
-//                TEXT
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                               TEXT
+//////////////////////////////////////////////////////////////////////////////////
 
 // How much text would fit per line, given a width of a rectangle
 static inline int
@@ -392,9 +705,9 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
   return i;
 }
 
-////////////////////////////////////////////
-//            DRAW THINGS
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                              DRAW THINGS
+//////////////////////////////////////////////////////////////////////////////////
 
 // A window is not bound to a rectangle
 static void
@@ -505,9 +818,19 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
 
     case GUI_T_ITEXT:
     {
+      int selected = t->itext.flags & GUI_ITXT_SELECTED ? 1 : 0;
+
       draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
 
+      if (selected)
+      {
+        draw_yline(top+1, top+font->height, left + 1 + t->itext.cursor * font_w, get_shade(3));
+      }
+
+      draw_text(get_shade(3 + selected), t->text, left, top, right, bottom);
+
       draw_ref_rect(t, left, top, right, bottom);
+      yes_text = 0;
     }
     break;
 
@@ -528,9 +851,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   }
 }
 
-////////////////////////////////////////////
-//            THING OPEN STUFF
-////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//                                 THING OPEN STUFF
+//////////////////////////////////////////////////////////////////////////////////
 
 gui_thing_t*
 gui_open(const char* fp)

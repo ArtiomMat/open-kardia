@@ -61,6 +61,10 @@ enum
   GUI_ITXT_NONUM = 1<<2, // No numbers
   GUI_ITXT_NOSYM = 1<<3, // No symbols
   GUI_ITXT_NOSPC = 1<<4, // No white space
+
+  GUI_ITXT_SELECTED = 1<<5, // If the text is currently selected
+
+  GUI_ITXT_NOT_VIRGIN = 1<<6, // If the flag is not on the moment the user begins typing all the text is overriden
 };
 
 enum
@@ -214,7 +218,9 @@ typedef struct gui_thing
 
     struct
     {
+      char flags;
       char format;
+      uint16_t cursor;
     } itext;
 
     struct
@@ -256,9 +262,6 @@ extern unsigned char gui_shades[GUI_SHADES_N];
 
 // It's a bad idea to completely override it because nothing would work then, a better idea is to override it if you need to but also make sure that you call gui_def_event_handler() in the end.
 extern int (*gui_on)(gui_event_t* event);
-
-// The initial window, currently only one window can work.
-extern gui_thing_t gui_window;
 
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
