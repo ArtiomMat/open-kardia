@@ -15,10 +15,16 @@ t rowmap M_MAIN
   row
   col I_A
 
+  row
+  col T_PROMISE
+
   # Buttons and shit
   row
   col B_CONFIRM
   col B_NOPE
+
+t tickbox T_PROMISE
+  str 'I promise'
 
 t otext O_Q
   str 'How old are you?'

@@ -78,6 +78,7 @@ on_vid(vid_event_t* e)
     edit_free();
     vid_free();
     aud_free();
+    gui_free(NULL);
     exit(0);
     break;
   }

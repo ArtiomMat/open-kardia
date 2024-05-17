@@ -22,6 +22,8 @@ static gui_thing_t* last_thing = NULL;
 
 gui_thing_t** gui_thing_refs;
 
+int gui_mouse_pos[2];
+
 void
 gui_set_flag(gui_thing_t* t, int flag, int yes)
 {
@@ -67,6 +69,7 @@ gui_free(gui_thing_t* t)
     }
 
     free(gui_thing_refs);
+    puts("gui_free(): GUI module freed.");
   }
   else
   {
@@ -87,12 +90,111 @@ gui_free(gui_thing_t* t)
 
     free(t);
   }
+
+}
+
+static gui_thing_t*
+get_pointed_thing()
+{
+  if (gui_mouse_pos[0] < 0 || gui_mouse_pos[1] < 0 || gui_mouse_pos[0] >= vid_size[0] ||  gui_mouse_pos[1] >= vid_size[1])
+  {
+    return NULL;
+  }
+  return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
+}
+
+static void
+button_on_vid(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+{
+  switch(e->type)
+  {
+    case VID_E_PRESS:
+    t->button.pressed = 1;
+    break;
+    case VID_E_RELEASE:
+    t->button.pressed = 0;
+    break;
+  }
+  gui_e->type = GUI_E_PRESS;
+}
+
+static void
+button_on_vid_last(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+{
+  t->button.pressed = 0;
+  gui_e->type = GUI_E_RELEASE;
+}
+
+static void
+tickbox_on_vid(gui_thing_t* t, vid_event_t* e, gui_event_t* gui_e)
+{
+  switch(e->type)
+  {
+    case VID_E_PRESS:
+    t->tickbox.ticked = !t->tickbox.ticked;
+    break;
+  }
+  gui_e->type = GUI_E_PRESS;
 }
 
 int
 gui_on_vid(vid_event_t* e)
 {
-  return 0;
+  // Last thing that get_pointed_thing got
+  static gui_thing_t* last_t = NULL;
+
+  switch (e->type)
+  {
+    case VID_E_MOVE:
+    // We also limit it to avoid any possible segfault
+    gui_mouse_pos[0] = e->move.x;
+    gui_mouse_pos[1] = e->move.y;
+    break;
+  }
+
+  gui_event_t gui_e = {.type = _GUI_E_NULL};
+  
+  gui_thing_t* t = get_pointed_thing();
+
+  // Now pass on to the specific types
+  if (t != NULL)
+  {
+    if (last_thing != t)
+    {
+      switch (last_thing->type)
+      {
+        case GUI_T_BUTTON:
+        button_on_vid_last(last_thing, e, &gui_e);
+        break;
+      }
+    }
+
+    if (t->flags & GUI_T_HIDE)
+    {
+      return 0;
+    }
+
+    switch (t->type)
+    {
+      case GUI_T_BUTTON:
+      button_on_vid(t, e, &gui_e);
+      break;
+
+      case GUI_T_TICKBOX:
+      tickbox_on_vid(t, e, &gui_e);
+      break;
+    }
+
+    last_thing = t;
+  }
+
+  // Decide if we ate or not!
+  if (gui_e.type == _GUI_E_NULL)
+  {
+    return 0;
+  }
+  // send_event(&gui_e);
+  return 1;
 }
 
 ////////////////////////////////////////////
@@ -205,7 +307,7 @@ draw_ref_rect(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t 
   {
     for (int _y = top; _y <= bottom; _y++)
     {
-      gui_thing_refs[ _y*vid_size[0] + _x] = t;
+      gui_thing_refs[_y*vid_size[0] + _x] = t;
     }
   }
 }
@@ -393,7 +495,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
       int tick = t->tickbox.ticked;
       int y0 = max(center_y - TICKBOX_SIZE/2, top);
       int y1 = min(center_y + TICKBOX_SIZE/2, bottom);
-      draw_filled_rect(right-font_w, y0, right, y1, get_shade(1), get_shade(3), tick?get_shade(4):get_shade(0));
+
+      draw_filled_rect(right-TICKBOX_SIZE, y0, right, y1, get_shade(1), get_shade(3), tick?get_shade(4):get_shade(0));
+      draw_ref_rect(t, right-TICKBOX_SIZE, y0, right, y1);
 
       right -= TICKBOX_SIZE-1;
     }
@@ -402,6 +506,8 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
     case GUI_T_ITEXT:
     {
       draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
+
+      draw_ref_rect(t, left, top, right, bottom);
     }
     break;
 
@@ -410,6 +516,8 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
       int p = t->button.pressed;
       // Doing math with p to just reverse if pressed or not.
       draw_filled_rect(left, top, right, bottom, get_shade(p?1:3), get_shade(p?3:1), get_shade(2));
+
+      draw_ref_rect(t, left, top, right, bottom);
     }
     break;
   }

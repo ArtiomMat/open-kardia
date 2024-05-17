@@ -28,59 +28,6 @@
 #define DEF_CHILD 0xFFFF
 #define DEF_ITXT_FMT 0
 
-enum
-{
-  CWINDOW,
-  CMAP,
-  CITEXT,
-  COTEXT,
-  CBUTTON,
-  CTICKBOX,
-  CSLIDER,
-
-  CX,
-  CY,
-  CH,
-  CW,
-  CWMIN,
-  CWMAX,
-  CHMIN,
-  CHMAX,
-
-  CTEXT,
-
-  CFORMAT,
-  CROW,
-  CCHILD,
-
-};
-
-const char* cmdstrs[] =
-{
-  "window",
-  "map",
-  "itext",
-  "otext",
-  "button",
-  "tickbox",
-  "slider",
-
-  "x",
-  "y",
-  "w",
-  "wmin",
-  "wmax",
-  "h",
-  "hmin",
-  "hmax",
-
-  "text",
-
-  "format",
-  "row",
-  "child",
-};
-
 typedef struct line_s
 {
   struct line_s* prev,* next;
@@ -686,6 +633,10 @@ initial_init()
       else if ((end = wrdcmp("button", str, ' ')))
       {
         things[thing_i].type = GUI_T_BUTTON;
+      }
+      else if ((end = wrdcmp("tickbox", str, ' ')))
+      {
+        things[thing_i].type = GUI_T_TICKBOX;
       }
       else if ((end = wrdcmp("itext", str, ' ')))
       {

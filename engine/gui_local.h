@@ -2,7 +2,7 @@
 
 #include "gui.h"
 
-#define TICKBOX_SIZE 8
+#define TICKBOX_SIZE 10
 
 #define BORDER_THICKNESS (GUI_BORDER_WH>>1)
 
