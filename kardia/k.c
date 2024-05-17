@@ -306,7 +306,10 @@ main(int args_n, const char** args)
     vid_wipe(254);
       node_draw(flow_mode);
       ekg_draw();
-      gui_draw(&gui_things[0], 0,0, vid_size[0]-1, vid_size[1]-1);
+      if (gui_things != NULL)
+      {
+        gui_draw(gui_things, 0,0, vid_size[0]-1, vid_size[1]-1);
+      }
     vid_refresh();
     
     

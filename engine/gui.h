@@ -221,6 +221,8 @@ typedef struct gui_thing
       char flags;
       char format;
       uint16_t cursor;
+      uint16_t nmem; // Number of bytes for text in memory
+      uint16_t n; // Number of bytes we have that are used
     } itext;
 
     struct

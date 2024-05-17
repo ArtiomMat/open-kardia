@@ -77,6 +77,7 @@ gui_free(gui_thing_t* t)
     }
 
     free(gui_thing_refs);
+    puts("gui_free(): GUI module freed.");
   }
   else
   {
@@ -93,7 +94,6 @@ gui_free(gui_thing_t* t)
         {
           for (int c = 0; c < t->rowmap.cols_n[r]; c++, i++)
           {
-            // FIXME: Throws invalid pointer because t->rowmap.things is allocated as a whole buffer, gui_free calls a free on the thing, and it's not the right approach, during opening gotta allocate them individually instead of as a buffer.
             gui_free(t->rowmap.things[i]);
           }
         }
@@ -111,17 +111,15 @@ gui_free(gui_thing_t* t)
       t->prev->next = t->next;
     }
     
-    // Free and return here if it's not the last thing
-    if (t != gui_things || t->next != NULL)
+    // Free and return here if it's the last thing
+    if (t->next == NULL && t->prev == NULL)
     {
-      free(t);
-      return;
+      last_thing = gui_things = NULL;
     }
+    
 
-    gui_things = NULL;
+    free(t);
   }
-
-  puts("gui_free(): GUI module freed.");
 }
 
 static gui_thing_t*
@@ -893,88 +891,97 @@ gui_open(const char* fp)
 
   fread(&n, 2, 1, f);
   n = com_lil16(n);
-  gui_thing_t* buf = calloc(sizeof (*buf) * n, 1);
+
+  // "OHHHHH BUT THERE IS A BETTER WAY!!!!" Shut up! check the gui_free() code, it's gonna be a pain to implement this differently.
+  gui_thing_t* buf[n];
+  for (int i = 0; i < n; i++)
+  {
+    buf[i] = calloc(sizeof (gui_thing_t), 1);
+  }
 
   if (gui_things == NULL)
   {
-    gui_things = buf;
+    gui_things = buf[0];
   }
 
-  for (int i = 0; i < n; i++, last_thing = &buf[i])
+  for (int i = 0; i < n; last_thing = buf[i++])
   {
-    buf[i].prev = last_thing;
-    buf[i].next = (i < n-1) ? &buf[i+1] : NULL;
+    buf[i]->prev = last_thing;
+    buf[i]->next = (i < n-1) ? buf[i+1] : NULL;
 
-    fread(&buf[i].type, 1, 1, f);
+    fread(&buf[i]->type, 1, 1, f);
     
     uint16_t id_s, str_s;
 
     fread(&id_s, 2, 1, f);
     id_s = com_lil16(id_s);
-    buf[i].id = malloc(id_s);
+    buf[i]->id = malloc(id_s);
 
     fread(&str_s, 2, 1, f);
     str_s = com_lil16(str_s);
-    buf[i].text = malloc(str_s);
+    buf[i]->text = malloc(str_s);
 
-    fread(buf[i].id, id_s, 1, f);
+    fread(buf[i]->id, id_s, 1, f);
 
-    fread(buf[i].text, str_s, 1, f);
+    fread(buf[i]->text, str_s, 1, f);
 
-    fread(&buf[i].pos[0], 2, 1, f);
-    buf[i].pos[0] = com_lil16(buf[i].pos[0]);
+    fread(&buf[i]->pos[0], 2, 1, f);
+    buf[i]->pos[0] = com_lil16(buf[i]->pos[0]);
 
-    fread(&buf[i].pos[1], 2, 1, f);
-    buf[i].pos[1] = com_lil16(buf[i].pos[1]);
+    fread(&buf[i]->pos[1], 2, 1, f);
+    buf[i]->pos[1] = com_lil16(buf[i]->pos[1]);
 
     for (int j = 0; j < 2; j++)
     {
-      fread(&buf[i].size[j], 2, 1, f);
-      buf[i].size[j] = com_lil16(buf[i].size[j]);
+      fread(&buf[i]->size[j], 2, 1, f);
+      buf[i]->size[j] = com_lil16(buf[i]->size[j]);
 
-      fread(&buf[i].min_size[j], 2, 1, f);
-      buf[i].min_size[j] = com_lil16(buf[i].min_size[j]);
+      fread(&buf[i]->min_size[j], 2, 1, f);
+      buf[i]->min_size[j] = com_lil16(buf[i]->min_size[j]);
 
-      fread(&buf[i].max_size[j], 2, 1, f);
-      buf[i].max_size[j] = com_lil16(buf[i].max_size[j]);
+      fread(&buf[i]->max_size[j], 2, 1, f);
+      buf[i]->max_size[j] = com_lil16(buf[i]->max_size[j]);
     }
 
-    switch(buf[i].type)
+    switch(buf[i]->type)
     {
       case GUI_T_ITEXT:
-      fread(&buf[i].itext.format, 1, 1, f);
+      fread(&buf[i]->itext.format, 1, 1, f);
+      
+      // Setup the n and nmem
+      buf[i]->itext.n = buf[i]->itext.nmem = str_s;
       break;
 
       case GUI_T_WINDOW:
       fread(&u16, 2, 1, f);
       u16 = com_lil16(u16);
-      buf[i].window.child = &buf[u16];
+      buf[i]->window.child = buf[u16];
       break;
 
       case GUI_T_ROWMAP:
-      fread(&buf[i].rowmap.rows_n, 1, 1, f);
-      buf[i].rowmap.cols_n = malloc(sizeof (uint8_t) * buf[i].rowmap.rows_n);
+      fread(&buf[i]->rowmap.rows_n, 1, 1, f);
+      buf[i]->rowmap.cols_n = malloc(sizeof (uint8_t) * buf[i]->rowmap.rows_n);
 
       int total_cols = 0;
-      for (int j = 0; j < buf[i].rowmap.rows_n; j++)
+      for (int j = 0; j < buf[i]->rowmap.rows_n; j++)
       {
-        fread(&buf[i].rowmap.cols_n[j], 1, 1, f);
-        total_cols += buf[i].rowmap.cols_n[j];
+        fread(&buf[i]->rowmap.cols_n[j], 1, 1, f);
+        total_cols += buf[i]->rowmap.cols_n[j];
       }
-      buf[i].rowmap.things = malloc(sizeof (gui_thing_t*) * total_cols);
+      buf[i]->rowmap.things = malloc(sizeof (gui_thing_t*) * total_cols);
       
       for (int j = 0; j < total_cols; j++)
       {
         fread(&u16, 2, 1, f);
         u16 = com_lil16(u16);
-        buf[i].rowmap.things[j] = &buf[u16];
+        buf[i]->rowmap.things[j] = buf[u16];
       }
       break;
     }
   }
   printf( "gui_open(): Loaded %hu things from '%s'.\n", n, fp);
 
-  return buf;
+  return buf[0];
 }
 
 gui_thing_t*
