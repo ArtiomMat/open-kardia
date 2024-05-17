@@ -181,7 +181,7 @@ typedef struct gui_thing
   gui_u_t pos[2]; // If overriden by flags the position is automatically modified by GUI.
   short flags;
   char type;
-  unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
+  // unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
   const char* id; // The string based ID
   union
   {
@@ -264,50 +264,45 @@ extern int gui_title_h;
 // A linked list don't forget
 extern gui_thing_t* gui_things;
 
-// Requires vid_init()
-// If you change the order or the array of things itself you must gui_recache_all()!
-extern void
-gui_init(gui_u_t w, gui_u_t h, const char* title, gui_thing_t* thing, gui_font_t* _font);
-
-extern void
-gui_free();
-// Turn a text gui file into binary, setting out to NULL makes out=fp
-// Optimized to not do it again if the file is already a binary
-// Returns 1 if succeeded, 0 otherwise
-extern int
-gui_to_bin(const char* fp, const char* out);
-// Reverse a binary gui file into text, setting out to NULL makes out=fp
-// Optimized to not do it again if the file is already a text
-// Returns 1 if succeeded, 0 otherwise
-extern int
-gui_to_txt(const char* fp, const char* out);
-
-// Only opens
-extern gui_thing_t*
-gui_open_thing(const char* fp);
-// Searches through the root thing, returns the pointer to the thing with this ID, 
-extern gui_thing_t*
-gui_find(gui_thing_t* root, const char* id);
-
-// This function is the starting point of any drawn thing.
-// the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
-extern void
-gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom);
-
-extern void
-gui_set_flag(int flag, int yes);
-extern void
-gui_toggle_flag(int flag);
-
-extern void
-gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color);
-
 /**
  * Event handler that must be called so GUI properly works.
  * Returns 1 if the even was eaten, meaning your program shouldn't handle it because it was in the jurisdiction of GUI, returns 0 if it was not eaten, this does not always mean that GUI didn't collect information about the event for itself.
 */
 extern int
 gui_on_vid(vid_event_t* event);
+
+// Requires vid_init()
+// If you change the order or the array of things itself you must gui_recache_all()!
+extern void
+gui_init(gui_font_t* font);
+// If t is NULL fress the entire module.
+// Frees a thing and its children/subthings(in maps or windows).
+// NOTE: Freeing a thing that is referenced by any other thing WILL lead to problems.
+extern void
+gui_free(gui_thing_t* t);
+
+// Opens a file into memory, returns the first thing that was loaded
+extern gui_thing_t*
+gui_open(const char* fp);
+// Searches through all things and locates the thing with this ID, returns NULL if not found.
+// FROM can be NULL to start from the beginning, otherwise we start searching from FROM and to FROM->next.
+// If ONETIME=1 then the thing can never be found again, this can speed up finding later on of other things. ONETIME can also be useful if you plan on loading the same file again or something similar.
+extern gui_thing_t*
+gui_find(gui_thing_t* from, const char* id, char onetime);
+
+// Note, windows will ignore the rectangle provided, they are not bound to a rectangle.
+// This function is the starting point of any drawn thing.
+// the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
+extern void
+gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom);
+
+extern void
+gui_set_flag(gui_thing_t* t, int flag, int yes);
+extern void
+gui_toggle_flag(gui_thing_t* t, int flag);
+
+extern void
+gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color);
 
 // Draw font, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.

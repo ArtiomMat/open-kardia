@@ -3,38 +3,23 @@
 #include "com.h"
 #include "mix.h"
 
+#include "gui_local.h"
+
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 
-#define TICKBOX_SIZE 8
 
-#define BORDER_THICKNESS (GUI_BORDER_WH>>1)
-#define BORDER_RIGHT (gui_window.pos[0] + gui_window.size[0] - 1)
-#define BORDER_LEFT (gui_window.pos[0])
-#define BORDER_TOP (gui_window.pos[1])
-#define BORDER_BOTTOM (gui_window.pos[1] + gui_window.size[1] - 1)
-
-#define TITLE_RIGHT (BORDER_RIGHT - BORDER_THICKNESS)
-#define TITLE_LEFT (BORDER_LEFT + BORDER_THICKNESS)
-#define TITLE_TOP (BORDER_TOP + BORDER_THICKNESS)
-#define TITLE_BOTTOM (TITLE_TOP + gui_title_h - 1)
-
-// All that is used because X is inside of the title so it inherits some stuff
-#define X_LEFT (TITLE_RIGHT - X_WIDTH)
-#define X_BOTTOM (TITLE_BOTTOM - 2)
-#define X_WIDTH 12
-
-#define CONTENT_RIGHT (TITLE_RIGHT-1)
-#define CONTENT_LEFT (TITLE_LEFT+1)
-#define CONTENT_TOP (TITLE_BOTTOM+1)
-#define CONTENT_BOTTOM (BORDER_BOTTOM - BORDER_THICKNESS - 1)
+// Mainly just a file that is loaded, multiple files can be loaded and stuff
+typedef struct thingbuf
+{
+  struct thingbuf* next, * prev;
+  gui_thing_t* things; // Buffer of things loaded from a file
+} thingbuf_t;
 
 static gui_font_t* font;
 int font_w;
-static int mouse_pos[2] = {0};
-static int mouse_state; // 1 for pressed, 0 for not!
 
 // The currently focused thing, for instance a button, eg if enter is pressed we press it.
 // static gui_thing_t* focused_thing = NULL;
@@ -49,9 +34,7 @@ gui_thing_t* things;
 
 int (*gui_on)(gui_event_t* event) = NULL;
 
-static gui_bmap_t main_map;
-//
-static gui_bmap_t thing_map;
+gui_thing_t** gui_thing_refs;
 
 static unsigned char
 get_shade(int i)
@@ -62,15 +45,6 @@ get_shade(int i)
     return gui_shades[max(i - 1, 0)];
   }
   return gui_shades[i];
-}
-
-static void
-send_event(gui_event_t* e)
-{
-  if (gui_on != NULL && !gui_on(e))
-  {
-    puts("FUCK!");
-  }
 }
 
 static inline void
@@ -97,13 +71,18 @@ draw_yline(gui_u_t yi, gui_u_t yf, gui_u_t x, int color)
   }
 }
 
-/**
- * Test if X_TEST and Y_TEST are within a rectangle.
-*/
-static inline int
-in_rect(gui_u_t x_test, gui_u_t y_test, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
+// Extends draw_rect and also fills the rectangle.
+// If xray is enabled it avoids filling the rectangle there.
+static inline void
+draw_ref_rect(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
-  return x_test <= right && x_test >= left && y_test <= bottom && y_test >= top;
+  for (int _x = left; _x <= right; _x++)
+  {
+    for (int _y = top; _y <= bottom; _y++)
+    {
+      gui_thing_refs[ _y*vid_size[0] + _x] = t;
+    }
+  }
 }
 
 // Draws a rectangle with light being the color on the top and left, dark is right and bottom
@@ -210,7 +189,9 @@ gui_init(gui_u_t w, gui_u_t h, const char* title, gui_thing_t* thing, gui_font_t
 
   // gui_window.content_cache = NULL;
 
-  printf("gui_init(): GUI module initialized, '%s' is no more a dream!\n", gui_window.text);
+  gui_thing_refs = calloc( vid_size[0] * vid_size[1], sizeof (gui_thing_t*));
+
+  printf("gui_init(): GUI module initialized.\n");
 }
 
 void
@@ -221,188 +202,6 @@ gui_free()
   // free(gui_window.content_cache);
 }
 
-static void
-save_mouse_rel()
-{
-  gui_u_t mouse_x = min(max(mouse_pos[0], 0), vid_size[0]-1);
-  gui_u_t mouse_y = min(max(mouse_pos[1], 0), vid_size[1]-1);
-
-  gui_window.window.mouse_rel[0] = mouse_x - gui_window.pos[0];
-  gui_window.window.mouse_rel[1] = mouse_y - gui_window.pos[1];
-}
-
-
-int
-gui_on_vid(vid_event_t* e)
-{
-  if (gui_window.window.flags & GUI_E_HIDE)
-  {
-    return 0;
-  }
-
-  gui_event_t gui_e = {.type = _GUI_E_NULL};
-
-  switch (e->type)
-  {
-    case VID_E_MOVE:
-    mouse_pos[0] = e->move.x;
-    mouse_pos[1] = e->move.y;
-    break;
-
-    case VID_E_PRESS:
-    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
-    {
-      mouse_state = 1;
-
-      // Inside of the title bar
-      if (in_rect(mouse_pos[0], mouse_pos[1], TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM))
-      {
-        if (mouse_pos[0] >= X_LEFT && mouse_pos[1] <= X_BOTTOM)
-        {
-          gui_set_flag(GUI_WND_HIDE, 1);
-          gui_set_flag(GUI_WND_UNFOCUSED, 1); // Also we unfocus so the user can interact again
-
-          gui_e.type = GUI_E_HIDE;
-          send_event(&gui_e);
-          break;
-        }
-
-        if (e->press.code == KEY_LMOUSE)
-        {
-          gui_set_flag(GUI_WND_RELOCATING, 1);
-          save_mouse_rel();
-        }
-        // else if (e->press.code == KEY_MMOUSE)
-        // {
-        //   gui_set_flag(GUI_WND_HIDE, 1);
-        //   gui_set_flag(GUI_WND_UNFOCUSED, 1); // Also we unfocus so the user can interact again
-
-        //   gui_e.type = GUI_E_HIDE;
-        //   send_event(&gui_e);
-        //   break;
-        // }
-        else if (e->press.code == KEY_RMOUSE)
-        {
-          gui_toggle_flag(GUI_WND_XRAY); // Toggle!
-        }
-
-        // We need to automatically focus back the window regardless, we don't reach this is middle clicked
-        gui_window.window.flags &= ~GUI_WND_UNFOCUSED;
-
-        gui_set_flag(GUI_WND_UNFOCUSED, 0);
-        gui_e.type = GUI_E_UNFOCUS;
-        break;
-      }
-      // Inside of the content zone
-      else if (!(gui_window.window.flags & GUI_WND_XRAY) && in_rect(mouse_pos[0], mouse_pos[1], CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM))
-      {
-        gui_set_flag(GUI_WND_UNFOCUSED, 0);
-        gui_e.type = GUI_E_HIDE;
-        break;
-      }
-      // We are 100% either in border or outside the window alltogether
-      else
-      {
-        int flags_tmp = gui_window.window.flags; // Save the flag for future
-
-        // Right and left border
-        if (in_rect(mouse_pos[0], mouse_pos[1], CONTENT_RIGHT+1 - GUI_RESIZE_BLEED, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM))
-        {
-          gui_set_flag(GUI_WND_RESIZING_R, 1);
-        }
-        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, CONTENT_LEFT-1 + GUI_RESIZE_BLEED, BORDER_BOTTOM))
-        {
-          gui_set_flag(GUI_WND_RESIZING_L, 1);
-        }
-
-        // Top and bottom border, disconnected to combine the two in the corners
-        if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, TITLE_TOP-1 + GUI_RESIZE_BLEED))
-        {
-          gui_set_flag(GUI_WND_RESIZING_T, 1);
-        }
-        else if (in_rect(mouse_pos[0], mouse_pos[1], BORDER_LEFT, CONTENT_BOTTOM+1 - GUI_RESIZE_BLEED, BORDER_RIGHT, BORDER_BOTTOM))
-        {
-          gui_set_flag(GUI_WND_RESIZING_B, 1);
-        }
-
-        // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
-        if (gui_window.window.flags != flags_tmp)
-        {
-          gui_window.window.size_0[0] = gui_window.size[0];
-          gui_window.window.size_0[1] = gui_window.size[1];
-
-          save_mouse_rel();
-          gui_set_flag(GUI_WND_UNFOCUSED, 0);
-          gui_e.type = GUI_E_FOCUS;
-          break;
-        }
-        // 100% outside the window, if not already set we set and put the event for eaten
-        // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
-        else if (!(gui_window.window.flags & GUI_WND_UNFOCUSED))
-        {
-          gui_set_flag(GUI_WND_UNFOCUSED, 1);
-          gui_e.type = GUI_E_UNFOCUS;
-          break;
-        }
-        // Otherwise it's not eaten ofc
-      }
-    }
-    break;
-
-    case VID_E_RELEASE:
-    if (e->press.code == KEY_LMOUSE || e->press.code == KEY_RMOUSE || e->press.code == KEY_MMOUSE)
-    {
-      gui_set_flag(GUI_WND_RELOCATING, 0);
-      gui_set_flag(GUI_WND_RESIZING, 0);
-    }
-    break;
-  }
-
-  // Decide if we ate or not!
-  if (gui_e.type == _GUI_E_NULL)
-  {
-    return 0;
-  }
-  send_event(&gui_e);
-  return 1;
-}
-
-// i is the dimention of the size/pos vector
-// Can also be used to resize towards the bottom of the screen, i is for that
-static void
-resize_right(int i, gui_u_t max_r)
-{
-  int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
-
-  gui_window.size[i] = gui_window.window.size_0[i] + mouse_delta;
-  gui_window.size[i] = min(max(gui_window.size[i], gui_window.min_size[i]), max_r + 1 - gui_window.pos[i]);
-}
-// i is the dimention of the size/pos vector
-// Can also be used to resize to the top of the screen
-static void
-resize_left(int i, gui_u_t min_l)
-{
-  int mouse_delta = mouse_pos[i] - (gui_window.window.mouse_rel[i] + gui_window.pos[i]);
-
-  gui_window.pos[i] += mouse_delta;
-
-  if (gui_window.pos[i] < min_l)
-  {
-    mouse_delta -= gui_window.pos[i];
-    gui_window.pos[i] = 0;
-  }
-
-  gui_window.size[i] = gui_window.window.size_0[i] - mouse_delta;
-
-  if (gui_window.size[i] < gui_window.min_size[i])
-  {
-    gui_window.pos[i] -= gui_window.min_size[i] - gui_window.size[i];
-    gui_window.size[i] = gui_window.min_size[i];
-  }
-
-  // So that in the next call to resize_left(), the size[i] does not return to be size_0(old). Since the X keeps updating, we need to shift the width with it, so that mouse_delta keeps being current. I know this is not really a good explanation, but just run this on a fucking paper, just shift the window do all the operations without this line, you will understand what I mean.
-  gui_window.window.size_0[i] = gui_window.size[i];
-}
 
 // How much text would fit per line, given a width of a rectangle
 static inline int
@@ -456,71 +255,37 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
 void
 gui_draw_window(gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
-  // Move the window if necessary and other logic to keep track of movement
-  if (gui_window.window.flags & GUI_WND_RELOCATING)
-  {
-    gui_event_t e;
-    gui_window.pos[0] = e.relocate.delta[0] = mouse_pos[0]-gui_window.window.mouse_rel[0];
-    gui_window.pos[1] = e.relocate.delta[1] = mouse_pos[1]-gui_window.window.mouse_rel[1];
-
-    gui_window.pos[0] = e.relocate.normalized[0] = min(max(gui_window.pos[0], l), r+1-gui_window.size[0]);
-    gui_window.pos[1] = e.relocate.normalized[1] = min(max(gui_window.pos[1], l), b+1-gui_window.size[1]);
-    send_event(&e);
-  }
-  // Resize the window and keep track of resizing too
-  else if (gui_window.window.flags & GUI_WND_RESIZING)
-  {
-    int flag = gui_window.window.flags & GUI_WND_RESIZING;
-
-    if (flag & GUI_WND_RESIZING_R)
-    {
-      resize_right(0, r);
-    }
-    else if (flag & GUI_WND_RESIZING_L)
-    {
-      resize_left(0, l);
-    }
-
-    if (flag & GUI_WND_RESIZING_B)
-    {
-      resize_right(1, b);
-    }
-    else if (flag & GUI_WND_RESIZING_T)
-    {
-      resize_left(1, t);
-    }
-  }
-
+  draw_ref_rect(&gui_window, BORDER_LEFT(gui_window), BORDER_TOP(gui_window), BORDER_RIGHT(gui_window), BORDER_BOTTOM(gui_window));
 
   // Draw the window decorations and stuff
-  draw_filled_rect(BORDER_LEFT, BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  draw_filled_rect(BORDER_LEFT(gui_window), BORDER_TOP(gui_window), BORDER_RIGHT(gui_window), BORDER_BOTTOM(gui_window), get_shade(3), get_shade(1), get_shade(2));
 
-  // draw_filled_rect(CONTENT_LEFT, CONTENT_TOP, CONTENT_RIGHT, CONTENT_BOTTOM, get_shade(1), get_shade(1), get_shade(2));
+  // draw_filled_rect(CONTENT_LEFT(gui_window), CONTENT_TOP(gui_window), CONTENT_RIGHT(gui_window), CONTENT_BOTTOM(gui_window), get_shade(1), get_shade(1), get_shade(2));
 
-  //draw_filled_rect(TITLE_LEFT, TITLE_TOP, TITLE_RIGHT, TITLE_BOTTOM, get_shade(3), get_shade(1), get_shade(2));
+  //draw_filled_rect(TITLE_LEFT(gui_window), TITLE_TOP(gui_window), TITLE_RIGHT(gui_window), TITLE_BOTTOM(gui_window), get_shade(3), get_shade(1), get_shade(2));
 
   // Seperate x button from the rest of the title
-  draw_yline(TITLE_TOP, TITLE_BOTTOM-1, X_LEFT, get_shade(1));
+  draw_yline(TITLE_TOP(gui_window), TITLE_BOTTOM(gui_window)-1, X_LEFT(gui_window), get_shade(1));
 
   // X button text
-  gui_u_t xx=X_LEFT + X_WIDTH/2 - 3, xy=TITLE_TOP+1;
+  gui_u_t xx=X_LEFT(gui_window) + X_WIDTH/2 - 3, xy=TITLE_TOP(gui_window)+1;
   gui_draw_font(font, xx, xy, '\\', get_shade(0));
   gui_draw_font(font, xx, xy,  '/', get_shade(0));
 
   // Window title text
-  draw_text(gui_window.text_color, gui_window.text, TITLE_LEFT, TITLE_TOP, X_LEFT, TITLE_BOTTOM);
+  draw_text(gui_window.text_color, gui_window.text, TITLE_LEFT(gui_window), TITLE_TOP(gui_window), X_LEFT(gui_window), TITLE_BOTTOM(gui_window));
 
   // Three dots on the corner
-  //gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height-2, '.', get_shade(3));
-  //gui_draw_font(font, BORDER_RIGHT-6, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
-  //gui_draw_font(font, BORDER_RIGHT-10, BORDER_BOTTOM-font->height+2, '.', get_shade(3));
+  //gui_draw_font(font, BORDER_RIGHT(gui_window)-6, BORDER_BOTTOM(gui_window)-font->height-2, '.', get_shade(3));
+  //gui_draw_font(font, BORDER_RIGHT(gui_window)-6, BORDER_BOTTOM(gui_window)-font->height+2, '.', get_shade(3));
+  //gui_draw_font(font, BORDER_RIGHT(gui_window)-10, BORDER_BOTTOM(gui_window)-font->height+2, '.', get_shade(3));
 
   // Drawing the things and shit
   static gui_thing_t th = {0};
   th.text = "Ouah";
   th.type = GUI_T_TICKBOX;
   th.button.pressed = 0;
-  gui_draw(&th, CONTENT_LEFT,CONTENT_TOP, CONTENT_RIGHT,CONTENT_TOP+font->height+1);
+  gui_draw(&th, CONTENT_LEFT(gui_window),CONTENT_TOP(gui_window), CONTENT_RIGHT(gui_window),CONTENT_TOP(gui_window)+font->height+1);
 }
 
 
