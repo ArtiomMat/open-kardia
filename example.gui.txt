@@ -2,10 +2,10 @@ t window W_MAIN
   str 'Example\nwindow'
   x 10
   y 10
-  w 300
-  h 200
-  min_w 300
-  min_h 200
+  w 200
+  h 150
+  min_w 200
+  min_h 150
   child M_MAIN
 
 t rowmap M_MAIN
