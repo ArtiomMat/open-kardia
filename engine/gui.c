@@ -77,28 +77,51 @@ gui_free(gui_thing_t* t)
     }
 
     free(gui_thing_refs);
-    puts("gui_free(): GUI module freed.");
   }
   else
   {
+    switch (t->type)
+    {
+      case GUI_T_WINDOW:
+      gui_free(t->window.child);
+      break;
+
+      case GUI_T_ROWMAP:
+      {
+        int i = 0;
+        for (int r = 0; r < t->rowmap.rows_n; r++)
+        {
+          for (int c = 0; c < t->rowmap.cols_n[r]; c++, i++)
+          {
+            // FIXME: Throws invalid pointer because t->rowmap.things is allocated as a whole buffer, gui_free calls a free on the thing, and it's not the right approach, during opening gotta allocate them individually instead of as a buffer.
+            gui_free(t->rowmap.things[i]);
+          }
+        }
+      }
+      break;
+    }
+
     if (t->next != NULL)
     {
       t->next->prev = t->prev;
     }
+
     if (t->prev != NULL)
     {
       t->prev->next = t->next;
     }
     
-    // If it's the last thing
-    if (t == gui_things && t->next == NULL)
+    // Free and return here if it's not the last thing
+    if (t != gui_things || t->next != NULL)
     {
-      gui_things = NULL;
+      free(t);
+      return;
     }
 
-    free(t);
+    gui_things = NULL;
   }
 
+  puts("gui_free(): GUI module freed.");
 }
 
 static gui_thing_t*
@@ -223,10 +246,9 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
   {
     if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
     {
-      thing->window.flags |= GUI_WND_HIDE;
-      thing->window.flags |= GUI_WND_UNFOCUSED; // Also we unfocus so the user can interact again
+      gui_free(thing);
 
-      (*gui_e).type = GUI_E_HIDE;
+      gui_e->type = GUI_E_HIDE;
       return;
     }
 
@@ -237,14 +259,13 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     thing->window.flags &= ~GUI_WND_UNFOCUSED;
 
     thing->window.flags &= ~GUI_WND_UNFOCUSED;
-    (*gui_e).type = GUI_E_UNFOCUS;
+    gui_e->type = GUI_E_UNFOCUS;
     return;
   }
   // Inside of the content zone
   else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
   {
-    thing->window.flags &= ~GUI_WND_UNFOCUSED;
-    (*gui_e).type = GUI_E_HIDE;
+    gui_e->type = GUI_E_PRESS;
     return;
   }
   // We are 100% either in border or outside the window alltogether
@@ -280,7 +301,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
 
       save_mouse_rel(thing);
       thing->window.flags &= ~GUI_WND_UNFOCUSED;
-      (*gui_e).type = GUI_E_FOCUS;
+      gui_e->type = GUI_E_FOCUS;
       return;
     }
     // 100% outside the window, if not already set we set and put the event for eaten
@@ -288,7 +309,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     else if (!(thing->window.flags & GUI_WND_UNFOCUSED))
     {
       thing->window.flags |= GUI_WND_UNFOCUSED;
-      (*gui_e).type = GUI_E_UNFOCUS;
+      gui_e->type = GUI_E_UNFOCUS;
       return;
     }
   }
