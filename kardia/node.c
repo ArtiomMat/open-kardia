@@ -34,7 +34,6 @@ color_for(node_t* left, node_t* right, int x, int xi, int xf)
 void
 node_draw_line(node_t* root_node, node_t* next)
 {
-
   int xi, yi, xf, yf;
   xi = FIPTOI(root_node->pos[0]);
   yi = FIPTOI(root_node->pos[1]);

@@ -24,16 +24,14 @@ typedef int16_t gui_u_t;
 enum
 {
   _GUI_E_NULL, // For internal use
+  _GUI_E_EAT, // Does not get sent to the game, just means that the GUI module should eat the event without notifying the gui_on()
 
-  GUI_E_HOVER, // Buttons
   GUI_E_PRESS, // Buttons
   GUI_E_RELEASE, // Buttons
 
-  GUI_E_RELOCATE, // The user is moving a window
-  GUI_E_HIDE, // The user hid the window
-  GUI_E_SHOW, // The user opened/showed the window
-  GUI_E_FOCUS, // The user focused the window
-  GUI_E_UNFOCUS, // The user unfocused the window
+  GUI_E_WINDOW_X, // X button pressed
+
+  GUI_E_TICK, // The tickbox was toggled, either ticked or unticked
 };
 
 enum

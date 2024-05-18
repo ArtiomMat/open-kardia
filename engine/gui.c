@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_ITEXT_TEXT 1024
+
 int gui_title_h = 0;
 unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
 int (*gui_on)(gui_event_t* event) = NULL;
@@ -132,9 +134,9 @@ get_pointed_thing()
   return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                  WINDOW ON
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static void
 save_mouse_rel(gui_thing_t* gui_window)
@@ -248,28 +250,25 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
   // Inside of the title bar
   if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], TITLE_LEFT((*thing)), TITLE_TOP((*thing)), TITLE_RIGHT((*thing)), TITLE_BOTTOM((*thing))))
   {
+    // Pressed the x button
     if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
     {
       gui_free(thing);
 
-      gui_e->type = GUI_E_HIDE;
+      gui_e->type = GUI_E_WINDOW_X;
       return;
     }
 
     thing->window.flags |= GUI_WND_RELOCATING;
     save_mouse_rel(thing);
 
-    // We need to automatically focus back the window regardless, we don't reach this is middle clicked
-    thing->window.flags &= ~GUI_WND_UNFOCUSED;
-
-    thing->window.flags &= ~GUI_WND_UNFOCUSED;
-    gui_e->type = GUI_E_UNFOCUS;
+    gui_e->type = _GUI_E_EAT;
     return;
   }
   // Inside of the content zone
   else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
   {
-    gui_e->type = GUI_E_PRESS;
+    gui_e->type = _GUI_E_EAT;
     return;
   }
   // We are 100% either in border or outside the window alltogether
@@ -304,16 +303,14 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
       thing->window.size_0[1] = thing->size[1];
 
       save_mouse_rel(thing);
-      thing->window.flags &= ~GUI_WND_UNFOCUSED;
-      gui_e->type = GUI_E_FOCUS;
+      gui_e->type = _GUI_E_EAT;
       return;
     }
     // 100% outside the window, if not already set we set and put the event for eaten
     // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
     else if (!(thing->window.flags & GUI_WND_UNFOCUSED))
     {
-      thing->window.flags |= GUI_WND_UNFOCUSED;
-      gui_e->type = GUI_E_UNFOCUS;
+      gui_e->type = _GUI_E_EAT;
       return;
     }
   }
@@ -324,11 +321,12 @@ window_on_mrelease(gui_thing_t* thing, gui_event_t* gui_e)
 {
   thing->window.flags &= ~GUI_WND_RELOCATING;
   thing->window.flags &= ~GUI_WND_RESIZING;
+  gui_e->type = _GUI_E_EAT;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                  BUTTON ON
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static void
 button_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
@@ -344,9 +342,9 @@ button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
   gui_e->type = GUI_E_RELEASE;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                               ITEXT ON
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static int itext_shift = 0;
 static int itext_caps = 0;
@@ -433,6 +431,7 @@ static void
 itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
 {
   t->itext.flags &= ~GUI_ITXT_SELECTED;
+  gui_e->type = _GUI_E_EAT; // XXX: Maybe it's better to actually not eat it
 }
 
 static void
@@ -446,6 +445,7 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
     t->itext.flags |= GUI_ITXT_NOT_VIRGIN;
   }
   t->itext.flags |= GUI_ITXT_SELECTED;
+
   gui_e->type = GUI_E_PRESS;
 }
 
@@ -459,12 +459,23 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
   
   switch (code)
   {
+    case KEY_LEFT:
     case KEY_BS:
     if (t->itext.cursor)
     {
       t->itext.cursor--;
     }
     t->text[t->itext.cursor] = 0;
+
+    // Deallocate memory if we are less that half of it
+    if (t->itext.cursor < (t->itext.nmem / 2))
+    {
+      t->itext.nmem /= 2;
+      t->text = realloc(t->text, t->itext.nmem);
+      #ifdef DEBUG
+        printf("REALLOCATED ITEXT: %d\n", t->itext.nmem);
+      #endif
+    }
     break;
 
     case KEY_LSHIFT:
@@ -476,19 +487,19 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     itext_caps = !(itext_caps);
     break;
 
-    case KEY_RIGHT: // Move only if we can right
-    if (t->text[t->itext.cursor])
-    {
-      t->itext.cursor++;
-    }
-    break;
+    // case KEY_RIGHT: // Move only if we can right
+    // if (t->text[t->itext.cursor])
+    // {
+    //   t->itext.cursor++;
+    // }
+    // break;
 
-    case KEY_LEFT: // Move only if we can left
-    if (t->itext.cursor)
-    {
-      t->itext.cursor--;
-    }
-    break;
+    // case KEY_LEFT: // Move only if we can left
+    // if (t->itext.cursor)
+    // {
+    //   t->itext.cursor--;
+    // }
+    // break;
 
     case KEY_ENTER:
     if (!itext_shift)
@@ -497,6 +508,7 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
       return;
     }
 
+    case KEY_RIGHT:
     case KEY_SPACE:
     code = ' ';
 
@@ -518,19 +530,22 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     t->text[t->itext.cursor] = code;
 
     t->itext.cursor++;
+
+    // Allocate more data for the text if we are eating
     if (t->itext.cursor >= t->itext.nmem)
     {
       t->itext.nmem *= 2;
+      #ifdef DEBUG
+        printf("REALLOCATED ITEXT: %d\n", t->itext.nmem);
+      #endif
       t->text = realloc(t->text, t->itext.nmem);
-      // printf("REALLOC %d\n", t->itext.nmem);
     }
-    t->text[t->itext.cursor] = 0;
 
+    t->text[t->itext.cursor] = 0;
     break;
   }
 
-
-  gui_e->type = GUI_E_PRESS;
+  gui_e->type = _GUI_E_EAT;
 }
 
 static void
@@ -548,24 +563,25 @@ itext_on_release(gui_thing_t* selected, int code, gui_event_t* gui_e)
     itext_shift = 0;
     break;
   }
-  gui_e->type = GUI_E_RELEASE;
+
+  gui_e->type = _GUI_E_EAT;
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                               TICKBOX ON
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static void
 tickbox_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 {
   t->tickbox.ticked = !t->tickbox.ticked;
-  gui_e->type = GUI_E_PRESS;
+  gui_e->type = GUI_E_TICK;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                GUI ON PIPE
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static void
 thing_on_mrelease(gui_thing_t* released, gui_event_t* gui_e)
@@ -705,6 +721,7 @@ gui_on_vid(vid_event_t* e)
       }
       selected = pressed;
 
+      // FIXME: WILL CAUSE THINGS TO CONFLICT, THE PRESSED MAY OVERRIDE THE DESELCT
       if (pressed != NULL)
       {
         thing_on_mpress(pressed, &gui_e);
@@ -722,13 +739,16 @@ gui_on_vid(vid_event_t* e)
   {
     return 0;
   }
-  send_event(&gui_e);
+  if (gui_e.type != _GUI_E_EAT)
+  {
+    send_event(&gui_e);
+  }
   return 1;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                     MISC DRAW
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static unsigned char
 get_shade(int i)
@@ -741,9 +761,9 @@ get_shade(int i)
   return gui_shades[i];
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                    LINES
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 static inline void
 draw_xline(gui_u_t xi, gui_u_t xf, gui_u_t y, int color)
@@ -822,9 +842,9 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                  RECTS
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 // Extends draw_rect and also fills the rectangle.
 // If xray is enabled it avoids filling the rectangle there.
@@ -867,9 +887,9 @@ draw_filled_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int l
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                               TEXT
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 // How much text would fit per line, given a width of a rectangle
 static inline int
@@ -920,9 +940,9 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
   return i;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                              DRAW THINGS
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 // A window is not bound to a rectangle
 static void
@@ -997,8 +1017,12 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   gui_u_t center_y = top + (bottom-top)/2;
   gui_u_t center_x = left + (right-left)/2;
 
-  bottom = min(top + t->max_size[1], bottom);
-  right = min(left + t->max_size[0], right);
+  // Limit drawing size for non window things
+  if (t->type != GUI_T_WINDOW)
+  {
+    bottom = min(top + t->max_size[1], bottom);
+    right = min(left + t->max_size[0], right);
+  }
 
   #ifdef DEBUG
     // draw_rect(left, top, right, bottom, gui_shades[4],gui_shades[4]);
@@ -1046,16 +1070,19 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
       if (selected && ((now>>9)%2))
       {
         // FIXME: Doesn't work always, sometimes the cursor overshoots 1 chracter forward, might have to do with even-ness of tpl or something similar.
-        int tpl = text_per_line(right-left) - 1;
+        int tpl = text_per_line(right-left);
         int maxline = text_lines_n(bottom-top) - 1;
         int x = t->itext.cursor;
         int y = x / tpl;
         if (y > maxline)
         {
           y = maxline;
-          x = tpl;
+          x = tpl-1;
         }
-        x %= tpl;
+        else
+        {
+          x %= tpl;
+        }
 
         draw_yline(y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1, get_shade(3));
       }
@@ -1084,9 +1111,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 //                                 THING OPEN STUFF
-//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 gui_thing_t*
 gui_open(const char* fp)
@@ -1117,83 +1144,93 @@ gui_open(const char* fp)
   {
     gui_things = buf[0];
   }
+  
+  // All freads use n of 1, so if read_ret comes out 0 after doing &= to it, there was an error.
+  int read_ret = 1;
 
   for (int i = 0; i < n; last_thing = buf[i++])
   {
     buf[i]->prev = last_thing;
     buf[i]->next = (i < n-1) ? buf[i+1] : NULL;
 
-    fread(&buf[i]->type, 1, 1, f);
+    read_ret &= fread(&buf[i]->type, 1, 1, f);
     
     uint16_t id_s, str_s;
 
-    fread(&id_s, 2, 1, f);
+    read_ret &= fread(&id_s, 2, 1, f);
     id_s = com_lil16(id_s);
     buf[i]->id = malloc(id_s);
 
-    fread(&str_s, 2, 1, f);
+    read_ret &= fread(&str_s, 2, 1, f);
     str_s = com_lil16(str_s);
     buf[i]->text = malloc(str_s);
 
-    fread(buf[i]->id, id_s, 1, f);
+    read_ret &= fread(buf[i]->id, id_s, 1, f);
 
-    fread(buf[i]->text, str_s, 1, f);
+    read_ret &= fread(buf[i]->text, str_s, 1, f);
 
-    fread(&buf[i]->pos[0], 2, 1, f);
+    read_ret &= fread(&buf[i]->pos[0], 2, 1, f);
     buf[i]->pos[0] = com_lil16(buf[i]->pos[0]);
 
-    fread(&buf[i]->pos[1], 2, 1, f);
+    read_ret &= fread(&buf[i]->pos[1], 2, 1, f);
     buf[i]->pos[1] = com_lil16(buf[i]->pos[1]);
 
     for (int j = 0; j < 2; j++)
     {
-      fread(&buf[i]->size[j], 2, 1, f);
+      read_ret &= fread(&buf[i]->size[j], 2, 1, f);
       buf[i]->size[j] = com_lil16(buf[i]->size[j]);
 
-      fread(&buf[i]->min_size[j], 2, 1, f);
+      read_ret &= fread(&buf[i]->min_size[j], 2, 1, f);
       buf[i]->min_size[j] = com_lil16(buf[i]->min_size[j]);
 
-      fread(&buf[i]->max_size[j], 2, 1, f);
+      read_ret &= fread(&buf[i]->max_size[j], 2, 1, f);
       buf[i]->max_size[j] = com_lil16(buf[i]->max_size[j]);
     }
 
     switch(buf[i]->type)
     {
       case GUI_T_ITEXT:
-      fread(&buf[i]->itext.format, 1, 1, f);
+      read_ret &= fread(&buf[i]->itext.format, 1, 1, f);
       
       // Setup the n and nmem
       buf[i]->itext.n = buf[i]->itext.nmem = str_s;
       break;
 
       case GUI_T_WINDOW:
-      fread(&u16, 2, 1, f);
+      read_ret &= fread(&u16, 2, 1, f);
       u16 = com_lil16(u16);
       buf[i]->window.child = buf[u16];
       break;
 
       case GUI_T_ROWMAP:
-      fread(&buf[i]->rowmap.rows_n, 1, 1, f);
+      read_ret &= fread(&buf[i]->rowmap.rows_n, 1, 1, f);
       buf[i]->rowmap.cols_n = malloc(sizeof (uint8_t) * buf[i]->rowmap.rows_n);
 
       int total_cols = 0;
       for (int j = 0; j < buf[i]->rowmap.rows_n; j++)
       {
-        fread(&buf[i]->rowmap.cols_n[j], 1, 1, f);
+        read_ret &= fread(&buf[i]->rowmap.cols_n[j], 1, 1, f);
         total_cols += buf[i]->rowmap.cols_n[j];
       }
       buf[i]->rowmap.things = malloc(sizeof (gui_thing_t*) * total_cols);
       
       for (int j = 0; j < total_cols; j++)
       {
-        fread(&u16, 2, 1, f);
+        read_ret &= fread(&u16, 2, 1, f);
         u16 = com_lil16(u16);
         buf[i]->rowmap.things[j] = buf[u16];
       }
       break;
     }
+    
+    if (!read_ret)
+    {
+      // TODO: Indicate error...
+    }
   }
-  printf( "gui_open(): Loaded %hu things from '%s'.\n", n, fp);
+  fclose(f);
+  
+  printf("gui_open(): Loaded %hu things from '%s'.\n", n, fp);
 
   return buf[0];
 }

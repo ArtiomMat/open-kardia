@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 static int edit_mode = 0;
 static int flow_mode = 0;
 
@@ -100,17 +101,17 @@ k_init()
   mix_push_gradient(K_EKG_GRAD, 31, 0,255,100);
 
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-  /*       mix_push1(K_GUI_GRAD, 60,60,10);
-         mix_push1(K_GUI_GRAD, 80,80,30);
-         mix_push1(K_GUI_GRAD, 100,100,40);
-         mix_push1(K_GUI_GRAD, 160,160,80);
-  next = mix_push1(K_GUI_GRAD, 235,235,180);*/
+  mix_push(K_GUI_GRAD, 45,45,10);
+  mix_push(K_GUI_GRAD, 80,80,30);
+  mix_push(K_GUI_GRAD, 115,115,40);
+  mix_push(K_GUI_GRAD, 160,160,80);
+  mix_push(K_GUI_GRAD, 235,235,180);
   
-  mix_push(K_GUI_GRAD, 40,40,40);
-  mix_push(K_GUI_GRAD, 80,80,80);
-  mix_push(K_GUI_GRAD, 130,130,130);
-  mix_push(K_GUI_GRAD, 180,180,180);
-  mix_push(K_GUI_GRAD, 255,255,255);
+  // mix_push(K_GUI_GRAD, 40,40,40);
+  // mix_push(K_GUI_GRAD, 80,80,80);
+  // mix_push(K_GUI_GRAD, 130,130,130);
+  // mix_push(K_GUI_GRAD, 180,180,180);
+  // mix_push(K_GUI_GRAD, 255,255,255);
   
   mix_set(255, 0,0,0);
 }
@@ -251,7 +252,8 @@ main(int args_n, const char** args)
   {
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
   }
-  gui_open(com_relfp("example.gui"));
+  gui_thing_t* opened = gui_open(com_relfp("example.gui"));
+  gui_thing_t* gui_window = gui_find(opened, "W_MAIN", 1);
 
   aud_init();
 
@@ -303,12 +305,12 @@ main(int args_n, const char** args)
     node_beat();
     vid_run();
 
-    vid_wipe(254);
+    vid_wipe(255);
       node_draw(flow_mode);
       ekg_draw();
       if (gui_things != NULL)
       {
-        gui_draw(gui_things, 0,0, vid_size[0]-1, vid_size[1]-1);
+        gui_draw(gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
       }
     vid_refresh();
     
