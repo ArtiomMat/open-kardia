@@ -67,7 +67,6 @@ gui_init(gui_font_t* _font)
 void
 gui_free(gui_thing_t* t)
 {
-  puts("gui_free(): GUI module freed.");
   if (t == NULL)
   {
     for (gui_thing_t* _t = t; _t != NULL;)
@@ -78,6 +77,7 @@ gui_free(gui_thing_t* t)
     }
 
     free(gui_thing_refs);
+    puts("gui_free(): GUI module freed.");
   }
   else
   {
@@ -937,7 +937,18 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
 
       if (selected)
       {
-        draw_yline(top+1, top+font->height, left + 1 + t->itext.cursor * font_w, get_shade(3));
+        int tpl = text_per_line(right-left) - 1;
+        int maxline = text_lines_n(bottom-top) - 1;
+        int x = t->itext.cursor;
+        int y = x / tpl;
+        if (y > maxline)
+        {
+          y = maxline;
+          x = tpl;
+        }
+        x %= tpl;
+
+        draw_yline(y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1, get_shade(3));
       }
 
       draw_text(get_shade(3 + selected), t->text, left, top, right, bottom);

@@ -16,13 +16,6 @@
 // Writable frame buffer, essentially blitting:
 // https://bbs.archlinux.org/viewtopic.php?id=225741
 
-
-/*
-113 -> 0 LEFT
-111 -> 0 UP
-114 -> 0 RIGHT
-116 -> 0 DOWN
-*/
 // From older project
 static const char xkeymap[256] = {
 	0,0,0,0,0,0,0,0,0, // First 9 are for some reason not mapped?
