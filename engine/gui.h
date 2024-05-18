@@ -220,7 +220,7 @@ typedef struct gui_thing
     {
       char flags;
       char format;
-      uint16_t cursor;
+      uint16_t cursor; // Where the 
       uint16_t nmem; // Number of bytes for text in memory
       uint16_t n; // Number of bytes we have that are used
     } itext;
@@ -282,9 +282,9 @@ gui_on_vid(vid_event_t* event);
 // If you change the order or the array of things itself you must gui_recache_all()!
 extern void
 gui_init(gui_font_t* font);
-// If t is NULL fress the entire module.
+// If t is NULL fress the entire module with all things(must do that when you end the program).
 // Frees a thing and its children/subthings(in maps or windows).
-// NOTE: Freeing a thing that is referenced by any other thing WILL lead to problems.
+// NOTE: Freeing a thing that is referenced by any other thing WILL lead to problems, because that parent thing will not be notified, there is no way to do so in the data structure of gui_thing_t.
 extern void
 gui_free(gui_thing_t* t);
 

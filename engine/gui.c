@@ -116,7 +116,6 @@ gui_free(gui_thing_t* t)
     {
       last_thing = gui_things = NULL;
     }
-    
 
     free(t);
   }
@@ -342,9 +341,19 @@ button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 //                               ITEXT ON
 //////////////////////////////////////////////////////////////////////////////////
 
+static int itext_shift = 0;
+
+static void
+itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
+{
+  t->itext.flags &= ~GUI_ITXT_SELECTED;
+}
+
 static void
 itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 {
+  itext_shift = 0; // Reset shift incase it was not registered
+
   if (!(t->itext.flags & GUI_ITXT_NOT_VIRGIN))
   {
     // TODO: Override all text
@@ -355,24 +364,91 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 }
 
 static void
-itext_on_press(gui_thing_t* t, gui_event_t* gui_e)
+itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
 {
-  if (gui_e->press.code != KEY_BS)
+  if (!(t->itext.flags & GUI_ITXT_SELECTED))
   {
-    t->text[t->itext.cursor++] = gui_e->press.code;
+    return;
   }
-  else if (t->itext.cursor)
+  
+  switch (code)
   {
-    t->itext.cursor--;
+    case KEY_BS:
+    if (t->itext.cursor)
+    {
+      t->itext.cursor--;
+    }
+    t->text[t->itext.cursor] = 0;
+    break;
+
+    case KEY_LSHIFT:
+    case KEY_RSHIFT:
+    itext_shift = 1;
+    break;
+
+    case KEY_ENTER:
+    itext_on_deselect(t, gui_e);
+    return;
+    break;
+
+    case KEY_RIGHT: // Move only if we can right
+    if (t->text[t->itext.cursor])
+    {
+      t->itext.cursor++;
+    }
+    break;
+
+    case KEY_LEFT: // Move only if we can left
+    if (t->itext.cursor)
+    {
+      t->itext.cursor--;
+    }
+    break;
+
+    case KEY_SPACE:
+    code = ' ';
+    default:
+    if (code >= 'a' && code <= 'z')
+    {
+      code -= itext_shift ? 32 : 0;
+    }
+    
+    t->text[t->itext.cursor] = code;
+
+    t->itext.cursor++;
+    if (t->itext.cursor >= t->itext.nmem)
+    {
+      t->itext.nmem *= 2;
+      t->text = realloc(t->text, t->itext.nmem);
+      printf("REALLOC %d\n", t->itext.nmem);
+    }
+    t->text[t->itext.cursor] = 0;
+
+    break;
   }
+
+
   gui_e->type = GUI_E_PRESS;
 }
 
 static void
-itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
+itext_on_release(gui_thing_t* selected, int code, gui_event_t* gui_e)
 {
-  t->itext.flags &= ~GUI_ITXT_SELECTED;
+  if (!(selected->itext.flags & GUI_ITXT_SELECTED))
+  {
+    return;
+  }
+
+  switch (code)
+  {
+    case KEY_LSHIFT:
+    case KEY_RSHIFT:
+    itext_shift = 0;
+    break;
+  }
+  gui_e->type = GUI_E_RELEASE;
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////
 //                               TICKBOX ON
@@ -453,12 +529,23 @@ test_mpress(vid_event_t* e)
 }
 
 static void
-thing_on_press(gui_thing_t* selected, gui_event_t* gui_e)
+thing_on_press(gui_thing_t* selected, int code, gui_event_t* gui_e)
 {
   switch (selected->type)
   {
     case GUI_T_ITEXT:
-    itext_on_press(selected, gui_e);
+    itext_on_press(selected, code, gui_e);
+    break;
+  }
+}
+
+static void
+thing_on_release(gui_thing_t* selected, int code, gui_event_t* gui_e)
+{
+  switch (selected->type)
+  {
+    case GUI_T_ITEXT:
+    itext_on_release(selected, code, gui_e);
     break;
   }
 }
@@ -491,10 +578,17 @@ gui_on_vid(vid_event_t* e)
     break;
 
     case VID_E_RELEASE:
-    if (pressed != NULL && test_mpress(e))
+    if (test_mpress(e))
     {
-      thing_on_mrelease(pressed, &gui_e);
-      pressed = NULL;
+      if (pressed != NULL)
+      {
+        thing_on_mrelease(pressed, &gui_e);
+        pressed = NULL;
+      }
+    }
+    else if (selected != NULL)
+    {
+      thing_on_release(selected, e->release.code, &gui_e);
     }
     break;
 
@@ -514,9 +608,9 @@ gui_on_vid(vid_event_t* e)
         thing_on_mpress(pressed, &gui_e);
       }
     }
-    else
+    else if (selected != NULL)
     {
-      thing_on_press(selected, &gui_e);
+      thing_on_press(selected, e->press.code, &gui_e);
     }
     break;
   }
@@ -777,7 +871,7 @@ draw_rowmap(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bo
     {
       int _left = left + coli * col_w;
       int _top = top + rowi * col_h;
-      gui_draw(t->rowmap.things[i], _left, _top, _left + col_w, _top + col_h);
+      gui_draw(t->rowmap.things[i], _left, _top, _left + col_w - 1, _top + col_h - 1);
     }
   }
 }

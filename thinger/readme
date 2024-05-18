@@ -4,17 +4,51 @@
 
  The program that compiles GUI text code files into .gui files that are read by the GUI module.
 
-==========
- GUI file
-==========
 
-GUI files are always little endian.
+=================
+ GUI thing files
+=================
+ The file itself:
 
-thing
-  u8 type
-  u8 
+uint16_t n : How many things
+thing_t things[n]
 
-i8[4] .GUI
-u8 things_n
-thing[things_n] things
+ GUI files adhere to the GUI module's enums and stuff, they are just file-ized, with dynamic arrays becoming static arrays, that's all.
+ gui_u_t is int16_t as of now.
+ thing_t is defined as follows:
+
+thing_t
+{
+  uint8_t type
+
+  uint16_t id_s : size of id
+  uint16_t str_s : size of str AKA text
+
+  uint8_t[id_s] id
+  uint8_t[str_s] str : AKA text
+
+  gui_u_t x
+  gui_u_t y
+
+  gui_u_t w
+  gui_u_t min_w
+  gui_u_t max_w
+
+  gui_u_t h
+  gui_u_t min_h
+  gui_u_t max_h
+
+  NOW IT DEPENDS ON TYPE
+
+  if type = itext:
+    uint8_t format
+  
+  if type = window:
+    uint16_t child
+
+  if type = rowmap:
+    uint8_t rows_n : How many rows
+    uint8_t[rows_n] cols_n : Number of columns per row index
+    uint16_t[SUM OF cols_n TIMES rows_n] children : Number of cols_n members
+}
 

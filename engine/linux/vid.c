@@ -16,6 +16,13 @@
 // Writable frame buffer, essentially blitting:
 // https://bbs.archlinux.org/viewtopic.php?id=225741
 
+
+/*
+113 -> 0 LEFT
+111 -> 0 UP
+114 -> 0 RIGHT
+116 -> 0 DOWN
+*/
 // From older project
 static const char xkeymap[256] = {
 	0,0,0,0,0,0,0,0,0, // First 9 are for some reason not mapped?
@@ -27,6 +34,11 @@ static const char xkeymap[256] = {
 	'*',KEY_LALT,KEY_SPACE,KEY_CAPSLOCK,
 	KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10, // KF11=95 for some reason.
 	KEY_NUMLOCK, KEY_SCROLLLOCK,
+	0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,
+  KEY_UP, 0, KEY_LEFT, KEY_RIGHT, 0, KEY_DOWN,
 };
 
 // bit array of all the key states that were pressed.
