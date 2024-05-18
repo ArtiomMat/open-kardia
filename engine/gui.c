@@ -120,6 +120,8 @@ gui_free(gui_thing_t* t)
       last_thing = gui_things = NULL;
     }
 
+    // TODO: GUI_ON_VID() STILL EATS EVENTS AFTER FREEING!
+
     free(t);
   }
 }
@@ -306,13 +308,8 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
       gui_e->type = _GUI_E_EAT;
       return;
     }
-    // 100% outside the window, if not already set we set and put the event for eaten
-    // We should only send the event if it's the first time, sending the event otherwise is both unnecessary and causes bugs(cannot interact outside GUI)
-    else if (!(thing->window.flags & GUI_WND_UNFOCUSED))
-    {
-      gui_e->type = _GUI_E_EAT;
-      return;
-    }
+    
+    // If we get to this point we are 100% outside the window, if not already set we set and put the event for eaten
   }
 }
 

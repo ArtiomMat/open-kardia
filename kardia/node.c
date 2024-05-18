@@ -59,7 +59,6 @@ node_draw_line(node_t* root_node, node_t* next)
   }
   else
   {
-    
     node_t* l = root_node->pos[0] < next->pos[0] ? root_node : next;
     node_t* r = l == root_node ? next : root_node;
 
