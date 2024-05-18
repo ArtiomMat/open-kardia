@@ -1045,6 +1045,7 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
       // Drawing the cursor, if the time is even
       if (selected && ((now>>9)%2))
       {
+        // FIXME: Doesn't work always, sometimes the cursor overshoots 1 chracter forward, might have to do with even-ness of tpl or something similar.
         int tpl = text_per_line(right-left) - 1;
         int maxline = text_lines_n(bottom-top) - 1;
         int x = t->itext.cursor;
