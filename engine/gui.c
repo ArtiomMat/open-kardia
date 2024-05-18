@@ -67,6 +67,7 @@ gui_init(gui_font_t* _font)
 void
 gui_free(gui_thing_t* t)
 {
+  puts("gui_free(): GUI module freed.");
   if (t == NULL)
   {
     for (gui_thing_t* _t = t; _t != NULL;)
@@ -77,7 +78,6 @@ gui_free(gui_thing_t* t)
     }
 
     free(gui_thing_refs);
-    puts("gui_free(): GUI module freed.");
   }
   else
   {
