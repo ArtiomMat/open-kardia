@@ -4,8 +4,13 @@ t window W_MAIN
   y 10
   w 200
   h 150
+  
   min_w 200
   min_h 150
+
+  max_w 250
+  max_h 200
+
   child M_MAIN
 
 t rowmap M_MAIN
@@ -33,7 +38,8 @@ t itext I_A
   str '18'
 
 t button B_CONFIRM
-  max_w 300
+  max_w 100
+  max_h 32
   str 'Confirm'
 
 t button B_NOPE

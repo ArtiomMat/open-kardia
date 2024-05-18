@@ -1,6 +1,7 @@
 #include "gui_local.h"
 #include "com.h"
 #include "fip.h"
+#include "clk.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -153,6 +154,7 @@ resize_right(gui_thing_t* gui_window, int i, gui_u_t max_r)
   int mouse_delta = gui_mouse_pos[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
 
   gui_window->size[i] = gui_window->window.size_0[i] + mouse_delta;
+  gui_window->size[i] = min(gui_window->max_size[i], gui_window->size[i]);
   gui_window->size[i] = min(max(gui_window->size[i], gui_window->min_size[i]), max_r + 1 - gui_window->pos[i]);
 }
 // i is the dimention of the size/pos vector
@@ -176,6 +178,11 @@ resize_left(gui_thing_t* gui_window, int i, gui_u_t min_l)
   {
     gui_window->pos[i] -= gui_window->min_size[i] - gui_window->size[i];
     gui_window->size[i] = gui_window->min_size[i];
+  }
+  else if (gui_window->size[i] > gui_window->max_size[i])
+  {
+    gui_window->pos[i] -= gui_window->max_size[i] - gui_window->size[i];
+    gui_window->size[i] = gui_window->max_size[i];
   }
 
   // So that in the next call to resize_left(), the size[i] does not return to be size_0(old). Since the X keeps updating, we need to shift the width with it, so that mouse_delta keeps being current. I know this is not really a good explanation, but just run this on a fucking paper, just shift the window do all the operations without this line, you will understand what I mean.
@@ -342,6 +349,85 @@ button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 //////////////////////////////////////////////////////////////////////////////////
 
 static int itext_shift = 0;
+static int itext_caps = 0;
+
+static char
+get_shift_char(char c)
+{
+  switch (c)
+  {
+    case '`':
+    c = '~';
+    break;
+
+    case '1':
+    c = '!';
+    break;
+    case '2':
+    c = '@';
+    break;
+    case '3':
+    c = '#';
+    break;
+    case '4':
+    c = '$';
+    break;
+    case '5':
+    c = '%';
+    break;
+    case '6':
+    c = '^';
+    break;
+    case '7':
+    c = '&';
+    break;
+    case '8':
+    c = '*';
+    break;
+    case '9':
+    c = '(';
+    break;
+    case '0':
+    c = ')';
+    break;
+
+    case '-':
+    c = '_';
+    break;
+    case '=':
+    c = '+';
+    break;
+
+
+    case '[':
+    c = '{';
+    break;
+    case ']':
+    c = '}';
+    break;
+
+    case ';':
+    c = ':';
+    break;
+    case '\'':
+    c = '"';
+    break;
+    case '\\':
+    c = '|';
+    break;
+    case ',':
+    c = '<';
+    break;
+    case '.':
+    c = '>';
+    break;
+    case '/':
+    c = '?';
+    break;
+  }
+
+  return c;
+}
 
 static void
 itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
@@ -386,9 +472,8 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     itext_shift = 1;
     break;
 
-    case KEY_ENTER:
-    itext_on_deselect(t, gui_e);
-    return;
+    case KEY_CAPSLOCK:
+    itext_caps = !(itext_caps);
     break;
 
     case KEY_RIGHT: // Move only if we can right
@@ -405,12 +490,29 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     }
     break;
 
+    case KEY_ENTER:
+    if (!itext_shift)
+    {
+      itext_on_deselect(t, gui_e);
+      return;
+    }
+
     case KEY_SPACE:
     code = ' ';
+
     default:
+    // Only ASCII characters can be drawn
+    if (code < 32)
+    {
+      break;
+    }
     if (code >= 'a' && code <= 'z')
     {
-      code -= itext_shift ? 32 : 0;
+      code -= (itext_shift || itext_caps) ? 32 : 0;
+    }
+    else if (itext_shift)
+    {
+      code = get_shift_char(code);
     }
     
     t->text[t->itext.cursor] = code;
@@ -420,7 +522,7 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     {
       t->itext.nmem *= 2;
       t->text = realloc(t->text, t->itext.nmem);
-      printf("REALLOC %d\n", t->itext.nmem);
+      // printf("REALLOC %d\n", t->itext.nmem);
     }
     t->text[t->itext.cursor] = 0;
 
@@ -879,6 +981,8 @@ draw_rowmap(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bo
 void
 gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
+  clk_time_t now = clk_now(); // Zero's every second
+
   if (t == NULL)
   {
     return;
@@ -892,6 +996,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   int yes_text = 1;
   gui_u_t center_y = top + (bottom-top)/2;
   gui_u_t center_x = left + (right-left)/2;
+
+  bottom = min(top + t->max_size[1], bottom);
+  right = min(left + t->max_size[0], right);
 
   #ifdef DEBUG
     // draw_rect(left, top, right, bottom, gui_shades[4],gui_shades[4]);
@@ -935,7 +1042,8 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
 
       draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
 
-      if (selected)
+      // Drawing the cursor, if the time is even
+      if (selected && ((now>>9)%2))
       {
         int tpl = text_per_line(right-left) - 1;
         int maxline = text_lines_n(bottom-top) - 1;
