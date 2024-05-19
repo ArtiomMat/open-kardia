@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_ITEXT_TEXT 1024
+#define MAX_ITEXT_TEXT 512
 
 int gui_title_h = 0;
 unsigned char gui_shades[GUI_SHADES_N] = {0,1,2,3,4};
@@ -26,6 +26,15 @@ gui_thing_t** gui_thing_refs;
 
 int gui_mouse_pos[2];
 
+// THE 3 BELOW ARE UPDATED EITHER BY FREEING A THING OR BY GUI_ON_VID():
+
+// pointed that got pressed
+static gui_thing_t* pressed = NULL;
+// Same as pressed, but ignores release, only a of a different thing changes it
+static gui_thing_t* selected = NULL;
+static gui_thing_t* pointed = NULL;
+
+
 static void
 send_event(gui_event_t* e)
 {
@@ -33,6 +42,22 @@ send_event(gui_event_t* e)
   {
     puts("FUCK!");
   }
+}
+
+// Checks if e is a valid event to be send, if it's _GUI_E_EAT then we return 1 but don't truly send the event, if it's _GUI_E_NULL we just return 0 and don't send, otherwise send.
+static int
+try_send_event(gui_event_t* gui_e)
+{
+  // Decide if we ate or not!
+  if (gui_e->type == _GUI_E_NULL)
+  {
+    return 0;
+  }
+  if (gui_e->type != _GUI_E_EAT)
+  {
+    send_event(gui_e);
+  }
+  return 1;
 }
 
 void
@@ -67,6 +92,65 @@ gui_init(gui_font_t* _font)
   printf("gui_init(): GUI module initialized.\n");
 }
 
+// Just frees a thing with its children, doesn't do extra stuff.
+// Also removes the thing from selected, pressed or all that if it is one of them.
+void
+gui_free2(gui_thing_t* t)
+{
+  if (pressed == t)
+  {
+    pressed = NULL;
+  }
+  if (selected == t)
+  {
+    selected = NULL;
+  }
+  if (pointed == t)
+  {
+    pointed = NULL;
+  }
+
+  switch (t->type)
+  {
+    case GUI_T_WINDOW:
+    gui_free(t->window.child);
+    break;
+
+    case GUI_T_ROWMAP:
+    {
+      int i = 0;
+      for (int r = 0; r < t->rowmap.rows_n; r++)
+      {
+        for (int c = 0; c < t->rowmap.cols_n[r]; c++, i++)
+        {
+          gui_free(t->rowmap.things[i]);
+        }
+      }
+    }
+    break;
+  }
+
+  if (t->next != NULL)
+  {
+    t->next->prev = t->prev;
+  }
+
+  if (t->prev != NULL)
+  {
+    t->prev->next = t->next;
+  }
+  
+  // Free and return here if it's the last thing
+  if (t->next == NULL && t->prev == NULL)
+  {
+    last_thing = gui_things = NULL;
+  }
+
+  // TODO: GUI_ON_VID() STILL EATS EVENTS AFTER FREEING!
+
+  free(t);
+}
+
 void
 gui_free(gui_thing_t* t)
 {
@@ -84,45 +168,13 @@ gui_free(gui_thing_t* t)
   }
   else
   {
-    switch (t->type)
+    gui_free2(t);
+
+    // Clear the refrence buffer, it may still point to freed things
+    for (int i = 0; i < vid_size[0] * vid_size[1]; i++)
     {
-      case GUI_T_WINDOW:
-      gui_free(t->window.child);
-      break;
-
-      case GUI_T_ROWMAP:
-      {
-        int i = 0;
-        for (int r = 0; r < t->rowmap.rows_n; r++)
-        {
-          for (int c = 0; c < t->rowmap.cols_n[r]; c++, i++)
-          {
-            gui_free(t->rowmap.things[i]);
-          }
-        }
-      }
-      break;
+      gui_thing_refs[i] = NULL;
     }
-
-    if (t->next != NULL)
-    {
-      t->next->prev = t->prev;
-    }
-
-    if (t->prev != NULL)
-    {
-      t->prev->next = t->next;
-    }
-    
-    // Free and return here if it's the last thing
-    if (t->next == NULL && t->prev == NULL)
-    {
-      last_thing = gui_things = NULL;
-    }
-
-    // TODO: GUI_ON_VID() STILL EATS EVENTS AFTER FREEING!
-
-    free(t);
   }
 }
 
@@ -211,13 +263,12 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
   // Move the window if necessary and other logic to keep track of movement
   if (window->window.flags & GUI_WND_RELOCATING)
   {
-    gui_event_t e;
-    window->pos[0] = e.relocate.delta[0] = gui_mouse_pos[0]-window->window.mouse_rel[0];
-    window->pos[1] = e.relocate.delta[1] = gui_mouse_pos[1]-window->window.mouse_rel[1];
+    window->pos[0] = gui_mouse_pos[0]-window->window.mouse_rel[0];
+    window->pos[1] = gui_mouse_pos[1]-window->window.mouse_rel[1];
 
-    window->pos[0] = e.relocate.normalized[0] = min(max(window->pos[0], l), r+1-window->size[0]);
-    window->pos[1] = e.relocate.normalized[1] = min(max(window->pos[1], l), b+1-window->size[1]);
-    send_event(&e);
+    window->pos[0] = min(max(window->pos[0], l), r+1-window->size[0]);
+    window->pos[1] = min(max(window->pos[1], l), b+1-window->size[1]);
+    // send_event(&e);
   }
   // Resize the window and keep track of resizing too
   else if (window->window.flags & GUI_WND_RESIZING)
@@ -255,9 +306,8 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     // Pressed the x button
     if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
     {
-      gui_free(thing);
-
-      gui_e->type = GUI_E_WINDOW_X;
+      // gui_free(thing);
+      gui_e->type = GUI_E_WND_X;
       return;
     }
 
@@ -310,6 +360,11 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     }
     
     // If we get to this point we are 100% outside the window, if not already set we set and put the event for eaten
+
+    if (selected == thing)
+    {
+      selected = NULL; // Deselect
+    }
   }
 }
 
@@ -329,14 +384,14 @@ static void
 button_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 {
   t->button.pressed = 1;
-  gui_e->type = GUI_E_PRESS;
+  gui_e->type = GUI_E_B_PRESS;
 }
 
 static void
 button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 {
   t->button.pressed = 0;
-  gui_e->type = GUI_E_RELEASE;
+  gui_e->type = GUI_E_B_RELEASE;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -425,10 +480,10 @@ get_shift_char(char c)
 }
 
 static void
-itext_on_deselect(gui_thing_t* t, gui_event_t* gui_e)
+itext_on_deselect(gui_thing_t* t)
 {
   t->itext.flags &= ~GUI_ITXT_SELECTED;
-  gui_e->type = _GUI_E_EAT; // XXX: Maybe it's better to actually not eat it
+  // gui_e->type = _GUI_E_EAT; // XXX: Maybe it's better to actually not eat it
 }
 
 static void
@@ -443,7 +498,7 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
   }
   t->itext.flags |= GUI_ITXT_SELECTED;
 
-  gui_e->type = GUI_E_PRESS;
+  gui_e->type = GUI_E_B_PRESS;
 }
 
 static void
@@ -465,9 +520,9 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     t->text[t->itext.cursor] = 0;
 
     // Deallocate memory if we are less that half of it
-    if (t->itext.cursor < (t->itext.nmem / 2))
+    if (t->itext.cursor < (t->itext.nmem / 4))
     {
-      t->itext.nmem /= 2;
+      t->itext.nmem /= 4;
       t->text = realloc(t->text, t->itext.nmem);
       #ifdef DEBUG
         printf("REALLOCATED ITEXT: %d\n", t->itext.nmem);
@@ -498,10 +553,15 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     // }
     // break;
 
+    case KEY_ESCAPE:
+    itext_on_deselect(t);
+    return;
+
     case KEY_ENTER:
     if (!itext_shift)
     {
-      itext_on_deselect(t, gui_e);
+      itext_on_deselect(t);
+      gui_e->type = GUI_E_ITXT_DONE;
       return;
     }
 
@@ -523,15 +583,19 @@ itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
     {
       code = get_shift_char(code);
     }
-    
-    t->text[t->itext.cursor] = code;
 
+    t->text[t->itext.cursor] = code;
     t->itext.cursor++;
+
+    if (t->itext.cursor >= MAX_ITEXT_TEXT)
+    {
+      t->itext.cursor = MAX_ITEXT_TEXT-1;
+    }
 
     // Allocate more data for the text if we are eating
     if (t->itext.cursor >= t->itext.nmem)
     {
-      t->itext.nmem *= 2;
+      t->itext.nmem = min(t->itext.nmem * 2, MAX_ITEXT_TEXT);
       #ifdef DEBUG
         printf("REALLOCATED ITEXT: %d\n", t->itext.nmem);
       #endif
@@ -625,13 +689,14 @@ thing_on_move(gui_thing_t* pressed, gui_event_t* gui_e)
   }
 }
 
+// NOTE: DESELECT MUST NOT DO ANY EVENTS!
 static void
-thing_on_deselect(gui_thing_t* selected, gui_event_t* gui_e)
+thing_on_deselect(gui_thing_t* selected)
 {
   switch (selected->type)
   {
     case GUI_T_ITEXT:
-    itext_on_deselect(selected, gui_e);
+    itext_on_deselect(selected);
     break;
   }
 }
@@ -668,11 +733,6 @@ thing_on_release(gui_thing_t* selected, int code, gui_event_t* gui_e)
 int
 gui_on_vid(vid_event_t* e)
 {
-  // pointed that got pressed
-  static gui_thing_t* pressed = NULL;
-  // Same as pressed, but ignores release, only a of a different thing changes it
-  static gui_thing_t* selected = NULL;
-  static gui_thing_t* pointed = NULL;
 
   gui_event_t gui_e = {.type = _GUI_E_NULL};
 
@@ -683,7 +743,30 @@ gui_on_vid(vid_event_t* e)
     gui_mouse_pos[0] = e->move.x;
     gui_mouse_pos[1] = e->move.y;
 
-    pointed = get_pointed_thing();
+    gui_thing_t* new_pointed = get_pointed_thing();
+    
+    // If we don't check for pressed we may switch cursor just because we hover on another thing while interacting with another
+    if (pressed == NULL && pointed != NULL && new_pointed != NULL && pointed->type != new_pointed->type)
+    {
+      switch (new_pointed->type)
+      {
+        case GUI_T_ITEXT:
+        vid_set_cursor_type(VID_CUR_TEXT);
+        break;
+
+        case GUI_T_TICKBOX:
+        case GUI_T_BUTTON:
+        vid_set_cursor_type(VID_CUR_SELECT);
+        break;
+
+        default:
+        vid_set_cursor_type(VID_CUR_POINTER);
+        break;
+      }
+    }
+
+    pointed = new_pointed;
+
     // We should only change the pointed if we are not pressing anything
     if (pressed != NULL)
     {
@@ -697,12 +780,14 @@ gui_on_vid(vid_event_t* e)
     {
       if (pressed != NULL)
       {
+        gui_e.thing = pressed;
         thing_on_mrelease(pressed, &gui_e);
         pressed = NULL;
       }
     }
     else if (selected != NULL)
     {
+      gui_e.thing = selected;
       thing_on_release(selected, e->release.code, &gui_e);
     }
     break;
@@ -711,36 +796,31 @@ gui_on_vid(vid_event_t* e)
     if (test_mpress(e))
     {
       pressed = pointed;
-
+      // Pressing a different thing means deselcting the last one
       if (selected != NULL && pressed != selected)
       {
-        thing_on_deselect(selected, &gui_e);
+        // NOTE: thing_on_mpress will not override anything because deselect sends no events
+        thing_on_deselect(selected);
+        gui_e.type = _GUI_E_EAT;
       }
       selected = pressed;
 
-      // FIXME: WILL CAUSE THINGS TO CONFLICT, THE PRESSED MAY OVERRIDE THE DESELCT
       if (pressed != NULL)
       {
+        gui_e.thing = pressed;
         thing_on_mpress(pressed, &gui_e);
       }
     }
+    // Pressing a keyboard key, if so send this to the selected
     else if (selected != NULL)
     {
+      gui_e.thing = selected;
       thing_on_press(selected, e->press.code, &gui_e);
     }
     break;
   }
 
-  // Decide if we ate or not!
-  if (gui_e.type == _GUI_E_NULL)
-  {
-    return 0;
-  }
-  if (gui_e.type != _GUI_E_EAT)
-  {
-    send_event(&gui_e);
-  }
-  return 1;
+  return try_send_event(&gui_e);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -750,11 +830,11 @@ gui_on_vid(vid_event_t* e)
 static unsigned char
 get_shade(int i)
 {
-  // Return darker shade if unfocused
-  // if (gui_window.window.flags & GUI_WND_UNFOCUSED)
-  // {
-  //   return gui_shades[max(i - 1, 0)];
-  // }
+  if (selected == NULL && i)
+  {
+    i--;
+  }
+  
   return gui_shades[i];
 }
 
@@ -805,7 +885,7 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
     #undef FIP_FRAC_BITS
     #define FIP_FRAC_BITS 16
 
-    fip_t ypx = ITOFIP(yf-yi);
+    fip_t ypx = ITOFIP(8,yf-yi);
     ypx /= xf-xi;
 
     int right = xi > xf ? xi : xf;
@@ -813,7 +893,7 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
 
     fip_t y = left == xi ? yi : yf; // Depends on which one is left
     y = max(y, 0); // Just limit it
-    y = ITOFIP(y);
+    y = ITOFIP(8,y);
 
     fip_t absi_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
 
@@ -822,9 +902,9 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
     for (int x = max(left, 0); x < min(right, vid_size[0]); x++)
     {
       fip_t i;
-      for (i = 0; i < absi_ypx; i += ITOFIP(1))
+      for (i = 0; i < absi_ypx; i += ITOFIP(8,1))
       {
-        fip_t set_y = FIPTOI(y + i*sign);
+        fip_t set_y = FIPTOI(8,y + i*sign);
         if (set_y >= vid_size[1])
         {
           return; // Nothing happens after the loop anyway
@@ -937,6 +1017,43 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
   return i;
 }
 
+static int
+draw_text_password(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
+{
+  static char pwd_c[] = {'*','@','2','*',')','6','9','a','M','(','!','*','1','C','2','A',
+  'S','%','%','-',']','`',';','\'',';','>','^','*','1','i','a','>',};
+  if (text == NULL)
+  {
+    return 0;
+  }
+
+  int i = 0;
+  for (int y = t+1; y+font->height <= b; y+=font->height)
+  {
+    int nl = 0;
+    for (int x = l+1; x+font_w < r && !nl; i++, x+=font_w)
+    {
+      if (!text[i])
+      {
+        return i;
+      }
+      gui_draw_font(font, x, y, pwd_c[i%sizeof (pwd_c)], color);
+    }
+  }
+  return i;
+}
+
+static int
+draw_text_format(int format, unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
+{
+  if (format & GUI_ITXT_PASSWORD)
+  {
+    return draw_text_password(color, text, l, t, r, b);
+  }
+  return draw_text(color, text, l, t, r, b);
+}
+
+
 /////////////////////////////////////////////////////////////////////
 //                              DRAW THINGS
 /////////////////////////////////////////////////////////////////////
@@ -959,8 +1076,8 @@ draw_window(gui_thing_t* t)
 
   // X button text
   gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
-  gui_draw_font(font, xx, xy, '\\', get_shade(0));
-  gui_draw_font(font, xx, xy,  '/', get_shade(0));
+  gui_draw_font(font, xx, xy, '\\', get_shade(4));
+  gui_draw_font(font, xx, xy,  '/', get_shade(4));
 
   // Window title text
   draw_text(get_shade(4), t->text, TITLE_LEFT((*t)), TITLE_TOP((*t)), X_LEFT((*t)), TITLE_BOTTOM((*t)));
@@ -998,8 +1115,6 @@ draw_rowmap(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bo
 void
 gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
 {
-  clk_time_t now = clk_now(); // Zero's every second
-
   if (t == NULL)
   {
     return;
@@ -1064,7 +1179,7 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
       draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
 
       // Drawing the cursor, if the time is even
-      if (selected && ((now>>9)%2))
+      if (selected && ((clk_begin_time>>9)%2))
       {
         // FIXME: Doesn't work always, sometimes the cursor overshoots 1 chracter forward, might have to do with even-ness of tpl or something similar.
         int tpl = text_per_line(right-left);
@@ -1083,8 +1198,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
 
         draw_yline(y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1, get_shade(3));
       }
+      
 
-      draw_text(get_shade(3 + selected), t->text, left, top, right, bottom);
+      draw_text_format(t->itext.format, get_shade(3 + selected), t->text, left, top, right, bottom);
 
       draw_ref_rect(t, left, top, right, bottom);
       yes_text = 0;
@@ -1190,7 +1306,7 @@ gui_open(const char* fp)
       read_ret &= fread(&buf[i]->itext.format, 1, 1, f);
       
       // Setup the n and nmem
-      buf[i]->itext.n = buf[i]->itext.nmem = str_s;
+      buf[i]->itext.nmem = str_s;
       break;
 
       case GUI_T_WINDOW:

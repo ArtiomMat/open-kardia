@@ -10,7 +10,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
-
+#include <X11/cursorfont.h>
 #include <X11/extensions/Xrandr.h>
 
 // Writable frame buffer, essentially blitting:
@@ -19,7 +19,7 @@
 // From older project
 static const char xkeymap[256] = {
 	0,0,0,0,0,0,0,0,0, // First 9 are for some reason not mapped?
-	KEY_ESC,'1','2','3','4','5','6','7','8','9','0','-','=',KEY_BS,
+	KEY_ESCAPE,'1','2','3','4','5','6','7','8','9','0','-','=',KEY_BS,
 	KEY_TAB,'q','w','e','r','t','y','u','i','o','p','[',']',KEY_ENTER,
 	KEY_CTRL,'a','s','d','f','g','h','j','k','l',';','\'','`',KEY_LSHIFT,
 	'\\','z','x','c','v','b','n','m',',','.','/',KEY_RSHIFT,
@@ -53,6 +53,8 @@ static Window root_window;
 
 static Colormap colormap;
 
+static Cursor cursors[_VID_CUR_N];
+
 // TODO: It's not exactly that safe
 void
 vid_free()
@@ -62,10 +64,18 @@ vid_free()
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
 
   if (vid_nix_image)
+  {
     XDestroyImage(vid_nix_image);
+  }
   vid_nix_image = 0;
 
+  for (int i = 0; i < _VID_CUR_N; i++)
+  {
+    XFreeCursor(vid_nix_dsp, cursors[i]);
+  }
+
   XCloseDisplay(vid_nix_dsp);
+
 
   puts("vid_free(): Video module freed.");
 }
@@ -125,6 +135,12 @@ vid_init(int _vid_w, int _vid_h)
     CWBorderPixel | CWEventMask,
     &attribs
   );
+
+  // Cursors
+  cursors[VID_CUR_POINTER] = XCreateFontCursor(vid_nix_dsp, XC_left_ptr);
+  cursors[VID_CUR_SELECT] = XCreateFontCursor(vid_nix_dsp, XC_hand2);
+  cursors[VID_CUR_TEXT] = XCreateFontCursor(vid_nix_dsp, XC_xterm);
+  cursors[VID_CUR_WAIT] = XCreateFontCursor(vid_nix_dsp, XC_watch);
 
   // XDefineCursor(vid_nix_dsp, vid_nix_window, createnullcursor(vid_nix_dsp, vid_nix_window));
 
@@ -353,3 +369,9 @@ vid_get(int i)
   return vid_pixels[i*4+3];
 }
 
+
+void
+vid_set_cursor_type(int t)
+{
+  XDefineCursor(vid_nix_dsp, vid_nix_window, cursors[t]);
+}

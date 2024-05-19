@@ -7,19 +7,19 @@
 clk_time_t clk_target_tick_time;
 clk_time_t clk_tick_time;
 
-static clk_time_t begin_time;
+clk_time_t clk_begin_time = 0;
 
 void
 clk_begin_tick()
 {
-  begin_time = clk_now();
+  clk_begin_time = clk_now();
 }
 
 int
 clk_end_tick()
 {
   clk_time_t now = clk_now();
-  clk_time_t delta = now - begin_time;
+  clk_time_t delta = now - clk_begin_time;
 
   if (delta < clk_target_tick_time)
   {

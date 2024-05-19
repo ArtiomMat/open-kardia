@@ -1,47 +1,54 @@
 t window W_MAIN 
-  str 'Example\nwindow'
+  str 'Login'
   x 10
   y 10
-  w 200
-  h 150
+  w 250
+  h 160
   
-  min_w 200
-  min_h 150
+  min_w 250
+  min_h 160
 
   max_w 250
-  max_h 200
+  max_h 160
 
   child M_MAIN
 
 t rowmap M_MAIN
   row
-  col O_Q
-  
-  row
-  col I_A
+  col O_NAME
+  col I_NAME
 
   row
-  col T_PROMISE
+  col O_PASS
+  col I_PASS
+
+  row
+  col T_REMEMBER
 
   # Buttons and shit
   row
-  col B_CONFIRM
-  col B_NOPE
+  col B_LOGIN
+  col B_NEWA
 
-t tickbox T_PROMISE
+t tickbox T_REMEMBER
   str 'I promise'
 
-t otext O_Q
-  str 'How old are you?'
+t otext O_PASS
+  str 'Password:'
+t otext O_NAME
+  str 'Username:'
 
-t itext I_A
-  str '18'
+t itext I_NAME
+  max_h 18
+t itext I_PASS
+  inherits I_NAME
+  format '*'
 
-t button B_CONFIRM
+t button B_LOGIN
   max_w 100
   max_h 32
-  str 'Confirm'
+  str 'Login'
 
-t button B_NOPE
-  inherits B_CONFIRM
-  str 'Nope'
+t button B_NEWA
+  inherits B_LOGIN
+  str 'New Account'

@@ -26,10 +26,12 @@ enum
   _GUI_E_NULL, // For internal use
   _GUI_E_EAT, // Does not get sent to the game, just means that the GUI module should eat the event without notifying the gui_on()
 
-  GUI_E_PRESS, // Buttons
-  GUI_E_RELEASE, // Buttons
+  GUI_E_B_PRESS, // Buttons
+  GUI_E_B_RELEASE, // Buttons
 
-  GUI_E_WINDOW_X, // X button pressed
+  GUI_E_WND_X, // X button pressed
+
+  GUI_E_ITXT_DONE, // When enter is pressed with an itext
 
   GUI_E_TICK, // The tickbox was toggled, either ticked or unticked
 };
@@ -220,7 +222,6 @@ typedef struct gui_thing
       char format;
       uint16_t cursor; // Where the 
       uint16_t nmem; // Number of bytes for text in memory
-      uint16_t n; // Number of bytes we have that are used
     } itext;
 
     struct
@@ -240,19 +241,8 @@ typedef struct gui_thing
 
 typedef struct
 {
+  gui_thing_t* thing;
   int type;
-  union
-  {
-    struct
-    {
-      int code;
-    } press, release;
-    struct
-    {
-      gui_u_t delta[2]; // The intended move(without clamping to vid_size)
-      gui_u_t normalized[2]; // Normalized move(clamped to the vid_size)
-    } relocate;
-  };
 } gui_event_t;
 
 /**

@@ -12,7 +12,7 @@
 #endif
 
 // At max ionization the muscle fully contracts
-#define NODE_MAX_ION (8 << FIP_FRAC_BITS)
+#define NODE_MAX_ION (8 << 8)
 #define NODE_MAX_FLOW (NODE_MAX_ION*256)
 
 typedef struct node_s

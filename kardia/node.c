@@ -35,10 +35,10 @@ void
 node_draw_line(node_t* root_node, node_t* next)
 {
   int xi, yi, xf, yf;
-  xi = FIPTOI(root_node->pos[0]);
-  yi = FIPTOI(root_node->pos[1]);
-  xf = FIPTOI(next->pos[0]);
-  yf = FIPTOI(next->pos[1]);
+  xi = FIPTOI(8,root_node->pos[0]);
+  yi = FIPTOI(8,root_node->pos[1]);
+  xf = FIPTOI(8,next->pos[0]);
+  yf = FIPTOI(8,next->pos[1]);
 
   // gui_draw_line(xi, yi, xf, yf, 255);
 
@@ -63,42 +63,38 @@ node_draw_line(node_t* root_node, node_t* next)
     node_t* r = l == root_node ? next : root_node;
 
     // Some magic to increase FIP accuracy
-    l->pos[0] <<= 12 - FIP_DEF_FRAC_BITS;
-    l->pos[1] <<= 12 - FIP_DEF_FRAC_BITS;
-    r->pos[0] <<= 12 - FIP_DEF_FRAC_BITS;
-    r->pos[1] <<= 12 - FIP_DEF_FRAC_BITS;
-    #undef FIP_FRAC_BITS
-    #define FIP_FRAC_BITS 12
+    l->pos[0] <<= 12 - 8;
+    l->pos[1] <<= 12 - 8;
+    r->pos[0] <<= 12 - 8;
+    r->pos[1] <<= 12 - 8;
 
-    fip_t slope = FIP_DIV(r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
+    fip_t slope = FIP_DIV(12,r->pos[1] - l->pos[1], r->pos[0] - l->pos[0]); // How much y's per 1 x
 
     fip_t abs_slope = slope < 0 ? -slope : slope;
     int sign = slope < 0 ? -1 : 1;
 
-    for (fip_t x = l->pos[0], y = l->pos[1]; x < r->pos[0]; x += ITOFIP(1), y += slope)
+    for (fip_t x = l->pos[0], y = l->pos[1]; x < r->pos[0]; x += ITOFIP(12,1), y += slope)
     {
       int c = color_for(l, r, x, l->pos[0], r->pos[0]);
 
-      for (fip_t i = 0; i < abs_slope; i += ITOFIP(1))
+      for (fip_t i = 0; i < abs_slope; i += ITOFIP(12,1))
       {
-        fip_t set_y = FIPTOI(sign * i + y);
+        fip_t set_y = FIPTOI(12,sign * i + y);
 
         if (set_y >= vid_size[1] || set_y < 0)
         {
           break;
         }
 
-        vid_set(c, FIPTOI(x) + set_y * K_VID_SIZE);
+        vid_set(c, FIPTOI(12,x) + set_y * K_VID_SIZE);
       }
     }
 
     // Back down from that black magic
-    l->pos[0] >>= 12 - FIP_DEF_FRAC_BITS;
-    l->pos[1] >>= 12 - FIP_DEF_FRAC_BITS;
-    r->pos[0] >>= 12 - FIP_DEF_FRAC_BITS;
-    r->pos[1] >>= 12 - FIP_DEF_FRAC_BITS;
-    #undef FIP_FRAC_BITS
-    #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
+    l->pos[0] >>= 12 - 8;
+    l->pos[1] >>= 12 - 8;
+    r->pos[0] >>= 12 - 8;
+    r->pos[1] >>= 12 - 8;
   }
 }
 
@@ -125,7 +121,7 @@ node_beat()
     node_t* node = &node_all[i];
     if (node->pos[0] == -1) // Null terminating node
     {
-      // printf("%f\n", FIPTOF(node_flow[0]), FIPTOF(node_flow[1]));
+      // printf("%f\n", FIPTOF(8,node_flow[0]), FIPTOF(8,node_flow[1]));
       return;
     }
 
@@ -163,8 +159,8 @@ node_beat()
 
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
 
-      fip_t fip_clk_tick_time = (clk_tick_time*1000) / (1 << FIP_FRAC_BITS);
-      fip_t real_flow = FIP_MUL(node->flow, fip_clk_tick_time);
+      fip_t fip_clk_tick_time = (clk_tick_time/1000) * (1 << 8);
+      fip_t real_flow = FIP_MUL(8,node->flow, fip_clk_tick_time);
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
       if (real_flow >= node->ion)
       {

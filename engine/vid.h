@@ -15,7 +15,7 @@ enum
 };
 
 enum keys {
-  KEY_ESC=-64,
+  KEY_ESCAPE=-64,
   KEY_ENTER,
   KEY_SPACE,
   KEY_BS,
@@ -34,6 +34,16 @@ enum keys {
   KEY_LMOUSE, // Left mouse
   KEY_MMOUSE, // Middle mouse
   KEY_RMOUSE, // Right mouse
+};
+
+enum
+{
+  VID_CUR_POINTER, // Regular pointer
+  VID_CUR_SELECT, // Selection cursor(i.e hover over links)
+  VID_CUR_TEXT, // Text hover
+  VID_CUR_WAIT, // Waiting for something
+
+  _VID_CUR_N,
 };
 
 typedef struct
@@ -111,3 +121,6 @@ vid_refresh();
 
 extern void
 vid_free();
+
+extern void
+vid_set_cursor_type(int t);

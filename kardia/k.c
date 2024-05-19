@@ -44,6 +44,18 @@ k_gradient(int x, int x_max, unsigned char r, unsigned char g, unsigned char b, 
 }
 
 static int
+on_gui(gui_event_t* e)
+{
+  switch(e->type)
+  {
+    case GUI_E_WND_X:
+    puts("OMG");
+    break;
+  }
+  return 1;
+}
+
+static int
 on_vid(vid_event_t* e)
 {
   // Pipe to GUI, and if eaten return 1
@@ -101,17 +113,17 @@ k_init()
   mix_push_gradient(K_EKG_GRAD, 31, 0,255,100);
 
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-  mix_push(K_GUI_GRAD, 45,45,10);
-  mix_push(K_GUI_GRAD, 80,80,30);
-  mix_push(K_GUI_GRAD, 115,115,40);
-  mix_push(K_GUI_GRAD, 160,160,80);
-  mix_push(K_GUI_GRAD, 235,235,180);
+  // mix_push(K_GUI_GRAD, 45,45,10);
+  // mix_push(K_GUI_GRAD, 80,80,30);
+  // mix_push(K_GUI_GRAD, 115,115,40);
+  // mix_push(K_GUI_GRAD, 160,160,80);
+  // mix_push(K_GUI_GRAD, 235,235,180);
   
-  // mix_push(K_GUI_GRAD, 40,40,40);
-  // mix_push(K_GUI_GRAD, 80,80,80);
-  // mix_push(K_GUI_GRAD, 130,130,130);
-  // mix_push(K_GUI_GRAD, 180,180,180);
-  // mix_push(K_GUI_GRAD, 255,255,255);
+  mix_push(K_GUI_GRAD, 40,40,40);
+  mix_push(K_GUI_GRAD, 80,80,80);
+  mix_push(K_GUI_GRAD, 130,130,130);
+  mix_push(K_GUI_GRAD, 180,180,180);
+  mix_push(K_GUI_GRAD, 255,255,255);
   
   mix_set(255, 0,0,0);
 }
@@ -146,13 +158,13 @@ set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flow
   }
   node_all[i].next_draws_n = j;
 
-  node_all[i].pol_pos[0] = ITOFIP(pol_x);
-  node_all[i].pol_pos[1] = ITOFIP(pol_y);
+  node_all[i].pol_pos[0] = ITOFIP(8,pol_x);
+  node_all[i].pol_pos[1] = ITOFIP(8,pol_y);
 
-  node_all[i].depol_off[0] = ITOFIP(depol_off_x);
-  node_all[i].depol_off[1] = ITOFIP(depol_off_y);
+  node_all[i].depol_off[0] = ITOFIP(8,depol_off_x);
+  node_all[i].depol_off[1] = ITOFIP(8,depol_off_y);
 
-  node_all[i].flow = ITOFIP(10);
+  node_all[i].flow = ITOFIP(8,10);
 }
 
 int
@@ -254,6 +266,7 @@ main(int args_n, const char** args)
   }
   gui_thing_t* opened = gui_open(com_relfp("example.gui"));
   gui_thing_t* gui_window = gui_find(opened, "W_MAIN", 1);
+  gui_on = on_gui;
 
   aud_init();
 
@@ -263,11 +276,11 @@ main(int args_n, const char** args)
   node_init(NULL);
 
   edit_init(com_relfp(fp));
-  ekg_init(ITOFIP(3000), K_VID_SIZE - K_VID_SIZE/10);
+  ekg_init(ITOFIP(8,3000), K_VID_SIZE - K_VID_SIZE/10);
 
   // Begin top
   set_node(0, 50,50, 10,10, (int[]){1,2,3,-1}, 1, (int[]){1,2,3,-1});
-  node_all[0].flow = ITOFIP(120);
+  node_all[0].flow = ITOFIP(8,120);
 
   // Right atrium
   set_node(1, 200,100, -50,-20, (int[]){-1}, 3, (int[]){-1});
@@ -277,7 +290,7 @@ main(int args_n, const char** args)
   // Middle cunt
   set_node(3, 170,170, -30,-10, (int[]){4,5,-1}, 3, (int[]){4,5,6,7,-1});
   node_all[3].halt = 200;
-  node_all[3].flow = ITOFIP(30);
+  node_all[3].flow = ITOFIP(8,30);
 
   // Left lower cunt
   set_node(4, 340,360, -20,-50, (int[]){6,-1}, 2, (int[]){6,5,-1});
@@ -291,7 +304,7 @@ main(int args_n, const char** args)
 
 
   // clk_time_t time = 0, count = 0;
-  // clk_time_t times[] = {0};// {FTOFIP(1), FTOFIP(0.7), FTOFIP(0.6), FTOFIP(1), FTOFIP(1), FTOFIP(1), FTOFIP(0.5), FTOFIP(0.3), FTOFIP(0.25), FTOFIP(0.25), FTOFIP(0.15), FTOFIP(0.15), FTOFIP(0.15)};
+  // clk_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
   printf("%hd %hd", gui_things[0].min_size[0], gui_things[0].min_size[1]);
 

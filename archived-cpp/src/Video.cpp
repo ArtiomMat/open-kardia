@@ -29,7 +29,7 @@ struct SystemVideo
 
 static const char keyMap[256] = {
 	0,0,0,0,0,0,0,0,0, // First 9 are for some reason not mapped?
-	KEY_ESC,'1','2','3','4','5','6','7','8','9','0','-','=',KEY_BS,
+	KEY_ESCAPE,'1','2','3','4','5','6','7','8','9','0','-','=',KEY_BS,
 	KEY_TAB,'q','w','e','r','t','y','u','i','o','p','[',']',KEY_ENTER,
 	KEY_CTRL,'a','s','d','f','g','h','j','k','l',';','\'','`',KEY_LSHIFT,
 	'\\','z','x','c','v','b','n','m',',','.','/',KEY_RSHIFT,

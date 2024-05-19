@@ -24,7 +24,7 @@
 #define DEF_MAX_H 9000
 #define DEF_MIN_W 1
 #define DEF_MIN_H 1
-#define DEF_STR "NULL"
+#define DEF_STR ""
 #define DEF_CHILD 0xFFFF
 #define DEF_ITXT_FMT 0
 
@@ -842,7 +842,7 @@ deep_init()
             case '*':
             case 'x':
             case 'X':
-            flags &= GUI_ITXT_PASSWORD;
+            flags |= GUI_ITXT_PASSWORD;
             break;
 
             default:

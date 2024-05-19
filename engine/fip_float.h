@@ -1,14 +1,12 @@
-// ! YOUR COMPILER MUST SUPPORT ARITHMETIC SHIFT! CHECK IF IT DOES OR YOU GET UNEXPRECTED RESULTS !
-// Fixed point arithmetic HEADER-ONLY module.
-// Entirely defined through macros, which allows you to dynamically change the fraction bits number through your source files for different purposes
+// Fixed point arithmetic HEADER-ONLY module, fixed point replaced with floats.
 
 // NOTE TO SELF: AVOID DOUBLE EVALUATION!!!!!
 
 #pragma once
 
-#define FIP_MUL(frac_bits,a,b) (((fip_t)(a)*(fip_t)(b)) >> frac_bits)
+#define FIP_MUL(frac_bits,a,b) (((fip_t)(a)*(fip_t)(b)))
 
-#define FIP_DIV(frac_bits,A,B) ((fip_t)((((long long)(A)) << frac_bits) / ((long long)(B))))
+#define FIP_DIV(frac_bits,A,B) ((fip_t)(A) / (long long)(B))
 
 #define FIP_FRAC(frac_bits,fip) ((fip_t)(fip) & ((1 << frac_bits) - 1))
 
@@ -26,4 +24,4 @@
 
 #define FTOFIP(frac_bits,f) ((fip_t)((f) * (1 << frac_bits)))
 
-typedef int fip_t;
+typedef float fip_t;

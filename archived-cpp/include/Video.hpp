@@ -8,7 +8,7 @@ namespace System
 {
   enum
   {
-    KEY_ESC=-64,
+    KEY_ESCAPE=-64,
     KEY_ENTER,
     KEY_SPACE,
     KEY_BS,

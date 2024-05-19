@@ -13,6 +13,9 @@ extern clk_time_t clk_target_tick_time;
 // The true time that took the tick is stored here, it will most likely be equal to clk_target_tick_time, but it may not if the tick took too long.
 extern clk_time_t clk_tick_time;
 
+// Updated as clk_now() the moment you call clk_begin_tick
+extern clk_time_t clk_begin_time;
+
 // Initialize right before the loop
 extern void
 clk_init(clk_time_t initial_tick_time);
