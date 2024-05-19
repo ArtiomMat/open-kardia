@@ -498,7 +498,7 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
   }
   t->itext.flags |= GUI_ITXT_SELECTED;
 
-  gui_e->type = GUI_E_B_PRESS;
+  gui_e->type = _GUI_E_EAT;
 }
 
 static void
@@ -1076,8 +1076,8 @@ draw_window(gui_thing_t* t)
 
   // X button text
   gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
-  gui_draw_font(font, xx, xy, '\\', get_shade(4));
-  gui_draw_font(font, xx, xy,  '/', get_shade(4));
+  gui_draw_font(font, xx, xy, '\\', get_shade(0));
+  gui_draw_font(font, xx, xy,  '/', get_shade(0));
 
   // Window title text
   draw_text(get_shade(4), t->text, TITLE_LEFT((*t)), TITLE_TOP((*t)), X_LEFT((*t)), TITLE_BOTTOM((*t)));
@@ -1126,15 +1126,15 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   }
 
   int yes_text = 1;
-  gui_u_t center_y = top + (bottom-top)/2;
-  gui_u_t center_x = left + (right-left)/2;
-
   // Limit drawing size for non window things
   if (t->type != GUI_T_WINDOW)
   {
     bottom = min(top + t->max_size[1], bottom);
     right = min(left + t->max_size[0], right);
   }
+  gui_u_t center_y = top + (bottom-top)/2;
+  gui_u_t center_x = left + (right-left)/2;
+
 
   #ifdef DEBUG
     // draw_rect(left, top, right, bottom, gui_shades[4],gui_shades[4]);
