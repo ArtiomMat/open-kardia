@@ -390,7 +390,8 @@ button_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 static void
 button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 {
-  t->button.pressed = 0;
+  // draw will 0 it after a frame
+  t->button.pressed = 2;
   gui_e->type = GUI_E_B_RELEASE;
 }
 
@@ -842,42 +843,18 @@ get_shade(int i)
 //                                    LINES
 /////////////////////////////////////////////////////////////////////
 
-static inline void
-draw_xline(gui_u_t xi, gui_u_t xf, gui_u_t y, int color)
-{
-  int right = xi > xf ? xi : xf;
-  int left = right == xi? xf : xi;
-
-  for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
-  {
-    vid_set(color, y*vid_size[0] + x);
-  }
-}
-
-static inline void
-draw_yline(gui_u_t yi, gui_u_t yf, gui_u_t x, int color)
-{
-  int top = yi > yf ? yi : yf;
-  int bottom = top == yi? yf : yi;
-
-  for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
-  {
-    vid_set(color, y*vid_size[0] + x);
-  }
-}
-
 void
-gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color)
+gui_draw_line(unsigned char color, gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf)
 {
   // Vertical line
   if (xi == xf)
   {
-    draw_yline(yi, yf, xi, color);
+    vid_put_yline(color, yi, yf, xi);
   }
   // Horizontal line
   else if (yi == yf)
   {
-    draw_xline(xi, xf, yi, color);
+    vid_put_xline(color, xi, xf, yi);
   }
   // Angled line
   else
@@ -909,7 +886,7 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
         {
           return; // Nothing happens after the loop anyway
         }
-        vid_set(color, set_y*vid_size[0] + x);
+        vid_put(color, set_y*vid_size[0] + x);
       }
       y += ypx;
     }
@@ -941,11 +918,11 @@ draw_ref_rect(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t 
 static inline void
 draw_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark)
 {
-  draw_xline(left, right, top, light);
-  draw_xline(left, right, bottom, dark);
+  vid_put_xline(light, left, right, top);
+  vid_put_xline(dark, left, right, bottom);
 
-  draw_yline(top, bottom, left, light);
-  draw_yline(top, bottom, right, dark);
+  vid_put_yline(light, top, bottom, left);
+  vid_put_yline(dark, top, bottom, right);
 }
 
 // Extends draw_rect and also fills the rectangle.
@@ -954,14 +931,7 @@ static inline void
 draw_filled_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark, int fill)
 {
   draw_rect(left, top, right, bottom, light, dark);
-  // Fill the mf now
-  for (int _x = left+1; _x < right; _x++)
-  {
-    for (int _y = top+1; _y < bottom; _y++)
-    {
-      vid_set(fill, _y*vid_size[0] + _x);
-    }
-  }
+  vid_put_rect(fill, left+1, top+1, right-1, bottom-1);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1020,8 +990,8 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
 static int
 draw_text_password(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
-  static char pwd_c[] = {'*','@','2','*',')','6','9','a','M','(','!','*','1','C','2','A',
-  'S','%','%','-',']','`',';','\'',';','>','^','*','1','i','a','>',};
+  static char pwd_c[] = {'*','@','2','/',')','6','9','a','M','(','!','*','1','C','2','A',
+  'S','%','%','-',']','`',';','\'','&','>','^','*','1','i','a','>',};
   if (text == NULL)
   {
     return 0;
@@ -1037,7 +1007,7 @@ draw_text_password(unsigned char color, const char* text, gui_u_t l, gui_u_t t, 
       {
         return i;
       }
-      gui_draw_font(font, x, y, pwd_c[i%sizeof (pwd_c)], color);
+      gui_draw_font(font, x, y, '*', color);
     }
   }
   return i;
@@ -1072,7 +1042,7 @@ draw_window(gui_thing_t* t)
   // draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
 
   // Seperate x button from the rest of the title
-  // draw_yline(TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)), get_shade(1));
+  // vid_put_yline(get_shade(1), TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)));
 
   // X button text
   gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
@@ -1132,9 +1102,9 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
     bottom = min(top + t->max_size[1], bottom);
     right = min(left + t->max_size[0], right);
   }
+  
   gui_u_t center_y = top + (bottom-top)/2;
   gui_u_t center_x = left + (right-left)/2;
-
 
   #ifdef DEBUG
     // draw_rect(left, top, right, bottom, gui_shades[4],gui_shades[4]);
@@ -1196,7 +1166,7 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
           x %= tpl;
         }
 
-        draw_yline(y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1, get_shade(3));
+        vid_put_yline(get_shade(3), y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1);
       }
       
 
@@ -1210,6 +1180,17 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
     case GUI_T_BUTTON:
     {
       int p = t->button.pressed;
+      switch (p)
+      {
+        case 2: // We set it to 3 to disable next frame
+        p=3;
+        break;
+
+        case 3: // We set it to 0
+        p=0;
+        break;
+      }
+      t->button.pressed = p;
       // Doing math with p to just reverse if pressed or not.
       draw_filled_rect(left, top, right, bottom, get_shade(p?1:3), get_shade(p?3:1), get_shade(2));
 

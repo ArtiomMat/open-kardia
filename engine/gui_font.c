@@ -188,7 +188,7 @@ gui_draw_font(gui_font_t* f, gui_u_t _x, gui_u_t _y, int g, unsigned char color)
       // We do it from left to right because that's how we draw
       if ((byte << (b % 8)) & (1 << 7))
       {
-        vid_set(color, x + y * vid_size[0]);
+        vid_put(color, x + y * vid_size[0]);
       }
     }
 

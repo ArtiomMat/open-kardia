@@ -266,6 +266,7 @@ main(int args_n, const char** args)
   }
   gui_thing_t* opened = gui_open(com_relfp("example.gui"));
   gui_thing_t* gui_window = gui_find(opened, "W_MAIN", 1);
+  opened = gui_open(com_relfp("example.gui"));
   gui_on = on_gui;
 
   aud_init();
@@ -306,8 +307,6 @@ main(int args_n, const char** args)
   // clk_time_t time = 0, count = 0;
   // clk_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
-  printf("%hd %hd", gui_things[0].min_size[0], gui_things[0].min_size[1]);
-
   puts("\nRUNNING...\n");
 
   while(1)
@@ -324,6 +323,7 @@ main(int args_n, const char** args)
       if (gui_things != NULL)
       {
         gui_draw(gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
+        gui_draw(opened, 0,0, vid_size[0]-1, vid_size[1]-1);
       }
     vid_refresh();
     

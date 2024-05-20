@@ -13,9 +13,10 @@ clk_init(clk_time_t initial_tick_time)
 
   struct timespec res;
   clock_getres(CLOCK_MONOTONIC, &res);
-  printf("clk_init(): Cloak module initialized, %ldns resolution.\n", res.tv_nsec);
-
+  
   t0 = clk_now();
+
+  printf("clk_init(): Cloak module initialized, %ldns resolution.\n", res.tv_nsec);
 }
 
 void

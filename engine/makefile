@@ -12,7 +12,7 @@ BIN =
 
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -O3 -I$(INC_DIR) -ggdb -D DEBUG -Wl,-rpath=$$ORIGIN
+CFLAGS = -Wall -O3 -I$(INC_DIR) -ggdb -D NODEBUG -Wl,-rpath=$$ORIGIN
 LIBS =
 
 # Compiling for Linux

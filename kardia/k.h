@@ -72,7 +72,7 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
 }
 
 static inline void
-k_vid_set(unsigned char r, unsigned char g, unsigned char b, int i)
+k_vid_put(unsigned char r, unsigned char g, unsigned char b, int i)
 {
   int check = (i-1)&1;
 
@@ -91,7 +91,7 @@ k_vid_set(unsigned char r, unsigned char g, unsigned char b, int i)
     rgb.b = k_pickc_rounder(b,_K_BLUE_DEPTH);
   }
 
-  vid_set(rgb.c, i);
+  vid_put(rgb.c, i);
 }
 
 // Puts the new values in rgb, same as k_gradient() just returns in RGB rather than in index

@@ -299,7 +299,7 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
         {
           return; // Nothing happens after the loop anyway
         }
-        vid_set(color, set_y*vid_size[0] + x);
+        vid_put(color, set_y*vid_size[0] + x);
       }
       y += ypx;
     }

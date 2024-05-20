@@ -94,6 +94,9 @@ vid_set_title(const char* title);
 extern int
 vid_init(int w, int h);
 
+extern void
+vid_realize_colors();
+
 /**
  * Run the window, meaning for one send all the events to vid_on, depending on underlying API may not blit the pixels though, call vid_refresh() to be 100% sure.
 */
@@ -105,7 +108,13 @@ vid_run();
  * Must call vid_refresh() to actually blit the pixels.
 */
 extern void
-vid_set(unsigned char color, int i);
+vid_put(unsigned char color, int i);
+extern void
+vid_put_xline(unsigned char color, int xi, int xf, int y);
+extern void
+vid_put_yline(unsigned char color, int yi, int yf, int x);
+extern void
+vid_put_rect(unsigned char fill, int left, int top, int right, int bottom);
 
 extern unsigned char
 vid_get(int i);

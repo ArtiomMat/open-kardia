@@ -54,7 +54,7 @@ node_draw_line(node_t* root_node, node_t* next)
     }
     for (int y = yi; y < yf; y++)
     {
-      vid_set(color_for(b, t, y, yi, yf), xi + y * K_VID_SIZE);
+      vid_put(color_for(b, t, y, yi, yf), xi + y * K_VID_SIZE);
     }
   }
   else
@@ -86,7 +86,7 @@ node_draw_line(node_t* root_node, node_t* next)
           break;
         }
 
-        vid_set(c, FIPTOI(12,x) + set_y * K_VID_SIZE);
+        vid_put(c, FIPTOI(12,x) + set_y * K_VID_SIZE);
       }
     }
 

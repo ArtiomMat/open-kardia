@@ -226,7 +226,7 @@ typedef struct gui_thing
 
     struct
     {
-      char pressed;
+      char pressed; // 0=not, 1=yes, 2=wanna not, 3=next frame not
     } button;
     struct
     {
@@ -297,7 +297,7 @@ extern void
 gui_toggle_flag(gui_thing_t* t, int flag);
 
 extern void
-gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char color);
+gui_draw_line(unsigned char color, gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf);
 
 // Draw font, in pixels not in grid units.
 // negative or too big x/y are still drawn partially if possible.

@@ -1,4 +1,5 @@
 #include "../vid.h"
+#include "../com.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -354,13 +355,55 @@ vid_wipe(int color)
   // XFree (scr_image);
 }
 
-void
-vid_set(unsigned char color, int i)
+static inline void
+_set(unsigned char color, int i)
 {
   vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
   vid_pixels[i*4+2] = vid_colors[color][0];
   vid_pixels[i*4+1] = vid_colors[color][1];
   vid_pixels[i*4+0] = vid_colors[color][2];
+}
+
+void
+vid_put(unsigned char color, int i)
+{
+  _set(color, i);
+}
+
+void
+vid_put_xline(unsigned char color, int xi, int xf, int y)
+{
+  int right = xi > xf ? xi : xf;
+  int left = right == xi? xf : xi;
+
+  for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
+  {
+    vid_put(color, y*vid_size[0] + x);
+  }
+}
+
+void
+vid_put_yline(unsigned char color, int yi, int yf, int x)
+{
+  int top = yi > yf ? yi : yf;
+  int bottom = top == yi? yf : yi;
+
+  for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
+  {
+    vid_put(color, y*vid_size[0] + x);
+  }
+}
+
+void
+vid_put_rect(unsigned char fill, int left, int top, int right, int bottom)
+{
+  for (int _x = left; _x <= right; _x++)
+  {
+    for (int _y = top; _y <= bottom; _y++)
+    {
+      vid_put(fill, _y*vid_size[0] + _x);
+    }
+  }
 }
 
 unsigned char
@@ -369,6 +412,10 @@ vid_get(int i)
   return vid_pixels[i*4+3];
 }
 
+void
+vid_realize_colors()
+{
+}
 
 void
 vid_set_cursor_type(int t)
