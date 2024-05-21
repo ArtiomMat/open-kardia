@@ -203,13 +203,16 @@ typedef struct gui_thing
 
     struct
     {
+      struct gui_thing* child;
+      struct gui_thing* next; // Next window to draw down the line
+      struct gui_thing* prev; // Previous window that is supposed to be drawn before this one
+
       // The relative coordinates of the mouse to the x and y of the window when it was pressed on the title bar on the previous frame
       // For internal use
       gui_u_t mouse_rel[2];
       // The size last frame, for internal use, crucial for calculating resizing for good UX
       gui_u_t size_0[2];
       int flags;
-      struct gui_thing* child;
     } window;
 
     struct
@@ -287,11 +290,13 @@ gui_open(const char* fp);
 extern gui_thing_t*
 gui_find(gui_thing_t* from, const char* id, char onetime);
 
-// Note, windows will ignore the rectangle provided, they are not bound to a rectangle.
-// This function is the starting point of any drawn thing.
-// the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
+// A thing is drawn, with its bounds being the entire screen, depending on what it is, it may stretch to the entire screen.
+// Recursion(drawing children) works
 extern void
 gui_draw(gui_thing_t* t);
+
+extern void
+gui_draw_windows();
 
 extern void
 gui_set_flag(gui_thing_t* t, int flag, int yes);

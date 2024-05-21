@@ -320,11 +320,7 @@ main(int args_n, const char** args)
     vid_wipe(255);
       // node_draw(flow_mode);
       ekg_draw();
-      if (gui_things != NULL)
-      {
-        gui_draw(gui_window);
-        gui_draw(opened);
-      }
+      gui_draw_windows();
     vid_refresh();
     
     

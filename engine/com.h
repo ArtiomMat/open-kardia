@@ -203,3 +203,30 @@ com_arg(const char* arg);
 // NOT THREAD SAFE IT USES ONE BUFFER ONLY!
 extern const char*
 com_relfp(const char* p);
+
+typedef struct com_node_s
+{
+  struct com_node_s *next, *prev;
+  union
+  {
+    void* p;
+    unsigned long long u;
+    long long i;
+  };
+} com_node_t;
+
+typedef struct
+{
+  com_node_t* first; // Identified by checking if ->prev==NULL
+  com_node_t* last; // Identified by checking if ->next==NULL
+} com_list_t;
+
+extern void
+com_init_list(com_list_t* l);
+// Frees a list and all its nodes
+extern void
+com_free_list(com_list_t* l);
+extern com_node_t*
+com_init_node(com_list_t* l, void* p);
+extern com_node_t*
+com_free_node(com_list_t* l, com_node_t* t);

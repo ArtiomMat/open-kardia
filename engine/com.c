@@ -1,5 +1,6 @@
 #include "com.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -75,4 +76,56 @@ com_relfp(const char* p)
   com_dir[dir_i] = 0;
 
   return com_dir;
+}
+
+
+
+void
+com_init_list(com_list_t* l)
+{
+  l->first = l->last = NULL;
+}
+
+
+void
+com_free_list(com_list_t* l)
+{
+  for (com_node_t* n = l->first; n != NULL; n = n->next)
+  {
+    free(n);
+  }
+  l->first = l->last = NULL;
+}
+
+
+com_node_t*
+com_init_node(com_list_t* l, void* p)
+{
+  com_node_t* n = malloc(sizeof (com_node_t));
+  
+  n->p = p;
+  n->prev = l->last;
+  n->next = NULL;
+
+  // Nothing there so this is the first one
+  if (l->last == NULL)
+  {
+    l->first = l->last = n;
+  }
+
+  l->last = n;
+}
+
+com_node_t*
+com_free_node(com_list_t* l, com_node_t* n)
+{
+  // This is the only node
+  if (l->first == n && l->last == n)
+  {
+    l->first = l->last = NULL;
+  }
+  else if (l->last == n)
+  {
+    l->last = 
+  }
 }

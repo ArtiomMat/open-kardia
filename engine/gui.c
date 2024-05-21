@@ -16,11 +16,9 @@ int (*gui_on)(gui_event_t* event) = NULL;
 static gui_font_t* font;
 int font_w;
 
-// The currently focused thing, for instance a button, eg if enter is pressed we press it.
-// static gui_thing_t* focused_thing = NULL;
-
 gui_thing_t* gui_things = NULL;
 static gui_thing_t* last_thing = NULL;
+static gui_thing_t* windows = NULL, * last_window = NULL;
 
 gui_thing_t** gui_thing_refs;
 
@@ -113,6 +111,20 @@ gui_free2(gui_thing_t* t)
   switch (t->type)
   {
     case GUI_T_WINDOW:
+    if (t->window.next != NULL)
+    {
+      t->window.next->prev = t->window.prev;
+    }
+    if (t->window.prev != NULL)
+    {
+      t->window.prev->next = t->window.next;
+    }
+
+    if (t->window.next == NULL && t->window.prev == NULL)
+    {
+      last_window = windows = NULL;
+    }
+
     gui_free(t->window.child);
     break;
 
@@ -140,13 +152,11 @@ gui_free2(gui_thing_t* t)
     t->prev->next = t->next;
   }
   
-  // Free and return here if it's the last thing
+  // if it's the only thing in gui_things
   if (t->next == NULL && t->prev == NULL)
   {
     last_thing = gui_things = NULL;
   }
-
-  // TODO: GUI_ON_VID() STILL EATS EVENTS AFTER FREEING!
 
   free(t);
 }
@@ -295,6 +305,35 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
   }
 }
 
+static void
+make_window_last(gui_thing_t* t)
+{
+  // First remove it from the chain
+  if (t->window.next != NULL)
+  {
+    t->window.next->prev = t->window.prev;
+
+    if (t->window.prev == NULL)
+    {
+      windows = t->window.next;
+    }
+  }
+  if (t->window.prev != NULL)
+  {
+    t->window.prev->next = t->window.next;
+  }
+
+  last_window->window.next = t;
+  t->window.prev = last_window;
+  t->window.next = NULL;
+  last_window = t;
+
+  for (gui_thing_t* t = windows; t != NULL; t = t->window.next)
+  {
+    puts("");
+  }
+}
+
 // gui_e is a pointer to the gui event that would be sent, if its ->type is untouched nothing will be sent.
 static void
 window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
@@ -314,12 +353,14 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     thing->window.flags |= GUI_WND_RELOCATING;
     save_mouse_rel(thing);
 
+    make_window_last(thing);
     gui_e->type = _GUI_E_EAT;
     return;
   }
   // Inside of the content zone
   else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
   {
+    make_window_last(thing);
     gui_e->type = _GUI_E_EAT;
     return;
   }
@@ -355,6 +396,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
       thing->window.size_0[1] = thing->size[1];
 
       save_mouse_rel(thing);
+      make_window_last(thing);
       gui_e->type = _GUI_E_EAT;
       return;
     }
@@ -990,8 +1032,8 @@ draw_text(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r
 static int
 draw_text_password(unsigned char color, const char* text, gui_u_t l, gui_u_t t, gui_u_t r, gui_u_t b)
 {
-  static char pwd_c[] = {'*','@','2','/',')','6','9','a','M','(','!','*','1','C','2','A',
-  'S','%','%','-',']','`',';','\'','&','>','^','*','1','i','a','>',};
+  // static char pwd_c[] = {'*','@','2','/',')','6','9','a','M','(','!','*','1','C','2','A','S','%','%','-',']','`',';','\'','&','>','^','*','1','i','a','>',};
+
   if (text == NULL)
   {
     return 0;
@@ -1228,6 +1270,20 @@ gui_draw(gui_thing_t* t)
   draw_thing(-1, t, 0, 0, vid_size[0]-1, vid_size[1]);
 }
 
+extern void
+gui_draw_windows()
+{
+  gui_thing_t* t;
+  for (t = windows; t->window.prev != NULL; t = t->window.prev)
+  {}
+  windows = t;
+
+  for (t = windows; t != NULL; t = t->window.next)
+  {
+    draw_window(-1, t);
+  }
+}
+
 /////////////////////////////////////////////////////////////////////
 //                                 THING OPEN STUFF
 /////////////////////////////////////////////////////////////////////
@@ -1320,6 +1376,19 @@ gui_open(const char* fp)
       buf[u16]->flags |= GUI_T_IS_CHILD;
 
       buf[i]->window.child = buf[u16];
+
+      buf[i]->window.next = buf[i]->window.prev = NULL;
+      
+      if (windows == NULL) // This is the first window added so far
+      {
+        windows = last_window = buf[i];
+      }
+      else // Add the window as last
+      {
+        last_window->window.next = buf[i];
+        buf[i]->window.prev = last_window;
+        last_window = buf[i];
+      }
       break;
 
       case GUI_T_ROWMAP:
