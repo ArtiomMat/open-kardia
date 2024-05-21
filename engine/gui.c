@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO: THE WHOLE DEAL WITH GUI_THINGS AND WINDOWS, OVERRIDE TO USE COM_NODE/LIST_T
+
 #define MAX_ITEXT_TEXT 512
 
 int gui_title_h = 0;
