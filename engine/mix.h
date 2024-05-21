@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define MIX_MAX_GRADS 8
+#define MIX_MAX_GRADS 16
 
 /**
  * Grad is a gradient, from one color to another
@@ -14,7 +14,8 @@ typedef struct
 
 extern mix_grad_t mix_grads[MIX_MAX_GRADS];
 
-// Includes how many shifts left and right can be done on this color.
+// Gives the index of a mix_grad that owns that index in vid_color index
+// Done 
 extern struct mix_shift
 {
   unsigned char grad_i;
@@ -73,8 +74,8 @@ mix_pickr(int i)
 static inline unsigned char
 mix_shl(unsigned char color_i, unsigned n)
 {
-  int start = mix_grads[mix_shifts[color_i].grad_i].start;
-  if ((int)color_i - n < start)
+  unsigned start = mix_grads[mix_shifts[color_i].grad_i].start;
+  if ((unsigned)color_i - n < start)
   {
     return start;
   }
@@ -88,8 +89,8 @@ static inline unsigned char
 mix_shr(unsigned char color_i, unsigned n)
 {
   mix_grad_t* g = &mix_grads[mix_shifts[color_i].grad_i];
-  int end = g->start + g->n - 1;
-  if ((int)color_i + n > end)
+  unsigned end = g->start + g->n - 1;
+  if ((unsigned)color_i + n > end)
   {
     return end;
   }

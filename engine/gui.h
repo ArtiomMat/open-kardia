@@ -15,7 +15,7 @@
 #define GUI_SHADES_N 5
 
 // How deep we can do recursion, 0 indicates a that the draw function can only be called once, meaning we can't go any deeper in a thing
-#define GUI_RECURSION_DEPTH 8
+#define GUI_RECURSION_DEPTH 4
 
 // GUI unit, the unit is in pixel length
 // The size of the unit must allow for a value at least (2^10-1), while at the same time being signed to allow for special values up to -(2^3-1), which is why it's int16_t.
@@ -106,6 +106,8 @@ enum
   GUI_T_PARENT_HEIGHT = 1<<8, // Cannot be paired with AUTO_HEIGHT
 
   GUI_T_HIDE          = 1<<9,
+
+  GUI_T_IS_CHILD      = 1<<10, // The thing is a child of another in one way or another. If a thing has this as 0, it also indicates it's a "root" thing.
 };
 
 enum
@@ -289,7 +291,7 @@ gui_find(gui_thing_t* from, const char* id, char onetime);
 // This function is the starting point of any drawn thing.
 // the rectangle given, is the area with which the thing is allowed to work with, it is guaranteed that the thing will not dare step outside these coordinates. Depending on flags and shit, the thing may align itself insisde the rectangle.
 extern void
-gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom);
+gui_draw(gui_thing_t* t);
 
 extern void
 gui_set_flag(gui_thing_t* t, int flag, int yes);

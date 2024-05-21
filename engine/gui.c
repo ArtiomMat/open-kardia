@@ -1028,63 +1028,20 @@ draw_text_format(int format, unsigned char color, const char* text, gui_u_t l, g
 //                              DRAW THINGS
 /////////////////////////////////////////////////////////////////////
 
-// A window is not bound to a rectangle
 static void
-draw_window(gui_thing_t* t)
-{
-  draw_ref_rect(t, BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)));
-
-  // Draw the window decorations and stuff
-  draw_filled_rect(BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
-
-  // draw_filled_rect(CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)), get_shade(1), get_shade(1), get_shade(2));
-
-  // draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
-
-  // Seperate x button from the rest of the title
-  // vid_put_yline(get_shade(1), TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)));
-
-  // X button text
-  gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
-  gui_draw_font(font, xx, xy, '\\', get_shade(0));
-  gui_draw_font(font, xx, xy,  '/', get_shade(0));
-
-  // Window title text
-  draw_text(get_shade(4), t->text, TITLE_LEFT((*t)), TITLE_TOP((*t)), X_LEFT((*t)), TITLE_BOTTOM((*t)));
-
-  // Three dots on the corner
-  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height-2, '.', get_shade(3));
-  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
-  // gui_draw_font(font, BORDER_RIGHT((*t))-10, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
-
-  // Drawing the child
-  // printf("%p %p\n", t, t->window.child);
-  gui_draw(t->window.child, CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)));
-}
+draw_window(int depth, gui_thing_t* t);
 
 static void
-draw_rowmap(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
-{
-  int i = 0;
-  int col_h = (bottom-top) / t->rowmap.rows_n;
+draw_rowmap(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom);
 
-  for (int rowi = 0; rowi < t->rowmap.rows_n; rowi++)
+static void
+draw_thing(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
+{
+  if (depth >= GUI_RECURSION_DEPTH)
   {
-    int colsn = t->rowmap.cols_n[rowi];
-    int col_w = (right-left) / colsn;
-
-    for (int coli = 0; coli < colsn; coli++, i++)
-    {
-      int _left = left + coli * col_w;
-      int _top = top + rowi * col_h;
-      gui_draw(t->rowmap.things[i], _left, _top, _left + col_w - 1, _top + col_h - 1);
-    }
+    return;
   }
-}
 
-void
-gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
-{
   if (t == NULL)
   {
     return;
@@ -1114,14 +1071,14 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   {
     case GUI_T_WINDOW:
     {
-      draw_window(t);
+      draw_window(depth+1, t);
       yes_text = 0;
     }
     break;
 
     case GUI_T_ROWMAP:
     {
-      draw_rowmap(t, left, top, right, bottom);
+      draw_rowmap(depth+1, t, left, top, right, bottom);
       yes_text = 0;
     }
     break;
@@ -1203,6 +1160,72 @@ gui_draw(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t botto
   {
     draw_text(get_shade(4), t->text, left, top, right, bottom);
   }
+}
+
+// A window is not bound to a rectangle
+static void
+draw_window(int depth, gui_thing_t* t)
+{
+  draw_ref_rect(t, BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)));
+
+  // Draw the window decorations and stuff
+  draw_filled_rect(BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
+
+  // draw_filled_rect(CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)), get_shade(1), get_shade(1), get_shade(2));
+
+  // draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
+
+  // Seperate x button from the rest of the title
+  // vid_put_yline(get_shade(1), TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)));
+
+  // X button text
+  gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
+  gui_draw_font(font, xx, xy, '\\', get_shade(0));
+  gui_draw_font(font, xx, xy,  '/', get_shade(0));
+
+  // Window title text
+  draw_text(get_shade(4), t->text, TITLE_LEFT((*t)), TITLE_TOP((*t)), X_LEFT((*t)), TITLE_BOTTOM((*t)));
+
+  // Three dots on the corner
+  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height-2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT((*t))-6, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
+  // gui_draw_font(font, BORDER_RIGHT((*t))-10, BORDER_BOTTOM((*t))-font->height+2, '.', get_shade(3));
+
+  // Drawing the child
+  // printf("%p %p\n", t, t->window.child);
+  draw_thing(depth+1, t->window.child, CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)));
+}
+
+static void
+draw_rowmap(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom)
+{
+  int i = 0;
+  int col_h = (bottom-top) / t->rowmap.rows_n;
+
+  for (int rowi = 0; rowi < t->rowmap.rows_n; rowi++)
+  {
+    int colsn = t->rowmap.cols_n[rowi];
+    int col_w = (right-left) / colsn;
+
+    for (int coli = 0; coli < colsn; coli++, i++)
+    {
+      int _left = left + coli * col_w;
+      int _top = top + rowi * col_h;
+      draw_thing(depth+1, t->rowmap.things[i], _left, _top, _left + col_w - 1, _top + col_h - 1);
+    }
+  }
+}
+
+
+void
+gui_draw(gui_thing_t* t)
+{
+  if (t->flags & GUI_T_IS_CHILD)
+  {
+    return;
+  }
+
+  draw_thing(-1, t, 0, 0, vid_size[0]-1, vid_size[1]);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1293,6 +1316,9 @@ gui_open(const char* fp)
       case GUI_T_WINDOW:
       read_ret &= fread(&u16, 2, 1, f);
       u16 = com_lil16(u16);
+
+      buf[u16]->flags |= GUI_T_IS_CHILD;
+
       buf[i]->window.child = buf[u16];
       break;
 
@@ -1312,6 +1338,9 @@ gui_open(const char* fp)
       {
         read_ret &= fread(&u16, 2, 1, f);
         u16 = com_lil16(u16);
+        
+        buf[u16]->flags |= GUI_T_IS_CHILD;
+
         buf[i]->rowmap.things[j] = buf[u16];
       }
       break;

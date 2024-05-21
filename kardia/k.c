@@ -318,12 +318,12 @@ main(int args_n, const char** args)
     vid_run();
 
     vid_wipe(255);
-      node_draw(flow_mode);
+      // node_draw(flow_mode);
       ekg_draw();
       if (gui_things != NULL)
       {
-        gui_draw(gui_window, 0,0, vid_size[0]-1, vid_size[1]-1);
-        gui_draw(opened, 0,0, vid_size[0]-1, vid_size[1]-1);
+        gui_draw(gui_window);
+        gui_draw(opened);
       }
     vid_refresh();
     

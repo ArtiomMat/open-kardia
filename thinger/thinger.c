@@ -381,6 +381,16 @@ a_find_by_id(int thing_i, const char* id)
   return ret;
 }
 
+// Check if a thing with id FID is a valid child.
+static void
+a_valid_child(int fid)
+{
+  if (things[fid].type == GUI_T_WINDOW)
+  {
+    logerr(1, "A window cannot be a child.");
+  }
+}
+
 // Parse the file nad initialialize LINES
 static void
 init_lines(FILE* in)
@@ -784,6 +794,10 @@ deep_init()
       else if (things[thing_i].type == GUI_T_WINDOW && (end = wrdcmp("child", str, ' ')))
       {
         str += end + 1;
+
+        int fid = a_find_by_id(thing_i, str);
+        a_valid_child(fid);
+
         things[thing_i].window.child = a_find_by_id(thing_i, str);
       }
 
@@ -796,10 +810,13 @@ deep_init()
       {
         str += end + 1;
 
+        int fid = a_find_by_id(thing_i, str);
+        a_valid_child(fid);
+
         things[thing_i].rowmap.children
         [
           things[thing_i].rowmap.child_i
-        ] = a_find_by_id(thing_i, str);
+        ] = fid;
 
         // puts(things[things[thing_i].rowmap.children[things[thing_i].rowmap.child_i]].id);
 

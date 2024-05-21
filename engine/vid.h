@@ -83,9 +83,6 @@ extern int
 vid_def_on(vid_event_t* event);
 
 extern void
-vid_screen_size(int* w, int* h);
-
-extern void
 vid_set_title(const char* title);
 
 /**
@@ -109,6 +106,8 @@ vid_run();
 */
 extern void
 vid_put(unsigned char color, int i);
+extern void
+vid_put_line(unsigned char color, int xi, int yi, int xf, int yf);
 extern void
 vid_put_xline(unsigned char color, int xi, int xf, int y);
 extern void

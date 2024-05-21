@@ -1,5 +1,6 @@
 #include "../vid.h"
 #include "../com.h"
+#include "../fip.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -402,6 +403,65 @@ vid_put_rect(unsigned char fill, int left, int top, int right, int bottom)
     for (int _y = top; _y <= bottom; _y++)
     {
       vid_put(fill, _y*vid_size[0] + _x);
+    }
+  }
+}
+
+void
+vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
+{
+  if (yi == yf)
+  {
+    vid_put_xline(color, xi, xf, yi);
+    return;
+  }
+  if (xi == xf)
+  {
+    vid_put_yline(color, yi, yf, xi);
+    return;
+  }
+
+  // XI must be less that xf
+  if (abs(xf-xi) > abs(yf-yi))
+  {
+    if (xi > xf)
+    {
+      int tmp = xi;
+      xi = xf;
+      xf = tmp;
+
+      tmp = yi;
+      yi = yf;
+      yf = tmp;
+    }
+
+    fip_t m = FIP_DIV(16, ITOFIP(16, yf-yi), ITOFIP(16, xf-xi));
+    fip_t y = ITOFIP(16,yi);
+
+    for (int x = xi; x <= xf; x++, y += m)
+    {
+      _set(color, x + FIPTOI(16, y) * vid_size[0]);
+    }
+  }
+  else
+  {
+    if (yi > yf)
+    {
+      int tmp = xi;
+      xi = xf;
+      xf = tmp;
+
+      tmp = yi;
+      yi = yf;
+      yf = tmp;
+    }
+
+    fip_t m = FIP_DIV(16, ITOFIP(16, xf-xi), ITOFIP(16, yf-yi));
+    fip_t x = ITOFIP(16,xi);
+
+    for (int y = yi; y <= yf; y++, x += m)
+    {
+      _set(color, FIPTOI(16, x) + y * vid_size[0]);
     }
   }
 }
