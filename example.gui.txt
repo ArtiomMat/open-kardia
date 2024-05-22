@@ -1,4 +1,4 @@
-t window W_MAIN 
+t window LOGIN_W 
   str 'Login'
   x 10
   y 10
@@ -11,38 +11,38 @@ t window W_MAIN
   max_w 250
   max_h 160
 
-  child M_MAIN
+  child LOGIN_RM
 
-t rowmap M_MAIN
+t rowmap LOGIN_RM
   row
-  col O_NAME
-  col I_NAME
-
-  row
-  col O_PASS
-  col I_PASS
+  col LOGIN_ONAME
+  col LOGIN_INAME
 
   row
-  col T_REMEMBER
+  col LOGIN_OPASS
+  col LOGIN_IPASS
+
+  row
+  col LOGIN_OREMEMBER
 
   # Buttons and shit
   row
   col B_LOGIN
   col B_NEWA
 
-t tickbox T_REMEMBER
+t tickbox LOGIN_OREMEMBER
   max_h 18
   str 'Remember me'
 
-t otext O_PASS
+t otext LOGIN_OPASS
   str 'Password:'
-t otext O_NAME
+t otext LOGIN_ONAME
   str 'Username:'
 
-t itext I_NAME
+t itext LOGIN_INAME
   max_h 18
-t itext I_PASS
-  inherits I_NAME
+t itext LOGIN_IPASS
+  inherits LOGIN_INAME
   format '*'
 
 t button B_LOGIN

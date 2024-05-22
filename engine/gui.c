@@ -442,8 +442,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
 static void
 window_on_mrelease(gui_thing_t* thing, gui_event_t* gui_e)
 {
-  thing->window.flags &= ~GUI_WND_RELOCATING;
-  thing->window.flags &= ~GUI_WND_RESIZING;
+  thing->window.flags &= (~GUI_WND_RELOCATING) & (~GUI_WND_RESIZING);
   gui_e->type = _GUI_E_EAT;
 }
 
@@ -473,6 +472,7 @@ button_on_mrelease(gui_thing_t* t, gui_event_t* gui_e)
 static int itext_shift = 0;
 static int itext_caps = 0;
 
+// XXX: Turn it into an array??? :D
 static char
 get_shift_char(char c)
 {
@@ -565,7 +565,6 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 
   if (!(t->itext.flags & GUI_ITXT_NOT_VIRGIN))
   {
-    // TODO: Override all text
     t->itext.flags |= GUI_ITXT_NOT_VIRGIN;
   }
   t->itext.flags |= GUI_ITXT_SELECTED;
@@ -574,7 +573,7 @@ itext_on_mpress(gui_thing_t* t, gui_event_t* gui_e)
 }
 
 static void
-itext_on_press(gui_thing_t* t, int code, gui_event_t* gui_e)
+itext_on_kpress(gui_thing_t* t, int code, gui_event_t* gui_e)
 {
   if (!(t->itext.flags & GUI_ITXT_SELECTED))
   {
@@ -781,12 +780,12 @@ test_mpress(vid_event_t* e)
 }
 
 static void
-thing_on_press(gui_thing_t* selected, int code, gui_event_t* gui_e)
+thing_on_kpress(gui_thing_t* selected, int code, gui_event_t* gui_e)
 {
   switch (selected->type)
   {
     case GUI_T_ITEXT:
-    itext_on_press(selected, code, gui_e);
+    itext_on_kpress(selected, code, gui_e);
     break;
   }
 }
@@ -835,39 +834,39 @@ gui_on_vid(vid_event_t* e)
     // We also limit it to avoid any possible segfault
     gui_mouse_pos[0] = e->move.x;
     gui_mouse_pos[1] = e->move.y;
-
+  
     gui_thing_t* new_pointed = get_pointed_thing();
     
-    // If we don't check for pressed we may switch cursor just because we hover on another thing while interacting with another
-    if (pressed == NULL && pointed != NULL && new_pointed != NULL && pointed->type != new_pointed->type)
+    // If we don't check for pressed we may switch cursor just because we hover on another thing while interacting with the current one
+    if (pressed == NULL)
     {
-      update_cursor(new_pointed);
+      if (pointed != NULL && new_pointed != NULL && pointed->type != new_pointed->type)
+      {
+        update_cursor(new_pointed);
+      }
+    }
+    else /* (pressed != NULL) */
+    {
+      gui_e.thing = pressed;
+      thing_on_move(pressed, &gui_e);
     }
 
     pointed = new_pointed;
 
-    // We should only change the pointed if we are not pressing anything
-    if (pressed != NULL)
-    {
-      thing_on_move(pressed, &gui_e);
-    }
-    
     break;
 
     case VID_E_RELEASE:
-    if (pointed != NULL)
+    if (pointed != NULL) // To not have to move cursor after release to update
     {
       update_cursor(pointed);
     }
 
-    if (test_mpress(e))
+    if (test_mpress(e) && pressed != NULL)
     {
-      if (pressed != NULL)
-      {
-        gui_e.thing = pressed;
-        thing_on_mrelease(pressed, &gui_e);
-        pressed = NULL;
-      }
+      gui_e.thing = pressed;
+      thing_on_mrelease(pressed, &gui_e);
+
+      pressed = NULL;
     }
     else if (selected != NULL)
     {
@@ -881,13 +880,14 @@ gui_on_vid(vid_event_t* e)
     {
       // XXX: Solved the issue of gui_free() setting pointed to NULL, but it MIGHT break other stuff so just make sure it doesn't.
       pressed = pointed = get_pointed_thing();
+      
       // Pressing a different thing means deselcting the last one
       if (selected != NULL && pressed != selected)
       {
-        // NOTE: thing_on_mpress will not override anything because deselect sends no events
         thing_on_deselect(selected);
-        gui_e.type = _GUI_E_EAT;
+        gui_e.type = _GUI_E_EAT; // deselect sends no GUI events
       }
+
       selected = pressed;
 
       if (pressed != NULL)
@@ -907,7 +907,7 @@ gui_on_vid(vid_event_t* e)
     else if (selected != NULL)
     {
       gui_e.thing = selected;
-      thing_on_press(selected, e->press.code, &gui_e);
+      thing_on_kpress(selected, e->press.code, &gui_e);
     }
     break;
   }
