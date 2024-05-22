@@ -91,6 +91,8 @@ enum
   GUI_T_TICKBOX,
   GUI_T_SLIDER,
 
+  _GUI_TYPES_N,
+
   // FLAGS
   GUI_T_FOUND         = 1<<0,
 
@@ -181,13 +183,14 @@ typedef struct gui_thing gui_thing_t;
 typedef struct gui_thing
 {
   struct gui_thing* prev, * next;
+  struct gui_thing* parent; // The parent, mostly for internal use 
   
   char* text; // Depends on what the thing is, but it's usually displayed as the lable of the thing.
   gui_u_t min_size[2], max_size[2]; // Always valid and no flag can make it unused!
   gui_u_t size[2]; // If overriden by flags the size is automatically modified by GUI.
   gui_u_t pos[2]; // If overriden by flags the position is automatically modified by GUI.
   short flags;
-  char type;
+  unsigned char type;
   // unsigned char text_color; // The color of text usually, sometimes not even used, for window it's the titlebar color. If not specified in the GUI file, it will be set to the default logical color by GUI.
   char* id; // The string based ID
   union
@@ -204,8 +207,6 @@ typedef struct gui_thing
     struct
     {
       struct gui_thing* child;
-      struct gui_thing* next; // Next window to draw down the line
-      struct gui_thing* prev; // Previous window that is supposed to be drawn before this one
 
       // The relative coordinates of the mouse to the x and y of the window when it was pressed on the title bar on the previous frame
       // For internal use
@@ -261,9 +262,6 @@ extern int (*gui_on)(gui_event_t* event);
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
 
-// A linked list don't forget
-extern gui_thing_t* gui_things;
-
 /**
  * Event handler that must be called so GUI properly works.
  * Returns 1 if the even was eaten, meaning your program shouldn't handle it because it was in the jurisdiction of GUI, returns 0 if it was not eaten, this does not always mean that GUI didn't collect information about the event for itself.
@@ -285,10 +283,10 @@ gui_free(gui_thing_t* t);
 extern gui_thing_t*
 gui_open(const char* fp);
 // Searches through all things and locates the thing with this ID, returns NULL if not found.
-// FROM can be NULL to start from the beginning, otherwise we start searching from FROM and to FROM->next.
+// TYPE can be -1 to indicate that we actually have no idea what the type is(which would be quite interesting how the hell you don't know it), otherwise type would speed up the search drastically, internally the list of things is sorted by type.
 // If ONETIME=1 then the thing can never be found again, this can speed up finding later on of other things. ONETIME can also be useful if you plan on loading the same file again or something similar.
 extern gui_thing_t*
-gui_find(gui_thing_t* from, const char* id, char onetime);
+gui_find(int type, const char* id, char onetime);
 
 // A thing is drawn, with its bounds being the entire screen, depending on what it is, it may stretch to the entire screen.
 // Recursion(drawing children) works

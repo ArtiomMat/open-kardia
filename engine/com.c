@@ -78,54 +78,94 @@ com_relfp(const char* p)
   return com_dir;
 }
 
+// com_node_t*
+// com_init_node(void* p)
+// {
+//   com_node_t* n = malloc(sizeof (com_node_t));
+//   n->p = p;
+//   n->l = NULL;
+//   n->r = NULL;
+//   return n;
+// }
 
+// com_node_t*
+// com_leftest_node(com_node_t* n)
+// {
+//   while (n->l != NULL)
+//   {
+//     n = n->l;
+//   }
+//   return n;
+// }
 
-void
-com_init_list(com_list_t* l)
-{
-  l->first = l->last = NULL;
-}
+// com_node_t*
+// com_rightest_node(com_node_t* n)
+// {
+//   while (n->r != NULL)
+//   {
+//     n = n->r;
+//   }
+//   return n;
+// }
 
+// com_node_t*
+// com_push_node(com_node_t* l, com_node_t* n)
+// {
+//   if (l == NULL)
+//   {
+//     n->l = n->r = NULL;
+//     return n;
+//   }
 
-void
-com_free_list(com_list_t* l)
-{
-  for (com_node_t* n = l->first; n != NULL; n = n->next)
-  {
-    free(n);
-  }
-  l->first = l->last = NULL;
-}
+//   n->l = l;
+//   n->r = l->r;
 
+//   l->r = n;
 
-com_node_t*
-com_init_node(com_list_t* l, void* p)
-{
-  com_node_t* n = malloc(sizeof (com_node_t));
-  
-  n->p = p;
-  n->prev = l->last;
-  n->next = NULL;
+//   return l;
+// }
 
-  // Nothing there so this is the first one
-  if (l->last == NULL)
-  {
-    l->first = l->last = n;
-  }
+// com_node_t*
+// com_pull_node(com_node_t* n)
+// {
+//   if (n->l == n)
+//   {
+//     n->l->r = n->r;
+//   }
+//   if (n->r == n)
+//   {
+//     n->r->l = n->l;
+//   }
 
-  l->last = n;
-}
+//   com_node_t* l = n->l;
 
-com_node_t*
-com_free_node(com_list_t* l, com_node_t* n)
-{
-  // This is the only node
-  if (l->first == n && l->last == n)
-  {
-    l->first = l->last = NULL;
-  }
-  else if (l->last == n)
-  {
-    l->last = 
-  }
-}
+//   n->l = n->r = NULL;
+
+//   return l;
+// }
+
+// com_node_t*
+// com_free_node(com_node_t* n)
+// {
+//   com_node_t* ret = com_pull_node(n);
+//   free(n);
+//   return ret;
+// }
+
+// void
+// com_free_nodes(com_node_t* n)
+// {
+//   if (n == NULL)
+//   {
+//     return;
+//   }
+
+//   for (com_node_t* x = n->r; x; x = x->r)
+//   {
+//     free(x);
+//   }
+//   for (com_node_t* x = n->l; x; x = x->l)
+//   {
+//     free(x);
+//   }
+// }

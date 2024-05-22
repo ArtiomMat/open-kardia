@@ -18,9 +18,10 @@ int (*gui_on)(gui_event_t* event) = NULL;
 static gui_font_t* font;
 int font_w;
 
-gui_thing_t* gui_things = NULL;
-static gui_thing_t* last_thing = NULL;
-static gui_thing_t* windows = NULL, * last_window = NULL;
+// [x]->prev is always NULL(it's the first one)
+static gui_thing_t* things[_GUI_TYPES_N] = {NULL};
+// [x]->next is always NULL(it's the last one)
+static gui_thing_t* last_things[_GUI_TYPES_N] = {NULL};
 
 gui_thing_t** gui_thing_refs;
 
@@ -34,6 +35,8 @@ static gui_thing_t* pressed = NULL;
 static gui_thing_t* selected = NULL;
 static gui_thing_t* pointed = NULL;
 
+// If get_shade should return darker shade, set to 1 for it to return the regular shade, this is global because of the recursive nature of drawing things. A window decides if it should draw in a darker shade, hence it makes this 1, then it pops it back to 0.
+static int darker_shade = 0;
 
 static void
 send_event(gui_event_t* e)
@@ -79,6 +82,20 @@ gui_toggle_flag(gui_thing_t* t, int flag)
   t->flags ^= flag;
 }
 
+// Returns NULL if there is not parent
+static gui_thing_t*
+get_root_parent(gui_thing_t* t)
+{
+  if ((t = t->parent) == NULL)
+  {
+    return NULL;
+  }
+
+  for (; t->parent != NULL; t = t->parent)
+  {}
+  return t;
+}
+
 void
 gui_init(gui_font_t* _font)
 {
@@ -113,21 +130,7 @@ gui_free2(gui_thing_t* t)
   switch (t->type)
   {
     case GUI_T_WINDOW:
-    if (t->window.next != NULL)
-    {
-      t->window.next->prev = t->window.prev;
-    }
-    if (t->window.prev != NULL)
-    {
-      t->window.prev->next = t->window.next;
-    }
-
-    if (t->window.next == NULL && t->window.prev == NULL)
-    {
-      last_window = windows = NULL;
-    }
-
-    gui_free(t->window.child);
+    gui_free2(t->window.child);
     break;
 
     case GUI_T_ROWMAP:
@@ -137,7 +140,7 @@ gui_free2(gui_thing_t* t)
       {
         for (int c = 0; c < t->rowmap.cols_n[r]; c++, i++)
         {
-          gui_free(t->rowmap.things[i]);
+          gui_free2(t->rowmap.things[i]);
         }
       }
     }
@@ -148,16 +151,24 @@ gui_free2(gui_thing_t* t)
   {
     t->next->prev = t->prev;
   }
+  else // This was last thing, so prev becomes new last
+  {
+    last_things[t->type] = t->prev;
+  }
 
   if (t->prev != NULL)
   {
     t->prev->next = t->next;
   }
-  
-  // if it's the only thing in gui_things
+  else // This was first thing, so next becomes new first
+  {
+    things[t->type] = t->next;
+  }
+
+  // if it's the only thing in its list
   if (t->next == NULL && t->prev == NULL)
   {
-    last_thing = gui_things = NULL;
+    things[t->type] = last_things[t->type] = NULL;
   }
 
   free(t);
@@ -168,12 +179,7 @@ gui_free(gui_thing_t* t)
 {
   if (t == NULL)
   {
-    for (gui_thing_t* _t = t; _t != NULL;)
-    {
-      gui_thing_t* next = _t->next;
-      free(t);
-      _t = next;
-    }
+    // TODO: FREE ALL THE THING TYPES
 
     free(gui_thing_refs);
     puts("gui_free(): GUI module freed.");
@@ -307,33 +313,38 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
   }
 }
 
+// There is a 100% guarantee t is of type window because it can only be called by window_on_*()
 static void
-make_window_last(gui_thing_t* t)
+window_set_first(gui_thing_t* t)
 {
-  // First remove it from the chain
-  if (t->window.next != NULL)
+  gui_thing_t* first = things[GUI_T_WINDOW];
+  if (t == first)
   {
-    t->window.next->prev = t->window.prev;
-
-    if (t->window.prev == NULL)
-    {
-      windows = t->window.next;
-    }
-  }
-  if (t->window.prev != NULL)
-  {
-    t->window.prev->next = t->window.next;
+    return;
   }
 
-  last_window->window.next = t;
-  t->window.prev = last_window;
-  t->window.next = NULL;
-  last_window = t;
-
-  for (gui_thing_t* t = windows; t != NULL; t = t->window.next)
+  // If last thing in list, put its prev as new last
+  if (t == last_things[GUI_T_WINDOW] /* && t->prev != NULL */)
   {
-    puts("");
+    // t->prev->next = NULL;
+    last_things[GUI_T_WINDOW] = t->prev;
   }
+  
+  if (t->prev != NULL)
+  {
+    t->prev->next = t->next;
+  }
+
+  if (t->next != NULL)
+  {
+    t->next->prev = t->prev;
+  }
+
+  first->prev = t;
+  t->prev = NULL;
+  t->next = first;
+
+  things[GUI_T_WINDOW] = t;
 }
 
 // gui_e is a pointer to the gui event that would be sent, if its ->type is untouched nothing will be sent.
@@ -355,14 +366,14 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     thing->window.flags |= GUI_WND_RELOCATING;
     save_mouse_rel(thing);
 
-    make_window_last(thing);
+    window_set_first(thing);
     gui_e->type = _GUI_E_EAT;
     return;
   }
   // Inside of the content zone
   else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
   {
-    make_window_last(thing);
+    window_set_first(thing);
     gui_e->type = _GUI_E_EAT;
     return;
   }
@@ -398,7 +409,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
       thing->window.size_0[1] = thing->size[1];
 
       save_mouse_rel(thing);
-      make_window_last(thing);
+      window_set_first(thing);
       gui_e->type = _GUI_E_EAT;
       return;
     }
@@ -775,10 +786,30 @@ thing_on_release(gui_thing_t* selected, int code, gui_event_t* gui_e)
   }
 }
 
+// Assumes new_pointed is not NULL, careful calling it too much, I don't know how fast vid_set_cursor_type() is, call it the minimal amout of times
+static void
+update_cursor(gui_thing_t* new_pointed)
+{
+  switch (new_pointed->type)
+  {
+    case GUI_T_ITEXT:
+    vid_set_cursor_type(VID_CUR_TEXT);
+    break;
+
+    case GUI_T_TICKBOX:
+    case GUI_T_BUTTON:
+    vid_set_cursor_type(VID_CUR_SELECT);
+    break;
+
+    default:
+    vid_set_cursor_type(VID_CUR_POINTER);
+    break;
+  }
+}
+
 int
 gui_on_vid(vid_event_t* e)
 {
-
   gui_event_t gui_e = {.type = _GUI_E_NULL};
 
   switch (e->type)
@@ -793,21 +824,7 @@ gui_on_vid(vid_event_t* e)
     // If we don't check for pressed we may switch cursor just because we hover on another thing while interacting with another
     if (pressed == NULL && pointed != NULL && new_pointed != NULL && pointed->type != new_pointed->type)
     {
-      switch (new_pointed->type)
-      {
-        case GUI_T_ITEXT:
-        vid_set_cursor_type(VID_CUR_TEXT);
-        break;
-
-        case GUI_T_TICKBOX:
-        case GUI_T_BUTTON:
-        vid_set_cursor_type(VID_CUR_SELECT);
-        break;
-
-        default:
-        vid_set_cursor_type(VID_CUR_POINTER);
-        break;
-      }
+      update_cursor(new_pointed);
     }
 
     pointed = new_pointed;
@@ -821,6 +838,11 @@ gui_on_vid(vid_event_t* e)
     break;
 
     case VID_E_RELEASE:
+    if (pointed != NULL)
+    {
+      update_cursor(pointed);
+    }
+
     if (test_mpress(e))
     {
       if (pressed != NULL)
@@ -854,6 +876,13 @@ gui_on_vid(vid_event_t* e)
       {
         gui_e.thing = pressed;
         thing_on_mpress(pressed, &gui_e);
+        
+        // Check if the thing is part of a window, if so make the window first!
+        gui_thing_t* p = get_root_parent(pressed);
+        if (p != NULL && p->type == GUI_T_WINDOW)
+        {
+          window_set_first(p);
+        }
       }
     }
     // Pressing a keyboard key, if so send this to the selected
@@ -875,7 +904,7 @@ gui_on_vid(vid_event_t* e)
 static unsigned char
 get_shade(int i)
 {
-  if (selected == NULL && i)
+  if (darker_shade && i)
   {
     i--;
   }
@@ -1210,6 +1239,9 @@ draw_thing(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, 
 static void
 draw_window(int depth, gui_thing_t* t)
 {
+  // FIXME: Selecting child things causes issues
+  darker_shade = (t != things[GUI_T_WINDOW]);
+
   draw_ref_rect(t, BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)));
 
   // Draw the window decorations and stuff
@@ -1238,6 +1270,8 @@ draw_window(int depth, gui_thing_t* t)
   // Drawing the child
   // printf("%p %p\n", t, t->window.child);
   draw_thing(depth+1, t->window.child, CONTENT_LEFT((*t)), CONTENT_TOP((*t)), CONTENT_RIGHT((*t)), CONTENT_BOTTOM((*t)));
+
+  darker_shade = 0;
 }
 
 static void
@@ -1276,11 +1310,7 @@ extern void
 gui_draw_windows()
 {
   gui_thing_t* t;
-  for (t = windows; t->window.prev != NULL; t = t->window.prev)
-  {}
-  windows = t;
-
-  for (t = windows; t != NULL; t = t->window.next)
+  for (t = last_things[GUI_T_WINDOW]; t != NULL; t = t->prev)
   {
     draw_window(-1, t);
   }
@@ -1290,6 +1320,7 @@ gui_draw_windows()
 //                                 THING OPEN STUFF
 /////////////////////////////////////////////////////////////////////
 
+// XXX: We may actually always be looking for the root parent, rather than the parent going up, and so maybe making a function get_root_parent, and running it for each thing in the BUF after the reading of the file(because while reading the file we may not be aware of the root thing as it may be added later for each thing).
 gui_thing_t*
 gui_open(const char* fp)
 {
@@ -1314,21 +1345,31 @@ gui_open(const char* fp)
   {
     buf[i] = calloc(sizeof (gui_thing_t), 1);
   }
-
-  if (gui_things == NULL)
-  {
-    gui_things = buf[0];
-  }
   
   // All freads use n of 1, so if read_ret comes out 0 after doing &= to it, there was an error.
   int read_ret = 1;
 
-  for (int i = 0; i < n; last_thing = buf[i++])
+  for (int i = 0; i < n; i++)
   {
-    buf[i]->prev = last_thing;
-    buf[i]->next = (i < n-1) ? buf[i+1] : NULL;
-
     read_ret &= fread(&buf[i]->type, 1, 1, f);
+    unsigned char type = buf[i]->type;
+
+    if (type >= _GUI_TYPES_N)
+    {
+      goto _error;
+    }
+
+    buf[i]->prev = NULL;
+    buf[i]->next = things[type];
+    if (things[type] != NULL) // First thing to be added
+    {
+      things[type]->prev = buf[i];
+    }
+    else /* if (last_things[type] == NULL) */
+    {
+      last_things[type] = buf[i]; // It's going to be always the last thing
+    }
+    things[type] = buf[i];
     
     uint16_t id_s, str_s;
 
@@ -1376,21 +1417,11 @@ gui_open(const char* fp)
       u16 = com_lil16(u16);
 
       buf[u16]->flags |= GUI_T_IS_CHILD;
-
+      buf[u16]->parent = buf[i];
+    
       buf[i]->window.child = buf[u16];
 
-      buf[i]->window.next = buf[i]->window.prev = NULL;
-      
-      if (windows == NULL) // This is the first window added so far
-      {
-        windows = last_window = buf[i];
-      }
-      else // Add the window as last
-      {
-        last_window->window.next = buf[i];
-        buf[i]->window.prev = last_window;
-        last_window = buf[i];
-      }
+      printf("%p\n", buf[i]);
       break;
 
       case GUI_T_ROWMAP:
@@ -1405,12 +1436,14 @@ gui_open(const char* fp)
       }
       buf[i]->rowmap.things = malloc(sizeof (gui_thing_t*) * total_cols);
       
+      // Setup all the sub-things
       for (int j = 0; j < total_cols; j++)
       {
         read_ret &= fread(&u16, 2, 1, f);
         u16 = com_lil16(u16);
         
         buf[u16]->flags |= GUI_T_IS_CHILD;
+        buf[u16]->parent = buf[i];
 
         buf[i]->rowmap.things[j] = buf[u16];
       }
@@ -1419,7 +1452,7 @@ gui_open(const char* fp)
     
     if (!read_ret)
     {
-      // TODO: Indicate error...
+      goto _error;
     }
   }
   fclose(f);
@@ -1427,26 +1460,33 @@ gui_open(const char* fp)
   printf("gui_open(): Loaded %hu things from '%s'.\n", n, fp);
 
   return buf[0];
+
+  _error:
+  printf("gui_open(): File '%s' is bad.\n", fp);
+  fclose(f);
+  for (int i = 0; i < n; i++)
+  {
+    free(buf[i]);
+  }
+  return NULL;
 }
 
 gui_thing_t*
-gui_find(gui_thing_t* from, const char* id, char onetime)
+gui_find(int type, const char* id, char onetime)
 {
-  if (from == NULL)
+  for (int i = type; i < _GUI_TYPES_N; i++)
   {
-    from = gui_things;
-  }
-
-  for (gui_thing_t* _t = from; _t != NULL; _t = _t->next)
-  {
-    if (!(_t->flags & GUI_T_FOUND) && !strcmp(id, _t->id))
+    for (gui_thing_t* _t = things[i]; _t != NULL; _t = _t->next)
     {
-      if (onetime)
+      if (!(_t->flags & GUI_T_FOUND) && !strcmp(id, _t->id))
       {
-        _t->flags |= GUI_T_FOUND;
-      }
+        if (onetime)
+        {
+          _t->flags |= GUI_T_FOUND;
+        }
 
-      return _t;
+        return _t;
+      }
     }
   }
 

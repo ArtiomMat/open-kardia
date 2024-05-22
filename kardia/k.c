@@ -49,7 +49,7 @@ on_gui(gui_event_t* e)
   switch(e->type)
   {
     case GUI_E_WND_X:
-    puts("OMG");
+    gui_free(e->thing);
     break;
   }
   return 1;
@@ -265,7 +265,9 @@ main(int args_n, const char** args)
     gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
   }
   gui_thing_t* opened = gui_open(com_relfp("example.gui"));
-  gui_thing_t* gui_window = gui_find(opened, "W_MAIN", 1);
+  gui_thing_t* gui_window = gui_find(GUI_T_WINDOW, "W_MAIN", 1);
+  opened = gui_open(com_relfp("example.gui"));
+  opened = gui_open(com_relfp("example.gui"));
   opened = gui_open(com_relfp("example.gui"));
   gui_on = on_gui;
 
