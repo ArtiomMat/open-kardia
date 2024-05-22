@@ -24,16 +24,18 @@ typedef int16_t gui_u_t;
 enum
 {
   _GUI_E_NULL, // For internal use
-  _GUI_E_EAT, // Does not get sent to the game, just means that the GUI module should eat the event without notifying the gui_on()
+  _GUI_E_EAT, // Does not get sent to the game, just means that the GUI module should eat the event without notifying the gui_on() callback
 
-  GUI_E_B_PRESS, // Buttons
-  GUI_E_B_RELEASE, // Buttons
+  GUI_E_B_PRESS,
+  GUI_E_B_RELEASE,
 
-  GUI_E_WND_X, // X button pressed
+  GUI_E_CLOSE, // X button pressed
 
-  GUI_E_ITXT_DONE, // When enter is pressed with an itext
+  GUI_E_ITXT_DONE, // When enter is pressed with an itext or just exiting it, escape is a special key that deselects the itext but doesn't send this event
 
-  GUI_E_TICK, // The tickbox was toggled, either ticked or unticked
+  GUI_E_TICK, // The tickbox was toggled, either ticked or unticked, check e->thing
+
+  GUI_E_SLIDE,
 };
 
 enum
@@ -109,7 +111,8 @@ enum
 
   GUI_T_HIDE          = 1<<9,
 
-  GUI_T_IS_CHILD      = 1<<10, // The thing is a child of another in one way or another. If a thing has this as 0, it also indicates it's a "root" thing.
+  // ARCHIVED BECAUSE parent ALREADY TELLS ME EVERYTHING.
+  // GUI_T_IS_CHILD      = 1<<10, // The thing is a child of another in one way or another. If a thing has this as 0, it also indicates it's a "root" thing.
 };
 
 enum
@@ -288,11 +291,12 @@ gui_open(const char* fp);
 extern gui_thing_t*
 gui_find(int type, const char* id, char onetime);
 
+// You should use this function only for non-windows, there is a special function for drawing windows.
 // A thing is drawn, with its bounds being the entire screen, depending on what it is, it may stretch to the entire screen.
 // Recursion(drawing children) works
 extern void
 gui_draw(gui_thing_t* t);
-
+// Utility function to draw every window, instead of you worrying about it.
 extern void
 gui_draw_windows();
 

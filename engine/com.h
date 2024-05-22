@@ -204,36 +204,36 @@ com_arg(const char* arg);
 extern const char*
 com_relfp(const char* p);
 
-typedef struct com_node_s
-{
-  struct com_node_s *r, *l;
-  union
-  {
-    void* p;
-    unsigned long long u;
-    long long i;
-  };
-} com_node_t;
+// typedef struct com_node_s
+// {
+//   struct com_node_s *r, *l;
+//   union
+//   {
+//     void* p;
+//     unsigned long long u;
+//     long long i;
+//   };
+// } com_node_t;
 
-extern com_node_t*
-com_init_node(void* p);
-// Pushes so that left->next = n(and other stuff for safety).
-// If left is NULL returns n, otherwise returns left. This is incase you want to make a sort of list, and have a variable called "nodes" or some shit, and it starts out as NULL because there are no "nodes".
-extern com_node_t*
-com_push_node(com_node_t* left, com_node_t* n);
-// Returns the left node to n, NULl if there was none.
-extern com_node_t*
-com_pull_node(com_node_t* n);
-// Also calls com_pull_node(), essentially all it adds is a free() call, so you can do it too if you want to avoid double calling of pull.
-// Returns what pull returns.
-extern com_node_t* 
-com_free_node(com_node_t* n);
-// Free all nodes, NULL can be put in place ofn
-extern void
-com_free_nodes(com_node_t* n);
-// Return the left most node in the list
-extern com_node_t*
-com_leftest_node(com_node_t* n);
-// Return the right most node in the list
-extern com_node_t*
-com_rightest_node(com_node_t* n);
+// extern com_node_t*
+// com_init_node(void* p);
+// // Pushes so that left->next = n(and other stuff for safety).
+// // If left is NULL returns n, otherwise returns left. This is incase you want to make a sort of list, and have a variable called "nodes" or some shit, and it starts out as NULL because there are no "nodes".
+// extern com_node_t*
+// com_push_node(com_node_t* left, com_node_t* n);
+// // Returns the left node to n, NULl if there was none.
+// extern com_node_t*
+// com_pull_node(com_node_t* n);
+// // Also calls com_pull_node(), essentially all it adds is a free() call, so you can do it too if you want to avoid double calling of pull.
+// // Returns what pull returns.
+// extern com_node_t* 
+// com_free_node(com_node_t* n);
+// // Free all nodes, NULL can be put in place ofn
+// extern void
+// com_free_nodes(com_node_t* n);
+// // Return the left most node in the list
+// extern com_node_t*
+// com_leftest_node(com_node_t* n);
+// // Return the right most node in the list
+// extern com_node_t*
+// com_rightest_node(com_node_t* n);

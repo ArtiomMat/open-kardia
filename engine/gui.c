@@ -109,6 +109,16 @@ gui_init(gui_font_t* _font)
   printf("gui_init(): GUI module initialized.\n");
 }
 
+static gui_thing_t*
+get_pointed_thing()
+{
+  if (gui_mouse_pos[0] < 0 || gui_mouse_pos[1] < 0 || gui_mouse_pos[0] >= vid_size[0] ||  gui_mouse_pos[1] >= vid_size[1])
+  {
+    return NULL;
+  }
+  return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
+}
+
 // Just frees a thing with its children, doesn't do extra stuff.
 // Also removes the thing from selected, pressed or all that if it is one of them.
 void
@@ -179,7 +189,23 @@ gui_free(gui_thing_t* t)
 {
   if (t == NULL)
   {
-    // TODO: FREE ALL THE THING TYPES
+    for (int i = 0; i < _GUI_TYPES_N; i++)
+    {
+      for (t = things[i]; t != NULL;)
+      {
+        gui_thing_t* next = t->next;
+        
+        switch (t->type)
+        {
+          case GUI_T_ROWMAP:
+          free(t->rowmap.things);
+          break;
+        }
+        free(t);
+        
+        t = next;
+      }
+    }
 
     free(gui_thing_refs);
     puts("gui_free(): GUI module freed.");
@@ -194,16 +220,6 @@ gui_free(gui_thing_t* t)
       gui_thing_refs[i] = NULL;
     }
   }
-}
-
-static gui_thing_t*
-get_pointed_thing()
-{
-  if (gui_mouse_pos[0] < 0 || gui_mouse_pos[1] < 0 || gui_mouse_pos[0] >= vid_size[0] ||  gui_mouse_pos[1] >= vid_size[1])
-  {
-    return NULL;
-  }
-  return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -359,7 +375,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
     {
       // gui_free(thing);
-      gui_e->type = GUI_E_WND_X;
+      gui_e->type = GUI_E_CLOSE;
       return;
     }
 
@@ -807,6 +823,7 @@ update_cursor(gui_thing_t* new_pointed)
   }
 }
 
+
 int
 gui_on_vid(vid_event_t* e)
 {
@@ -862,7 +879,8 @@ gui_on_vid(vid_event_t* e)
     case VID_E_PRESS:
     if (test_mpress(e))
     {
-      pressed = pointed;
+      // XXX: Solved the issue of gui_free() setting pointed to NULL, but it MIGHT break other stuff so just make sure it doesn't.
+      pressed = pointed = get_pointed_thing();
       // Pressing a different thing means deselcting the last one
       if (selected != NULL && pressed != selected)
       {
@@ -1298,7 +1316,7 @@ draw_rowmap(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right,
 void
 gui_draw(gui_thing_t* t)
 {
-  if (t->flags & GUI_T_IS_CHILD)
+  if (t->parent == NULL)
   {
     return;
   }
@@ -1344,6 +1362,7 @@ gui_open(const char* fp)
   for (int i = 0; i < n; i++)
   {
     buf[i] = calloc(sizeof (gui_thing_t), 1);
+      printf("%p\n", buf[i]);
   }
   
   // All freads use n of 1, so if read_ret comes out 0 after doing &= to it, there was an error.
@@ -1416,12 +1435,10 @@ gui_open(const char* fp)
       read_ret &= fread(&u16, 2, 1, f);
       u16 = com_lil16(u16);
 
-      buf[u16]->flags |= GUI_T_IS_CHILD;
       buf[u16]->parent = buf[i];
     
       buf[i]->window.child = buf[u16];
 
-      printf("%p\n", buf[i]);
       break;
 
       case GUI_T_ROWMAP:
@@ -1442,7 +1459,6 @@ gui_open(const char* fp)
         read_ret &= fread(&u16, 2, 1, f);
         u16 = com_lil16(u16);
         
-        buf[u16]->flags |= GUI_T_IS_CHILD;
         buf[u16]->parent = buf[i];
 
         buf[i]->rowmap.things[j] = buf[u16];
