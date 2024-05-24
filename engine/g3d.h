@@ -1,28 +1,23 @@
 // 3D Graphics module!!!
 
+// Rule of thumb: distance is measured in centimeter(-like) distance, angles are measured in radians, both use FIP, so 1 is not just =1, it's ITOFIP(G3D_FB, 1)
+
 #pragma once
 
 #include "fip.h"
 
 // How many bits are used as fraction bits in G3D's fixed point math
-#define G3D_DISTANCEB 10
-#define G3D_ANGLEB 10
+#define G3D_FB 10
 
-// Fundamental D unit, 1 of it is the smallest measure of distance. Can be thought of as ~cm/1000
-typedef int gui_d_t;
-typedef gui_d_t gui_d3_t[3];
-// Kilo-Distance is 1024*D. Can be tought of as ~cm. Kilo-distance is crucial
-typedef short gui_kd_t;
-typedef gui_kd_t gui_kd3_t[3];
-// Fundamental A unit, 1 of it is the smallest measure of angles.
-typedef short gui_a_t;
-typedef gui_a_t gui_a3_t;
+typedef int gui_i3_t[3], gui_i2_t[2], gui_i1_t;
+typedef fip_t gui_f3_t[3], gui_f2_t[2], gui_f1_t;
 
 enum
 {
   G3D_CUT_LOOP,
 };
 
+// A tri contains information about a triangle, made of a trio of indices that indexes a point in points of a model
 typedef struct
 {
   unsigned char color;
@@ -39,8 +34,8 @@ typedef struct
 
 typedef struct
 {
-  gui_d3_t* points; // Contains all the frames of the model, each frame of points must be in the correct order, points cannot be added or removed.
-  g3d_tri_t* tris; // Trios of indices that construct triangles
+  gui_f3_t* points; // Contains all the frames of the model, each frame of points must be in the same triangle order, points must be preserved in all frames.
+  g3d_tri_t* tris;
   g3d_cut_t* cuts;
   unsigned short tris_n;
   unsigned char frame_points_n; // How many points per frame
@@ -51,11 +46,31 @@ typedef struct
 
 typedef struct
 {
-  gui_d3_t point;
-  gui_a3_t angles; 
+  gui_f3_t origin;
+  gui_f3_t angles;
+  gui_f1_t fov;
+  gui_f1_t _tg; // Cached tg(fov/2)
 } g3d_eye_t;
 
-extern g3d_eye_t g3d_eye;
+typedef struct
+{
+  gui_f3_t origin;
+  gui_f3_t angles;
+  gui_f1_t fov;
+  gui_f1_t brightness; // Can also do anti brightness :D
+} g3d_light_t;
+
+extern g3d_eye_t* g3d_eye;
+
+// Requires vid
+extern int
+g3d_init(g3d_eye_t* initial_eye);
+
+extern void
+g3d_free();
+
+extern void
+g3d_draw(g3d_model_t* model);
 
 extern int
-g3d_init();
+g3d_open(g3d_model_t* model, const char* fp);

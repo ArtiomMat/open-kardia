@@ -6,6 +6,12 @@
 
 #pragma once
 
+// PI constant for fip of 30 bits of fraction, 6 first fraction digits 100% accurate.
+// translates to 3.1415927410d, PI is ~3.1415926535d.
+#define FIP30_PI (3373259426)
+
+#define FIP_PI(frac_bits) (FIP30_PI >> (30 - frac_bits))
+
 #define FIP_MUL(frac_bits,a,b) (((fip_t)(a)*(fip_t)(b)) >> frac_bits)
 
 #define FIP_DIV(frac_bits,A,B) ((fip_t)((((long long)(A)) << frac_bits) / ((long long)(B))))

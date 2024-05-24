@@ -113,11 +113,17 @@ k_init()
   mix_push_gradient(K_EKG_GRAD, 31, 0,255,100);
 
   // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-  mix_push(K_GUI_GRAD, 45,45,10);
-  mix_push(K_GUI_GRAD, 80,80,30);
-  mix_push(K_GUI_GRAD, 115,115,40);
-  mix_push(K_GUI_GRAD, 160,160,80);
-  mix_push(K_GUI_GRAD, 235,235,180);
+  mix_push(K_GUI_GRAD, 50,45,0);
+  mix_push(K_GUI_GRAD, 90,80,0);
+  mix_push(K_GUI_GRAD, 130,115,0);
+  mix_push(K_GUI_GRAD, 167,160,0);
+  mix_push(K_GUI_GRAD, 240,235,0);
+
+  // mix_push(K_GUI_GRAD, 45,45,10);
+  // mix_push(K_GUI_GRAD, 80,80,30);
+  // mix_push(K_GUI_GRAD, 115,115,40);
+  // mix_push(K_GUI_GRAD, 160,160,80);
+  // mix_push(K_GUI_GRAD, 235,235,180);
   
   // mix_push(K_GUI_GRAD, 40,40,40);
   // mix_push(K_GUI_GRAD, 80,80,80);
@@ -315,7 +321,6 @@ main(int args_n, const char** args)
   {
     clk_begin_tick();
 
-
     node_beat();
     vid_run();
 
@@ -323,6 +328,8 @@ main(int args_n, const char** args)
       // node_draw(flow_mode);
       ekg_draw();
       gui_draw_windows();
+
+      // vid_put_line(2, k_mouse[0], k_mouse[1], 150, 150);
     vid_refresh();
     
     

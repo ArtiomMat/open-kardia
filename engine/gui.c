@@ -396,7 +396,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
   // We are 100% either in border or outside the window alltogether
   else
   {
-    int flags_tmp = thing->window.flags; // Save the flag for future
+    // int flags_tmp = thing->window.flags; // Save the flag for future
 
     // Right and left border
     if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_RIGHT((*thing))+1 - GUI_RESIZE_BLEED, BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
@@ -419,19 +419,28 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     }
 
     // NOTE: Introduces thread unsafety because we do comparison if flags changed assuming they can't outside this scope.
-    if (thing->window.flags != flags_tmp)
+    if (thing->window.flags & GUI_WND_RESIZING)
     {
-      thing->window.size_0[0] = thing->size[0];
-      thing->window.size_0[1] = thing->size[1];
+      // cached as not resizable
+      if (thing->window.flags & GUI_WND_NOT_RESIZABLE)
+      {
+        thing->window.flags &= ~GUI_WND_RESIZING;
+      }
+      // Initialize the whole resizing process
+      else
+      {
+        thing->window.size_0[0] = thing->size[0];
+        thing->window.size_0[1] = thing->size[1];
 
-      save_mouse_rel(thing);
+        save_mouse_rel(thing);
+      }
+
       window_set_first(thing);
       gui_e->type = _GUI_E_EAT;
       return;
     }
-    
-    // If we get to this point we are 100% outside the window, if not already set we set and put the event for eaten
 
+    // If we get to this point we are 100% outside the window, if not already set we set and put the event for eaten
     if (selected == thing)
     {
       selected = NULL; // Deselect
@@ -811,10 +820,10 @@ update_cursor(gui_thing_t* new_pointed)
     vid_set_cursor_type(VID_CUR_TEXT);
     break;
 
-    case GUI_T_TICKBOX:
-    case GUI_T_BUTTON:
-    vid_set_cursor_type(VID_CUR_SELECT);
-    break;
+    // case GUI_T_TICKBOX:
+    // case GUI_T_BUTTON:
+    // vid_set_cursor_type(VID_CUR_SELECT);
+    // break;
 
     default:
     vid_set_cursor_type(VID_CUR_POINTER);
@@ -1257,10 +1266,18 @@ draw_thing(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, 
 static void
 draw_window(int depth, gui_thing_t* t)
 {
-  // FIXME: Selecting child things causes issues
-  darker_shade = (t != things[GUI_T_WINDOW]);
-
   draw_ref_rect(t, BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)));
+
+  if (t->window.flags & GUI_WND_RESIZING)
+  {
+    draw_rect(BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)), get_shade(3), get_shade(1));
+    draw_rect(BORDER_LEFT((*t))+1, BORDER_TOP((*t))+1, BORDER_RIGHT((*t))-1, BORDER_BOTTOM((*t))-1, get_shade(1), get_shade(3));
+
+    return;
+  }
+
+  // FIXME: Selecting child things causes issues
+  darker_shade = (t != things[GUI_T_WINDOW] || selected == NULL);
 
   // Draw the window decorations and stuff
   draw_filled_rect(BORDER_LEFT((*t)), BORDER_TOP((*t)), BORDER_RIGHT((*t)), BORDER_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
@@ -1438,6 +1455,11 @@ gui_open(const char* fp)
       buf[u16]->parent = buf[i];
     
       buf[i]->window.child = buf[u16];
+
+      if (buf[i]->min_size[0] == buf[i]->max_size[0] && buf[i]->min_size[1] == buf[i]->max_size[1])
+      {
+        buf[i]->window.flags |= GUI_WND_NOT_RESIZABLE;
+      }
 
       break;
 

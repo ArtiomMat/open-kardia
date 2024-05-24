@@ -55,6 +55,7 @@ enum
   GUI_WND_RESIZING_R = 1<<7,
   GUI_WND_RESIZING_T = 1<<8,
   GUI_WND_RESIZING_B = 1<<9,
+  GUI_WND_NOT_RESIZABLE = 1<<10, // Just cached if it can be resized, this is done during opening of window
 
   // FORMAT STUFF FOR ITEXT
 
