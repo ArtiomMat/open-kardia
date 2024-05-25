@@ -5,6 +5,7 @@
 #include "../engine/gui.h"
 #include "../engine/com.h"
 #include "../engine/mix.h"
+#include "../engine/g3d.h"
 
 #include "node.h"
 #include "edit.h"
@@ -329,7 +330,9 @@ main(int args_n, const char** args)
       ekg_draw();
       gui_draw_windows();
 
-      // vid_put_line(2, k_mouse[0], k_mouse[1], 150, 150);
+      g3d_draw(NULL);
+
+      // vid_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
     vid_refresh();
     
     

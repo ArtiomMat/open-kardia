@@ -204,6 +204,11 @@ typedef struct gui_thing
     struct
     {
       struct gui_thing** things;
+      struct
+      {
+        unsigned char* cols_n;
+        int size;
+      } rows;
       unsigned char* cols_n; // Gives number of columns per each row index.
       unsigned char rows_n;
     } rowmap;

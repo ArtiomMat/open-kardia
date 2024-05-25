@@ -79,6 +79,9 @@ extern unsigned char* vid_pixels;
 
 extern int vid_size[2];
 
+// Position of the cursor
+extern int vid_cursor[2];
+
 extern int
 vid_def_on(vid_event_t* event);
 

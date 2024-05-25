@@ -291,8 +291,8 @@ vid_run()
 
       case MotionNotify:
       e.type = VID_E_MOVE;
-      e.move.x = xe.xmotion.x;
-      e.move.y = xe.xmotion.y;
+      e.move.x = vid_cursor[0] = xe.xmotion.x;
+      e.move.y = vid_cursor[1] = xe.xmotion.y;
       break;
     }
 

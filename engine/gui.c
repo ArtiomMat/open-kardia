@@ -25,8 +25,6 @@ static gui_thing_t* last_things[_GUI_TYPES_N] = {NULL};
 
 gui_thing_t** gui_thing_refs;
 
-int gui_mouse_pos[2];
-
 // THE 3 BELOW ARE UPDATED EITHER BY FREEING A THING OR BY GUI_ON_VID():
 
 // pointed that got pressed
@@ -112,11 +110,11 @@ gui_init(gui_font_t* _font)
 static gui_thing_t*
 get_pointed_thing()
 {
-  if (gui_mouse_pos[0] < 0 || gui_mouse_pos[1] < 0 || gui_mouse_pos[0] >= vid_size[0] ||  gui_mouse_pos[1] >= vid_size[1])
+  if (vid_cursor[0] < 0 || vid_cursor[1] < 0 || vid_cursor[0] >= vid_size[0] ||  vid_cursor[1] >= vid_size[1])
   {
     return NULL;
   }
-  return gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
+  return gui_thing_refs[vid_cursor[0] + vid_cursor[1] * vid_size[0]];
 }
 
 // Just frees a thing with its children, doesn't do extra stuff.
@@ -229,8 +227,8 @@ gui_free(gui_thing_t* t)
 static void
 save_mouse_rel(gui_thing_t* gui_window)
 {
-  gui_u_t mouse_x = min(max(gui_mouse_pos[0], 0), vid_size[0]-1);
-  gui_u_t mouse_y = min(max(gui_mouse_pos[1], 0), vid_size[1]-1);
+  gui_u_t mouse_x = min(max(vid_cursor[0], 0), vid_size[0]-1);
+  gui_u_t mouse_y = min(max(vid_cursor[1], 0), vid_size[1]-1);
 
   gui_window->window.mouse_rel[0] = mouse_x - gui_window->pos[0];
   gui_window->window.mouse_rel[1] = mouse_y - gui_window->pos[1];
@@ -241,7 +239,7 @@ save_mouse_rel(gui_thing_t* gui_window)
 static void
 resize_right(gui_thing_t* gui_window, int i, gui_u_t max_r)
 {
-  int mouse_delta = gui_mouse_pos[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
+  int mouse_delta = vid_cursor[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
 
   gui_window->size[i] = gui_window->window.size_0[i] + mouse_delta;
   gui_window->size[i] = min(gui_window->max_size[i], gui_window->size[i]);
@@ -252,7 +250,7 @@ resize_right(gui_thing_t* gui_window, int i, gui_u_t max_r)
 static void
 resize_left(gui_thing_t* gui_window, int i, gui_u_t min_l)
 {
-  int mouse_delta = gui_mouse_pos[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
+  int mouse_delta = vid_cursor[i] - (gui_window->window.mouse_rel[i] + gui_window->pos[i]);
 
   gui_window->pos[i] += mouse_delta;
 
@@ -297,8 +295,8 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
   // Move the window if necessary and other logic to keep track of movement
   if (window->window.flags & GUI_WND_RELOCATING)
   {
-    window->pos[0] = gui_mouse_pos[0]-window->window.mouse_rel[0];
-    window->pos[1] = gui_mouse_pos[1]-window->window.mouse_rel[1];
+    window->pos[0] = vid_cursor[0]-window->window.mouse_rel[0];
+    window->pos[1] = vid_cursor[1]-window->window.mouse_rel[1];
 
     window->pos[0] = min(max(window->pos[0], l), r+1-window->size[0]);
     window->pos[1] = min(max(window->pos[1], l), b+1-window->size[1]);
@@ -369,10 +367,10 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
 {
   // window_on_move(thing, gui_e);
   // Inside of the title bar
-  if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], TITLE_LEFT((*thing)), TITLE_TOP((*thing)), TITLE_RIGHT((*thing)), TITLE_BOTTOM((*thing))))
+  if (in_rect(vid_cursor[0], vid_cursor[1], TITLE_LEFT((*thing)), TITLE_TOP((*thing)), TITLE_RIGHT((*thing)), TITLE_BOTTOM((*thing))))
   {
     // Pressed the x button
-    if (gui_mouse_pos[0] >= X_LEFT((*thing)) && gui_mouse_pos[1] <= X_BOTTOM((*thing)))
+    if (vid_cursor[0] >= X_LEFT((*thing)) && vid_cursor[1] <= X_BOTTOM((*thing)))
     {
       // gui_free(thing);
       gui_e->type = GUI_E_CLOSE;
@@ -387,7 +385,7 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     return;
   }
   // Inside of the content zone
-  else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
+  else if (!(thing->window.flags & GUI_WND_XRAY) && in_rect(vid_cursor[0], vid_cursor[1], CONTENT_LEFT((*thing)), CONTENT_TOP((*thing)), CONTENT_RIGHT((*thing)), CONTENT_BOTTOM((*thing))))
   {
     window_set_first(thing);
     gui_e->type = _GUI_E_EAT;
@@ -399,21 +397,21 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
     // int flags_tmp = thing->window.flags; // Save the flag for future
 
     // Right and left border
-    if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], CONTENT_RIGHT((*thing))+1 - GUI_RESIZE_BLEED, BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
+    if (in_rect(vid_cursor[0], vid_cursor[1], CONTENT_RIGHT((*thing))+1 - GUI_RESIZE_BLEED, BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
     {
       thing->window.flags |= GUI_WND_RESIZING_R;
     }
-    else if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), CONTENT_LEFT((*thing))-1 + GUI_RESIZE_BLEED, BORDER_BOTTOM((*thing))))
+    else if (in_rect(vid_cursor[0], vid_cursor[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), CONTENT_LEFT((*thing))-1 + GUI_RESIZE_BLEED, BORDER_BOTTOM((*thing))))
     {
       thing->window.flags |= GUI_WND_RESIZING_L;
     }
 
     // Top and bottom border, disconnected to combine the two in the corners
-    if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), TITLE_TOP((*thing))-1 + GUI_RESIZE_BLEED))
+    if (in_rect(vid_cursor[0], vid_cursor[1], BORDER_LEFT((*thing)), BORDER_TOP((*thing)), BORDER_RIGHT((*thing)), TITLE_TOP((*thing))-1 + GUI_RESIZE_BLEED))
     {
       thing->window.flags |= GUI_WND_RESIZING_T;
     }
-    else if (in_rect(gui_mouse_pos[0], gui_mouse_pos[1], BORDER_LEFT((*thing)), CONTENT_BOTTOM((*thing))+1 - GUI_RESIZE_BLEED, BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
+    else if (in_rect(vid_cursor[0], vid_cursor[1], BORDER_LEFT((*thing)), CONTENT_BOTTOM((*thing))+1 - GUI_RESIZE_BLEED, BORDER_RIGHT((*thing)), BORDER_BOTTOM((*thing))))
     {
       thing->window.flags |= GUI_WND_RESIZING_B;
     }
@@ -448,9 +446,24 @@ window_on_mpress(gui_thing_t* thing, gui_event_t* gui_e)
   }
 }
 
+// Guaranteed to be rowmap
+static void
+rowmap_resize(gui_thing_t* thing, gui_u_t size[2])
+{
+  
+}
+
 static void
 window_on_mrelease(gui_thing_t* thing, gui_event_t* gui_e)
 {
+  // After resizing let the rowmap know(if there is a rowmap as a child)
+  if (thing->window.flags & GUI_WND_RESIZING)
+  {
+    if (thing->window.child->type == GUI_T_ROWMAP)
+    {
+      rowmap_resize(thing->window.child, thing->size);
+    }
+  }
   thing->window.flags &= (~GUI_WND_RELOCATING) & (~GUI_WND_RESIZING);
   gui_e->type = _GUI_E_EAT;
 }
@@ -841,8 +854,8 @@ gui_on_vid(vid_event_t* e)
   {
     case VID_E_MOVE:
     // We also limit it to avoid any possible segfault
-    gui_mouse_pos[0] = e->move.x;
-    gui_mouse_pos[1] = e->move.y;
+    vid_cursor[0] = e->move.x;
+    vid_cursor[1] = e->move.y;
   
     gui_thing_t* new_pointed = get_pointed_thing();
     

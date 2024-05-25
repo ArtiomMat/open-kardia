@@ -11,6 +11,8 @@ int vid_size[2];
 
 int (*vid_on)(vid_event_t*) = vid_def_on;
 
+int vid_cursor[2];
+
 int
 vid_def_on(vid_event_t* e)
 {
