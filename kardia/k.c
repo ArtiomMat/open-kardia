@@ -318,6 +318,10 @@ main(int args_n, const char** args)
 
   puts("\nRUNNING...\n");
 
+  g3d_init(NULL);
+  float o = FIPTOF(G3D_DB, g3d_cos(FTOFIP(G3D_AB, 0.25f)));
+  printf("cos(pi/4) = %f\n", o);
+
   while(1)
   {
     clk_begin_tick();
@@ -326,16 +330,20 @@ main(int args_n, const char** args)
     vid_run();
 
     vid_wipe(255);
+      g3d_draw(NULL);
       // node_draw(flow_mode);
       ekg_draw();
       gui_draw_windows();
 
-      g3d_draw(NULL);
 
       // vid_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
     vid_refresh();
     
-    
+    // if (i++ > 20)
+    // {
+    //   printf("%d\n", clk_tick_time);
+    // }
+
     #if 0
     if (count < sizeof(times))
     {

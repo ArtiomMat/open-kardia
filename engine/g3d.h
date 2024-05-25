@@ -1,16 +1,20 @@
 // 3D Graphics module!!!
 
-// Rule of thumb: distance is measured in centimeter(-like) distance, angles are measured in radians, both use FIP, so 1 is not just =1, it's ITOFIP(G3D_FB, 1)
+// Rule of thumb: distance is measured in centimeter(-like) distance, angles are measured in radians, both use FIP, so 1 is not just =1, it's ITOFIP(G3D_DB, 1)
 
 #pragma once
 
 #include "fip.h"
 
-// How many bits are used as fraction bits in G3D's fixed point math
-#define G3D_FB 10
+// How many bits are used as fraction bits in distances
+#define G3D_DB 10
+// k*(2^G3D_AB) where k is a natural number is equivalent to 2*k*PI radians.
+// Note that the bigger this is the more memory it takes to cache the tan and sin functions.
+// This is also the fraction bits for an angle value.
+#define G3D_AB 9
 
-typedef int gui_i3_t[3], gui_i2_t[2], gui_i1_t;
-typedef fip_t gui_f3_t[3], gui_f2_t[2], gui_f1_t;
+typedef int g3d_i3_t[3], g3d_i2_t[2], g3d_i1_t;
+typedef fip_t g3d_f3_t[3], g3d_f2_t[2], g3d_f1_t;
 
 enum
 {
@@ -34,7 +38,7 @@ typedef struct
 
 typedef struct
 {
-  gui_f3_t* points; // Contains all the frames of the model, each frame of points must be in the same triangle order, points must be preserved in all frames.
+  g3d_f3_t* points; // Contains all the frames of the model, each frame of points must be in the same triangle order, points must be preserved in all frames.
   g3d_tri_t* tris;
   g3d_cut_t* cuts;
   unsigned short tris_n;
@@ -46,24 +50,29 @@ typedef struct
 
 typedef struct
 {
-  gui_f3_t origin;
-  gui_f3_t angles;
-  gui_f1_t fov;
-  gui_f1_t _tg; // Cached tg(fov/2)
+  g3d_model_t* model;
+} g3d_state_t;
+
+typedef struct
+{
+  g3d_f3_t origin;
+  g3d_f3_t angles;
+  g3d_f1_t fov;
+  g3d_f1_t _tg; // Cached tg(fov/2)
 } g3d_eye_t;
 
 typedef struct
 {
-  gui_f3_t origin;
-  gui_f3_t angles;
-  gui_f1_t fov;
-  gui_f1_t brightness; // Can also do anti brightness :D
+  g3d_f3_t origin;
+  g3d_f3_t angles;
+  g3d_f1_t fov;
+  g3d_f1_t brightness; // Can also do anti brightness :D
 } g3d_light_t;
 
 extern g3d_eye_t* g3d_eye;
 
 // Requires vid
-extern int
+extern void
 g3d_init(g3d_eye_t* initial_eye);
 
 extern void
@@ -74,3 +83,13 @@ g3d_draw(g3d_model_t* model);
 
 extern int
 g3d_open(g3d_model_t* model, const char* fp);
+
+// The fraction bits as input are AB, and output are DB.
+g3d_f1_t
+g3d_tan(g3d_f1_t a);
+// The fraction bits as input are AB, and output are DB.
+g3d_f1_t
+g3d_sin(g3d_f1_t a);
+// The fraction bits as input are AB, and output are DB.
+g3d_f1_t
+g3d_cos(g3d_f1_t a);

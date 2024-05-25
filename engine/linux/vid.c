@@ -379,7 +379,7 @@ vid_put_xline(unsigned char color, int xi, int xf, int y)
 
   for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
   {
-    vid_put(color, y*vid_size[0] + x);
+    _set(color, y*vid_size[0] + x);
   }
 }
 
@@ -391,7 +391,7 @@ vid_put_yline(unsigned char color, int yi, int yf, int x)
 
   for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
   {
-    vid_put(color, y*vid_size[0] + x);
+    _set(color, y*vid_size[0] + x);
   }
 }
 
