@@ -7,11 +7,11 @@
 #include "fip.h"
 
 // How many bits are used as fraction bits in distances
-#define G3D_DB 10
+#define G3D_DB 8
 // k*(2^G3D_AB) where k is a natural number is equivalent to 2*k*PI radians.
 // Note that the bigger this is the more memory it takes to cache the tan and sin functions.
 // This is also the fraction bits for an angle value.
-#define G3D_AB 9
+#define G3D_AB 8
 
 typedef int g3d_i3_t[3], g3d_i2_t[2], g3d_i1_t;
 typedef fip_t g3d_f3_t[3], g3d_f2_t[2], g3d_f1_t;
@@ -50,8 +50,18 @@ typedef struct
 
 typedef struct
 {
-  g3d_model_t* model;
-} g3d_state_t;
+  g3d_f3_t origin;
+  g3d_f3_t angles;
+  union
+  {
+    struct
+    {
+      g3d_model_t* p;
+      unsigned char frame;
+      unsigned char cut;
+    } model;
+  };
+} g3d_thing_t;
 
 typedef struct
 {
@@ -72,8 +82,14 @@ typedef struct
 extern g3d_eye_t* g3d_eye;
 
 // Requires vid
+// If initial_eye is NULL initializes a default eye 0'd out, with FOV of 90
+// g3d_set_fov() does not need to be used, it is automatically called on initial_eye using its own fov.
 extern void
 g3d_init(g3d_eye_t* initial_eye);
+
+// A function is required because some info is also cached
+extern void
+g3d_set_fov(g3d_eye_t* eye, g3d_f1_t fov);
 
 extern void
 g3d_free();
@@ -93,3 +109,4 @@ g3d_sin(g3d_f1_t a);
 // The fraction bits as input are AB, and output are DB.
 g3d_f1_t
 g3d_cos(g3d_f1_t a);
+

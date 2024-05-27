@@ -52,7 +52,6 @@ Window vid_nix_window;
 XImage* vid_nix_image;
 
 static Window root_window;
-
 static Colormap colormap;
 
 static Cursor cursors[_VID_CUR_N];
@@ -61,7 +60,7 @@ static Cursor cursors[_VID_CUR_N];
 void
 vid_free()
 {
-  free(vid_colors);
+  printf("%p\n", vid_nix_image); free(vid_colors);
 
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
 
@@ -77,7 +76,6 @@ vid_free()
   }
 
   XCloseDisplay(vid_nix_dsp);
-
 
   puts("vid_free(): Video module freed.");
 }

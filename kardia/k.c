@@ -316,11 +316,10 @@ main(int args_n, const char** args)
   // clk_time_t time = 0, count = 0;
   // clk_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
-  puts("\nRUNNING...\n");
 
   g3d_init(NULL);
-  float o = FIPTOF(G3D_DB, g3d_cos(FTOFIP(G3D_AB, 0.25f)));
-  printf("cos(pi/4) = %f\n", o);
+  
+  puts("\nRUNNING...\n");
 
   while(1)
   {
