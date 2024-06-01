@@ -5,42 +5,42 @@
 #define OUT_DEPTH 1
 #define OUT_COLOR_TYPE PNG_COLOR_TYPE_GRAY
 
-// A list of all the dithers, 0 is black, 1 is white.
-static unsigned char dithers[] =
-{
-  0b00000000,
-  0b10000000,
-  0b10001000,
-  0b10100100,
-  0b10101010,
-  0b11001101,
-  0b11101110,
-  0b11111110,
-  0b11111111,
-
-  // 0b00000000,
-  // 0b10001000,
-  // 0b10101010,
-  // 0b11101110,
-  // 0b11111111,
-};
-
 static int width, height;
 
 int
 get_p_for_v(int x, int y, int v)
 {
+  // const int dither_size = 3;
+  // const short dithers[] = {
+  //   0b000000000,
+  //   0b000010000,
+  //   0b001000100,
+  //   0b001010100,
+  //   0b010101010,
+
+  //   0b010111010,
+    
+  //   ~0b010101010,
+  //   ~0b001010100,
+  //   ~0b001000100,
+  //   ~0b000010000,
+  //   ~0b000000000,
+  // };
+
+  const int dither_size = 2;
+  const char dithers[] = {
+    0b0000,
+    0b1000,
+    0b1001,
+    0b0111,
+    0b1111,
+  };
   const int dithers_n = (sizeof(dithers)/sizeof(dithers[0]));
-  if (v > 230)
-  {
-    v = 255;
-  }
-  int dither_i =  (dithers_n - 1) * v / 255;
-  
-  int bit = x;
-  bit += rand()%8;
-  bit %= 8;
-  
+
+  int dither_i = (dithers_n - 1) * v / 255;
+  // int dither_i = 3;
+  int bit = x%dither_size + dither_size*(y%dither_size);
+
   return (dithers[dither_i] & (1<<bit)) ? 1 : 0;
 }
 
@@ -94,7 +94,6 @@ main(int args_n, const char** args)
   png_set_expand_gray_1_2_4_to_8(in_png);
 
   png_read_update_info(in_png, in_info);
-
 
   // Output setup
   out_info = png_create_info_struct(out_png);

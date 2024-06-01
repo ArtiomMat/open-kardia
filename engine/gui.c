@@ -671,6 +671,10 @@ itext_on_kpress(gui_thing_t* t, int code, gui_event_t* gui_e)
     if (code >= 'a' && code <= 'z')
     {
       code -= (itext_shift || itext_caps) ? 32 : 0;
+      if (t->itext.flags & GUI_ITXT_NOALP)
+      {
+        break;
+      }
     }
     else if (itext_shift)
     {

@@ -23,7 +23,7 @@ g3d_init(g3d_eye_t* initial_eye)
   // SIN/TAN TABLES SETUP
   for (int i = 0; i < (TBLS/2); i++)
   {
-    double a = ((double)i / TBLS) * M_PI * 2;
+    double a = ((double)i / TBLS) * 3.1415926535f * 2;
 
     sintbl[i] = SHORT_MAX * sin(a);
     tantbl[i] = FTOFIP(G3D_DB, tan(a));

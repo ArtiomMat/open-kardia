@@ -15,6 +15,8 @@
 #include <X11/cursorfont.h>
 #include <X11/extensions/Xrandr.h>
 
+#define BIT_DEPTH 24
+
 // Writable frame buffer, essentially blitting:
 // https://bbs.archlinux.org/viewtopic.php?id=225741
 
@@ -60,7 +62,8 @@ static Cursor cursors[_VID_CUR_N];
 void
 vid_free()
 {
-  printf("%p\n", vid_nix_image); free(vid_colors);
+  printf("%p\n", vid_nix_image);
+  free(vid_colors);
 
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
 
@@ -84,9 +87,10 @@ static int
 x_error_handler(Display * d, XErrorEvent * e)
 {
   static char text[512];
-  fprintf(stderr, "x_error_handler(): %hhu\n", e->error_code);
+  fprintf(stderr, "x_error_handler(): Fatal error going to exit(): %hhu\n", e->error_code);
   XGetErrorText(d, e->error_code, text, 512);
   puts(text);
+  exit(1);
   return 0;
 }
 
@@ -112,7 +116,7 @@ vid_init(int _vid_w, int _vid_h)
 
   // Visuals and stuff for drawing.
   XVisualInfo xvisualinfo;
-  if (!XMatchVisualInfo(vid_nix_dsp, vid_nix_scr, 24, TrueColor, &xvisualinfo))
+  if (!XMatchVisualInfo(vid_nix_dsp, vid_nix_scr, BIT_DEPTH, TrueColor, &xvisualinfo))
   {
     fputs("vid_init(): Failed to XMatchVisualInfo(). Are you sure you have 24 bit depth TrueColor?", stderr);
     vid_free();
@@ -129,20 +133,18 @@ vid_init(int _vid_w, int _vid_h)
     RootWindow(vid_nix_dsp, vid_nix_scr),
     0, 0, vid_size[0], vid_size[1],
     0, // border width
-    24, // bit depth
+    BIT_DEPTH, // bit depth
     InputOutput,
     vid_nix_visual,
     CWBorderPixel | CWEventMask,
     &attribs
   );
-
+  
   // Cursors
   cursors[VID_CUR_POINTER] = XCreateFontCursor(vid_nix_dsp, XC_left_ptr);
   cursors[VID_CUR_SELECT] = XCreateFontCursor(vid_nix_dsp, XC_hand2);
   cursors[VID_CUR_TEXT] = XCreateFontCursor(vid_nix_dsp, XC_xterm);
   cursors[VID_CUR_WAIT] = XCreateFontCursor(vid_nix_dsp, XC_watch);
-
-  // XDefineCursor(vid_nix_dsp, vid_nix_window, createnullcursor(vid_nix_dsp, vid_nix_window));
 
   // GC Creation, before mapping.
   XGCValues xgcvalues;
@@ -159,7 +161,7 @@ vid_init(int _vid_w, int _vid_h)
 
   // Image creation
   char* data = malloc(vid_size[0]*32/8 * vid_size[1]); // 32 because of padding >:(
-  if (!data)
+  if (data == NULL)
   {
     fputs("vid_init(): Failed to allocate image data.", stderr);
     vid_free();
@@ -169,12 +171,12 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_image = XCreateImage(
     vid_nix_dsp,
     vid_nix_visual,
-    24,
+    BIT_DEPTH,
     ZPixmap,
     0,
     data,
     vid_size[0], vid_size[1],
-    32, // bitmap_pad, no clue, 32 is "if unsure".
+    32, // bitmap_pad, just the alignment of each pixel I guess
     vid_size[0]*32/8
   ); // bytes per scanline, since we have padding of 32, we use 32 instead of 24.
 
