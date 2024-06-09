@@ -356,21 +356,6 @@ vid_wipe(int color)
   // XFree (scr_image);
 }
 
-static inline void
-_set(unsigned char color, int i)
-{
-  vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
-  vid_pixels[i*4+2] = vid_colors[color][0];
-  vid_pixels[i*4+1] = vid_colors[color][1];
-  vid_pixels[i*4+0] = vid_colors[color][2];
-}
-
-void
-vid_put(unsigned char color, int i)
-{
-  _set(color, i);
-}
-
 void
 vid_put_xline(unsigned char color, int xi, int xf, int y)
 {
@@ -379,7 +364,7 @@ vid_put_xline(unsigned char color, int xi, int xf, int y)
 
   for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
   {
-    _set(color, y*vid_size[0] + x);
+    vid_put(color, y*vid_size[0] + x);
   }
 }
 
@@ -391,7 +376,7 @@ vid_put_yline(unsigned char color, int yi, int yf, int x)
 
   for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
   {
-    _set(color, y*vid_size[0] + x);
+    vid_put(color, y*vid_size[0] + x);
   }
 }
 
@@ -451,7 +436,7 @@ vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
 
     for (int x = xi; x <= xf; x++, y += m)
     {
-      _set(color, x + FIPTOI(16, y) * vid_size[0]);
+      vid_put(color, x + FIPTOI(16, y) * vid_size[0]);
     }
   }
   else
@@ -461,15 +446,9 @@ vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
 
     for (int y = yi; y <= yf; y++, x += m)
     {
-      _set(color, FIPTOI(16, x) + y * vid_size[0]);
+      vid_put(color, FIPTOI(16, x) + y * vid_size[0]);
     }
   }
-}
-
-unsigned char
-vid_get(int i)
-{
-  return vid_pixels[i*4+3];
 }
 
 void
