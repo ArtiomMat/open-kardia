@@ -42,7 +42,9 @@ enum
   VID_CUR_SELECT, // Selection cursor(i.e hover over links)
   VID_CUR_TEXT, // Text hover
   VID_CUR_WAIT, // Waiting for something
-
+  
+  VID_CUR_NULL, // No cursor
+  
   _VID_CUR_N,
 };
 
@@ -74,9 +76,8 @@ extern int (*vid_on)(vid_event_t*);
 */
 extern unsigned char (*vid_colors)[3];
 
-// This is platform specific so it should not be really accessed unless you know what you are doing
-// vid_put() is hinted as inline and is part of the header, so use it, aswell as vid_get()
-extern unsigned char* vid_pixels;
+// Contains all the pixels, each being an index to vid_colors
+extern unsigned char* vid_p;
 
 extern int vid_size[2];
 
@@ -109,18 +110,6 @@ vid_run();
  * Must call vid_refresh() to actually blit the pixels.
 */
 
-static inline void
-vid_put(unsigned char color, int i)
-{
-#ifdef __linux__
-  vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
-  vid_pixels[i*4+2] = vid_colors[color][0];
-  vid_pixels[i*4+1] = vid_colors[color][1];
-  vid_pixels[i*4+0] = vid_colors[color][2];
-#elif _WIN32_
-  vid_pixels[i] = color;
-#endif
-}
 extern void
 vid_put_line(unsigned char color, int xi, int yi, int xf, int yf);
 extern void
@@ -129,16 +118,6 @@ extern void
 vid_put_yline(unsigned char color, int yi, int yf, int x);
 extern void
 vid_put_rect(unsigned char fill, int left, int top, int right, int bottom);
-
-static inline unsigned char
-vid_get(int i)
-{
-#ifdef __linux__
-  return vid_pixels[i*4+3];
-#elif _WIN32_
-  return vid_pixels[i];
-#endif
-}
 
 extern void
 vid_wipe(int i);

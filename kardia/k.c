@@ -324,7 +324,7 @@ main(int args_n, const char** args)
     node_beat();
     vid_run();
 
-    vid_wipe(255);
+    vid_wipe(1);
       g3d_draw(NULL);
       // node_draw(flow_mode);
       ekg_draw();

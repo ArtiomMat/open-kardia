@@ -957,63 +957,6 @@ get_shade(int i)
 }
 
 /////////////////////////////////////////////////////////////////////
-//                                    LINES
-/////////////////////////////////////////////////////////////////////
-
-void
-gui_draw_line(unsigned char color, gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf)
-{
-  // Vertical line
-  if (xi == xf)
-  {
-    vid_put_yline(color, yi, yf, xi);
-  }
-  // Horizontal line
-  else if (yi == yf)
-  {
-    vid_put_xline(color, xi, xf, yi);
-  }
-  // Angled line
-  else
-  {
-    #undef FIP_FRAC_BITS
-    #define FIP_FRAC_BITS 16
-
-    fip_t ypx = ITOFIP(8,yf-yi);
-    ypx /= xf-xi;
-
-    int right = xi > xf ? xi : xf;
-    int left = right == xi? xf : xi;
-
-    fip_t y = left == xi ? yi : yf; // Depends on which one is left
-    y = max(y, 0); // Just limit it
-    y = ITOFIP(8,y);
-
-    fip_t absi_ypx = ypx < 0 ? -ypx : ypx; // An absolute value
-
-    fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
-
-    for (int x = max(left, 0); x < min(right, vid_size[0]); x++)
-    {
-      fip_t i;
-      for (i = 0; i < absi_ypx; i += ITOFIP(8,1))
-      {
-        fip_t set_y = FIPTOI(8,y + i*sign);
-        if (set_y >= vid_size[1])
-        {
-          return; // Nothing happens after the loop anyway
-        }
-        vid_put(color, set_y*vid_size[0] + x);
-      }
-      y += ypx;
-    }
-
-    #undef FIP_FRAC_BITS
-    #define FIP_FRAC_BITS FIP_DEF_FRAC_BITS
-  }
-}
-
-/////////////////////////////////////////////////////////////////////
 //                                  RECTS
 /////////////////////////////////////////////////////////////////////
 

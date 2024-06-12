@@ -70,8 +70,7 @@ k_pickc(unsigned char r, unsigned char g, unsigned char b)
 
   return rgb.c;
 }
-
-static inline void
+#if 0
 k_vid_put(unsigned char r, unsigned char g, unsigned char b, int i)
 {
   int check = (i-1)&1;
@@ -93,7 +92,7 @@ k_vid_put(unsigned char r, unsigned char g, unsigned char b, int i)
 
   vid_put(rgb.c, i);
 }
-
+#endif
 // Puts the new values in rgb, same as k_gradient() just returns in RGB rather than in index
 extern void
 k_gradient_rgb(int x, int x_max, unsigned char* r, unsigned char* g, unsigned char* b, unsigned char R, unsigned char G, unsigned char B);

@@ -5,7 +5,7 @@
 
 unsigned char (*vid_colors)[3] = NULL;
 
-unsigned char* vid_pixels = NULL;
+unsigned char* vid_p = NULL;
 
 int vid_size[2];
 

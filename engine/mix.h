@@ -21,6 +21,11 @@ extern struct mix_shift
   unsigned char grad_i;
 } mix_shifts[256];
 
+extern int
+mix_load(const char* fp);
+extern int
+mix_save(const char* fp);
+
 /**
  * Just sets a vid_colors[color] to the rgb value, this doesn't have anything to do with mix_grads, just for a single line modification.
  */

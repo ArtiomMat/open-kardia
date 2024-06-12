@@ -53,30 +53,39 @@ GC vid_nix_gc;
 Window vid_nix_window;
 XImage* vid_nix_image;
 
+static unsigned char* image_data;
+
 static Window root_window;
 static Colormap colormap;
 
 static Cursor cursors[_VID_CUR_N];
+static Pixmap null_pixmap;
+static char null_data[8] = {0,0,0,0, 0,0,0,0};
+static XColor black = {0};
 
 // TODO: It's not exactly that safe
 void
 vid_free()
 {
-  printf("%p\n", vid_nix_image);
   free(vid_colors);
+  free(vid_p);
+  vid_p = NULL;
+  vid_colors = NULL;
 
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
 
   if (vid_nix_image)
   {
     XDestroyImage(vid_nix_image);
+
+    // Also means cursors were allocated
+    for (int i = 0; i < _VID_CUR_N; i++)
+    {
+      XFreeCursor(vid_nix_dsp, cursors[i]);
+    }
+    XFreePixmap(vid_nix_dsp, null_pixmap);
   }
   vid_nix_image = 0;
-
-  for (int i = 0; i < _VID_CUR_N; i++)
-  {
-    XFreeCursor(vid_nix_dsp, cursors[i]);
-  }
 
   XCloseDisplay(vid_nix_dsp);
 
@@ -140,19 +149,13 @@ vid_init(int _vid_w, int _vid_h)
     &attribs
   );
   
-  // Cursors
-  cursors[VID_CUR_POINTER] = XCreateFontCursor(vid_nix_dsp, XC_left_ptr);
-  cursors[VID_CUR_SELECT] = XCreateFontCursor(vid_nix_dsp, XC_hand2);
-  cursors[VID_CUR_TEXT] = XCreateFontCursor(vid_nix_dsp, XC_xterm);
-  cursors[VID_CUR_WAIT] = XCreateFontCursor(vid_nix_dsp, XC_watch);
-
   // GC Creation, before mapping.
   XGCValues xgcvalues;
   xgcvalues.graphics_exposures = False;
   vid_nix_gc = XCreateGC(vid_nix_dsp, vid_nix_window, GCGraphicsExposures, &xgcvalues );
 
   XSelectInput(vid_nix_dsp, vid_nix_window, attribs.event_mask);
-
+  
   // Set our custom WM_DELETE_WINDOW protocol
   XSetWMProtocols(vid_nix_dsp, vid_nix_window, &vid_nix_wmdeletewnd_atom, 1);
 
@@ -187,7 +190,10 @@ vid_init(int _vid_w, int _vid_h)
     return 0;
   }
 
-  vid_pixels = (unsigned char*) vid_nix_image->data;
+  image_data = (unsigned char*) vid_nix_image->data;
+
+  // Allocate the vid_p now
+  vid_p = malloc(vid_size[0] * vid_size[1]);
 
   // Limit window size
   XSizeHints size_hints;
@@ -209,6 +215,16 @@ vid_init(int _vid_w, int _vid_h)
     fputs("vid_init(): Could not get screen info, extra screen information not available.", stderr);
   }
 
+  // Cursors
+  cursors[VID_CUR_POINTER] = XCreateFontCursor(vid_nix_dsp, XC_left_ptr);
+  cursors[VID_CUR_SELECT] = XCreateFontCursor(vid_nix_dsp, XC_hand2);
+  cursors[VID_CUR_TEXT] = XCreateFontCursor(vid_nix_dsp, XC_xterm);
+  cursors[VID_CUR_WAIT] = XCreateFontCursor(vid_nix_dsp, XC_watch);
+  null_pixmap = XCreateBitmapFromData(vid_nix_dsp, vid_nix_window, null_data, 1, 1);
+  // Idk why this is not black tbh, some dark magic, but it's fully transparent.
+  cursors[VID_CUR_NULL] = XCreatePixmapCursor(vid_nix_dsp, null_pixmap,null_pixmap, &black, &black, 0, 0);
+  vid_set_cursor_type(VID_CUR_NULL);
+  
 //  int sizes_n;
   int rates_n;
 //  XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
@@ -309,6 +325,13 @@ vid_run()
 void
 vid_refresh()
 {
+  for (int i = 0, j = 0; i < vid_size[0] * vid_size[1]; i++, j+=4)
+  {
+    image_data[j+2] = vid_colors[vid_p[i]][0];
+    image_data[j+1] = vid_colors[vid_p[i]][1];
+    image_data[j+0] = vid_colors[vid_p[i]][2];
+  }
+
   XPutImage
   (
     vid_nix_dsp,
@@ -342,10 +365,7 @@ vid_wipe(int color)
     //   y++;
     // }
 
-    vid_pixels[i*4+3] = color; // We use the padding as the index, I am a fucking genius
-    vid_pixels[i*4+2] = vid_colors[color][0];
-    vid_pixels[i*4+1] = vid_colors[color][1];
-    vid_pixels[i*4+0] = vid_colors[color][2];
+    vid_p[i] = color; // We use the padding as the index, I am a fucking genius 
 
     // unsigned long pixel = XGetPixel(scr_image, x, y);
     // vid_pixels[i*4+2] = (pixel >> 16) & 0xFF; // Red component
@@ -364,7 +384,7 @@ vid_put_xline(unsigned char color, int xi, int xf, int y)
 
   for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
   {
-    vid_put(color, y*vid_size[0] + x);
+    vid_p[y*vid_size[0] + x] = color;
   }
 }
 
@@ -376,7 +396,7 @@ vid_put_yline(unsigned char color, int yi, int yf, int x)
 
   for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
   {
-    vid_put(color, y*vid_size[0] + x);
+    vid_p[y*vid_size[0] + x] = color;
   }
 }
 
@@ -387,7 +407,7 @@ vid_put_rect(unsigned char fill, int left, int top, int right, int bottom)
   {
     for (int _y = top; _y <= bottom; _y++)
     {
-      vid_put(fill, _y*vid_size[0] + _x);
+      vid_p[_y*vid_size[0] + _x] = fill;
     }
   }
 }
@@ -436,7 +456,7 @@ vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
 
     for (int x = xi; x <= xf; x++, y += m)
     {
-      vid_put(color, x + FIPTOI(16, y) * vid_size[0]);
+      vid_p[x + FIPTOI(16, y) * vid_size[0]] = color;
     }
   }
   else
@@ -446,7 +466,7 @@ vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
 
     for (int y = yi; y <= yf; y++, x += m)
     {
-      vid_put(color, FIPTOI(16, x) + y * vid_size[0]);
+      vid_p[FIPTOI(16, x) + y * vid_size[0]] = color;
     }
   }
 }
@@ -461,3 +481,4 @@ vid_set_cursor_type(int t)
 {
   XDefineCursor(vid_nix_dsp, vid_nix_window, cursors[t]);
 }
+
