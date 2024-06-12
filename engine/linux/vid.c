@@ -348,13 +348,25 @@ vid_refresh()
   );
 }
 
+static long long wipe_cache = 0;
+
+void
+vid_wipe_color(unsigned char color)
+{
+  char* c = (char*)&wipe_cache;
+  for (int i = 0; i < sizeof(long long); i++)
+  {
+    c[i] = color;
+  }
+}
+
 void
 vid_wipe()
 {
   long long* vid_p_ll = (long long*)vid_p;
   for (int i = 0; i < vid_size[1]*vid_size[0] / sizeof(long long); i++)
   {
-    vid_p_ll[i] = 0; // We use the padding as the index, I am a fucking genius 
+    vid_p_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
   }
 }
 

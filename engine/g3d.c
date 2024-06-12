@@ -16,6 +16,7 @@ static short sintbl[TBLS/2];
 // Repeats every PI/2
 static g3d_f1_t tantbl[TBLS/2];
 
+static long long wipe_cache;
 static short* zbuf;
 
 g3d_eye_t* g3d_eye;
@@ -26,6 +27,11 @@ g3d_init(g3d_eye_t* initial_eye)
   if ((vid_size[0]*vid_size[1]) % sizeof(long long))
   {
     return 1;
+  }
+
+  for (int i = 0; i < sizeof(long long) / sizeof(short); i++)
+  {
+    ((short*)&wipe_cache)[i] = -SHORT_MAX;
   }
 
   zbuf = aligned_alloc(sizeof(long long), vid_size[0]*vid_size[1] * sizeof(*zbuf));
@@ -64,7 +70,7 @@ g3d_wipe()
   long long* zbuf_ll = (long long*)zbuf;
   for (int i = 0; i < vid_size[1]*vid_size[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
   {
-    zbuf_ll[i] = 0; // We use the padding as the index, I am a fucking genius 
+    zbuf_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
   }
 }
 

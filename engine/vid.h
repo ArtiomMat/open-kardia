@@ -120,7 +120,11 @@ vid_put_yline(unsigned char color, int yi, int yf, int x);
 extern void
 vid_put_rect(unsigned char fill, int left, int top, int right, int bottom);
 
-// Puts colors[0] on
+// Set wipe color, before calling it the wipe color is just 0
+extern void
+vid_wipe_color(unsigned char color);
+
+// Puts the wipe color on the entire screen, efficiently.
 extern void
 vid_wipe();
 

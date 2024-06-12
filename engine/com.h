@@ -1,6 +1,12 @@
 // Common functionality module, a m
 #pragma once
 
+#include <stdint.h>
+
+#if INTPTR_MAX != INT64_MAX
+  #error Only 64 bit systems.
+#endif
+
 #define COM_PATH_SIZE 512
 
 // Little endian

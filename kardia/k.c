@@ -318,7 +318,7 @@ main(int args_n, const char** args)
   g3d_init(NULL);
   
   puts("\nRUNNING...\n");
-
+  
   while(1)
   {
     clk_begin_tick();
