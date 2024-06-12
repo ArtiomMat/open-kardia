@@ -21,7 +21,7 @@ static unsigned char
 color_for(node_t* left, node_t* right, int x, int xi, int xf)
 {
   unsigned char left_pick, right_pick;
-  int grad_i = draw_flow ? K_EKG_GRAD : K_NODE_GRAD;
+  int grad_i = draw_flow ? K_EKG_MIXS : K_NODE_MIXS;
 
   // We need to left get the picks for each node
   left_pick = mix_pick(grad_i, left->ion, left->bias);

@@ -107,30 +107,32 @@ on_vid(vid_event_t* e)
 static void
 k_init()
 {
-  mix_push(K_NODE_GRAD, 255,100,0);
-  mix_push_gradient(K_NODE_GRAD, 31, 0,100,255);
+  mix_push(K_MISC_MIXS, 0, 0, 0);
   
-  mix_push(K_EKG_GRAD, 0,0,0);
-  mix_push_gradient(K_EKG_GRAD, 31, 0,255,100);
-
-  // x = mix_push(K_GUI_GRAD, GUI_SHADES_N, 64,64,10, 200,200,50);
-  // mix_push(K_GUI_GRAD, 50,45,0);
-  // mix_push(K_GUI_GRAD, 90,80,0);
-  // mix_push(K_GUI_GRAD, 130,115,0);
-  // mix_push(K_GUI_GRAD, 167,160,0);
-  // mix_push(K_GUI_GRAD, 240,235,0);
-
-  // mix_push(K_GUI_GRAD, 45,45,10);
-  // mix_push(K_GUI_GRAD, 80,80,30);
-  // mix_push(K_GUI_GRAD, 115,115,40);
-  // mix_push(K_GUI_GRAD, 160,160,80);
-  // mix_push(K_GUI_GRAD, 235,235,180);
+  mix_push(K_NODE_MIXS, 255,100,0);
+  mix_push_gradient(K_NODE_MIXS, 31, 0,100,255);
   
-  mix_push(K_GUI_GRAD, 40,40,40);
-  mix_push(K_GUI_GRAD, 80,80,80);
-  mix_push(K_GUI_GRAD, 130,130,130);
-  mix_push(K_GUI_GRAD, 180,180,180);
-  mix_push(K_GUI_GRAD, 255,255,255);
+  mix_push(K_EKG_MIXS, 0,0,0);
+  mix_push_gradient(K_EKG_MIXS, 31, 0,255,100);
+
+  // x = mix_push(K_GUI_MIXS, GUI_SHADES_N, 64,64,10, 200,200,50);
+  // mix_push(K_GUI_MIXS, 50,45,0);
+  // mix_push(K_GUI_MIXS, 90,80,0);
+  // mix_push(K_GUI_MIXS, 130,115,0);
+  // mix_push(K_GUI_MIXS, 167,160,0);
+  // mix_push(K_GUI_MIXS, 240,235,0);
+
+  // mix_push(K_GUI_MIXS, 45,45,10);
+  // mix_push(K_GUI_MIXS, 80,80,30);
+  // mix_push(K_GUI_MIXS, 115,115,40);
+  // mix_push(K_GUI_MIXS, 160,160,80);
+  // mix_push(K_GUI_MIXS, 235,235,180);
+  
+  mix_push(K_GUI_MIXS, 40,40,40);
+  mix_push(K_GUI_MIXS, 80,80,80);
+  mix_push(K_GUI_MIXS, 130,130,130);
+  mix_push(K_GUI_MIXS, 180,180,180);
+  mix_push(K_GUI_MIXS, 255,255,255);
   
   mix_set(255, 0,0,0);
 }
@@ -269,7 +271,7 @@ main(int args_n, const char** args)
   gui_init(k_font);
   for (int i = 0; i < GUI_SHADES_N; i++)
   {
-    gui_shades[i] = mix_grads[K_GUI_GRAD].start + i;
+    gui_shades[i] = mix_sets[K_GUI_MIXS].start + i;
   }
   gui_thing_t* opened = gui_open(com_relfp("example.gui"));
   gui_on = on_gui;
@@ -324,13 +326,12 @@ main(int args_n, const char** args)
     node_beat();
     vid_run();
 
-    vid_wipe(1);
+    vid_wipe();
+      g3d_wipe();
       g3d_draw(NULL);
       // node_draw(flow_mode);
       ekg_draw();
       gui_draw_windows();
-
-
       // vid_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
     vid_refresh();
     

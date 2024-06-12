@@ -106,6 +106,11 @@ x_error_handler(Display * d, XErrorEvent * e)
 int
 vid_init(int _vid_w, int _vid_h)
 {
+  if ((_vid_w*_vid_h) % sizeof(long long))
+  {
+    fprintf(stderr, "vid_init(): Resolution must be %lu byte aligned.", sizeof(long long));
+  }
+
   vid_size[0] = _vid_w;
   vid_size[1] = _vid_h;
 
@@ -193,7 +198,7 @@ vid_init(int _vid_w, int _vid_h)
   image_data = (unsigned char*) vid_nix_image->data;
 
   // Allocate the vid_p now
-  vid_p = malloc(vid_size[0] * vid_size[1]);
+  vid_p = aligned_alloc(sizeof(long long), vid_size[0] * vid_size[1]);
 
   // Limit window size
   XSizeHints size_hints;
@@ -223,12 +228,11 @@ vid_init(int _vid_w, int _vid_h)
   null_pixmap = XCreateBitmapFromData(vid_nix_dsp, vid_nix_window, null_data, 1, 1);
   // Idk why this is not black tbh, some dark magic, but it's fully transparent.
   cursors[VID_CUR_NULL] = XCreatePixmapCursor(vid_nix_dsp, null_pixmap,null_pixmap, &black, &black, 0, 0);
-  vid_set_cursor_type(VID_CUR_NULL);
-  
-//  int sizes_n;
-  int rates_n;
-//  XRRScreenSize *screen_sizes = XRRConfigSizes(screen_info, &sizes_n);
 
+  vid_set_cursor_type(VID_CUR_POINTER);
+
+  // Get screen refresh rate
+  int rates_n;
   short* rates = XRRConfigRates(screen_info, 0, &rates_n);
   if (screen_info == NULL)
   {
@@ -345,35 +349,13 @@ vid_refresh()
 }
 
 void
-vid_wipe(int color)
+vid_wipe()
 {
-  // int x, y;
-  // Window child;
-  // XWindowAttributes xwa;
-  // XTranslateCoordinates( vid_nix_dsp, vid_nix_window, root_window, 0, 0, &x, &y, &child );
-  // printf("%d,%d\n", x, y);
-  // XGetWindowAttributes(vid_nix_dsp, vid_nix_window, &xwa);
-
-
-  // XImage* scr_image = XGetImage(vid_nix_dsp, root_window, x, y, vid_size[0], vid_size[1], AllPlanes, XYPixmap);
-
-  for (int i = 0; i < vid_size[1]*vid_size[0]; i++)
+  long long* vid_p_ll = (long long*)vid_p;
+  for (int i = 0; i < vid_size[1]*vid_size[0] / sizeof(long long); i++)
   {
-    // if (x >= vid_size[0])
-    // {
-    //   x = 0;
-    //   y++;
-    // }
-
-    vid_p[i] = color; // We use the padding as the index, I am a fucking genius 
-
-    // unsigned long pixel = XGetPixel(scr_image, x, y);
-    // vid_pixels[i*4+2] = (pixel >> 16) & 0xFF; // Red component
-    // vid_pixels[i*4+1] = (pixel >> 8) & 0xFF;  // Green component
-    // vid_pixels[i*4+0] = pixel & 0xFF;         // Blue component
+    vid_p_ll[i] = 0; // We use the padding as the index, I am a fucking genius 
   }
-
-  // XFree (scr_image);
 }
 
 void

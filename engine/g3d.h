@@ -81,10 +81,10 @@ typedef struct
 
 extern g3d_eye_t* g3d_eye;
 
-// Requires vid
+// Requires vid, resolution must be sizeof(long long) divisible.
 // If initial_eye is NULL initializes a default eye 0'd out, with FOV of 90
 // g3d_set_fov() does not need to be used, it is automatically called on initial_eye using its own fov.
-extern void
+extern int
 g3d_init(g3d_eye_t* initial_eye);
 
 // A function is required because some info is also cached
@@ -93,6 +93,10 @@ g3d_set_fov(g3d_eye_t* eye, g3d_f1_t fov);
 
 extern void
 g3d_free();
+
+// Wipes the zbuf
+extern void
+g3d_wipe();
 
 extern void
 g3d_draw(g3d_model_t* model);

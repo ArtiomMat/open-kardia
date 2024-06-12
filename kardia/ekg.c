@@ -123,7 +123,7 @@ ekg_draw()
   // The loop actually just draws the visible portion that hasn't faded
   for (int raw_i = 0, last = 0; raw_i <= EKG_DRAW_RANGE; raw_i++)
   {
-    int color = mix_pick(K_EKG_GRAD, raw_i, EKG_DRAW_RANGE);
+    int color = mix_pick(K_EKG_MIXS, raw_i, EKG_DRAW_RANGE);
 
     // Setup the video i that is the x on the screen
     int i = x - EKG_DRAW_RANGE + raw_i;

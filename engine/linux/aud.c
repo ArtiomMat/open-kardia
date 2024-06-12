@@ -40,6 +40,8 @@ aud_init()
     fprintf(stderr, "aud_init(): Failed to connect to server, '%s' -PulseAudio\n", pa_strerror(error));
     return 0;
   }
+
+  puts("aud_init(): Simple audio module initialized, no info it's too simple.");
   return 1;
 }
 

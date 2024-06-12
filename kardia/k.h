@@ -34,11 +34,12 @@ typedef union
 
 enum
 {
-  K_NODE_GRAD,
-  K_EKG_GRAD,
-  K_GUI_GRAD,
-  K_GUI_TITLE_COLO,
-  K_GRADS_N,
+  K_MISC_MIXS,
+  K_NODE_MIXS,
+  K_EKG_MIXS,
+  K_GUI_MIXS,
+  
+  K_MIX_SETS_N,
 };
 
 // How long in seconds it takes for a single in Kardia, in a single tick all the nodes of the heart are updated. By default is 0.03 for 30 ticks per second

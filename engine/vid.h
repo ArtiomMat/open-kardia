@@ -91,6 +91,7 @@ extern void
 vid_set_title(const char* title);
 
 /**
+ * W*H must be sizeof(long long) divisible.
  * Returns 0 if fails, returns main refresh rate of screen if succeeds!
 */
 extern int
@@ -119,8 +120,9 @@ vid_put_yline(unsigned char color, int yi, int yf, int x);
 extern void
 vid_put_rect(unsigned char fill, int left, int top, int right, int bottom);
 
+// Puts colors[0] on
 extern void
-vid_wipe(int i);
+vid_wipe();
 
 /**
  * Refresh the window with all the new pixels that were set.

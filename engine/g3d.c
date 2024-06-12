@@ -20,10 +20,15 @@ static short* zbuf;
 
 g3d_eye_t* g3d_eye;
 
-void
+int
 g3d_init(g3d_eye_t* initial_eye)
 {
-  zbuf = malloc(vid_size[1]*vid_size[0] * sizeof(*zbuf));
+  if ((vid_size[0]*vid_size[1]) % sizeof(long long))
+  {
+    return 1;
+  }
+
+  zbuf = aligned_alloc(sizeof(long long), vid_size[0]*vid_size[1] * sizeof(*zbuf));
 
   // SIN/TAN TABLES SETUP
   for (int i = 0; i < (TBLS/2); i++)
@@ -49,6 +54,18 @@ g3d_init(g3d_eye_t* initial_eye)
   g3d_set_fov(g3d_eye, g3d_eye->fov);
 
   printf("g3d_init(): 3D Graphics module initialized, table size is %.1fKb.\n", (sizeof(sintbl) + sizeof(tantbl)) / 1024.0f);
+
+  return 1;
+}
+
+void
+g3d_wipe()
+{
+  long long* zbuf_ll = (long long*)zbuf;
+  for (int i = 0; i < vid_size[1]*vid_size[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
+  {
+    zbuf_ll[i] = 0; // We use the padding as the index, I am a fucking genius 
+  }
 }
 
 g3d_f1_t

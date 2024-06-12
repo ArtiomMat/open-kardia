@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-mix_grad_t mix_grads[MIX_MAX_GRADS] = {0};
+mix_set_t mix_sets[MIX_MAX_SETS] = {0};
 
 static int push_start = 0; // Where we start this current push
 
@@ -21,13 +21,13 @@ unsigned char
 mix_push(int i, int r, int g, int b)
 {
   // If it's the first push for this gradient we need to init the start
-  if (mix_grads[i].n == 0)
+  if (mix_sets[i].n == 0)
   {
-    mix_grads[i].start = push_start;
+    mix_sets[i].start = push_start;
   }
 
   // Add 1 to n
-  mix_grads[i].n++;
+  mix_sets[i].n++;
   mix_set(push_start, r, g, b);
   mix_shifts[push_start].grad_i = i;
 
