@@ -3,11 +3,9 @@
 
 #include "vid.h"
 
+px_t vid_px;
+
 unsigned char (*vid_colors)[3] = NULL;
-
-unsigned char* vid_p = NULL;
-
-int vid_size[2];
 
 int (*vid_on)(vid_event_t*) = vid_def_on;
 

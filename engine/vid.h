@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "px.h"
+
 enum
 {
   _VID_E_NULL,
@@ -76,10 +78,8 @@ extern int (*vid_on)(vid_event_t*);
 */
 extern unsigned char (*vid_colors)[3];
 
-// Contains all the pixels, each being an index to vid_colors
-extern unsigned char* vid_p;
-
-extern int vid_size[2];
+// The video px.
+extern px_t vid_px;
 
 // Position of the cursor
 extern int vid_cursor[2];
@@ -110,23 +110,6 @@ vid_run();
  * Set pixel of index I to the rgb value of COLOR_INDEX.
  * Must call vid_refresh() to actually blit the pixels.
 */
-
-extern void
-vid_put_line(unsigned char color, int xi, int yi, int xf, int yf);
-extern void
-vid_put_xline(unsigned char color, int xi, int xf, int y);
-extern void
-vid_put_yline(unsigned char color, int yi, int yf, int x);
-extern void
-vid_put_rect(unsigned char fill, int left, int top, int right, int bottom);
-
-// Set wipe color, before calling it the wipe color is just 0
-extern void
-vid_wipe_color(unsigned char color);
-
-// Puts the wipe color on the entire screen, efficiently.
-extern void
-vid_wipe();
 
 /**
  * Refresh the window with all the new pixels that were set.

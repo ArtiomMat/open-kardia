@@ -96,7 +96,7 @@ gui_init(gui_u_t w, gui_u_t h, const char* title, gui_thing_t* thing, gui_font_t
 
   // gui_window.content_cache = NULL;
 
-  gui_thing_refs = calloc( vid_size[0] * vid_size[1], sizeof (gui_thing_t*));
+  gui_thing_refs = calloc( vid_px.s[0] * vid_px.s[1], sizeof (gui_thing_t*));
 
   printf("gui_init(): GUI module initialized.\n");
 }
@@ -289,17 +289,17 @@ gui_draw_line(gui_u_t xi, gui_u_t yi, gui_u_t xf, gui_u_t yf, unsigned char colo
 
     fip_t sign = absi_ypx == ypx ? 1 : -1; // What value we increment in the y for loop
 
-    for (int x = max(left, 0); x < min(right, vid_size[0]); x++)
+    for (int x = max(left, 0); x < min(right, vid_px.s[0]); x++)
     {
       fip_t i;
       for (i = 0; i < absi_ypx; i += ITOFIP(8,1))
       {
         fip_t set_y = FIPTOI(8,y + i*sign);
-        if (set_y >= vid_size[1])
+        if (set_y >= vid_px.s[1])
         {
           return; // Nothing happens after the loop anyway
         }
-        vid_put(color, set_y*vid_size[0] + x);
+        vid_put(color, set_y*vid_px.s[0] + x);
       }
       y += ypx;
     }

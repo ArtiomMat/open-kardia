@@ -54,7 +54,7 @@ node_draw_line(node_t* root_node, node_t* next)
     }
     for (int y = yi; y < yf; y++)
     {
-      vid_p[xi + y * K_VID_SIZE] = color_for(b, t, y, yi, yf);
+      vid_px.p[xi + y * K_VID_SIZE] = color_for(b, t, y, yi, yf);
     }
   }
   else
@@ -81,12 +81,12 @@ node_draw_line(node_t* root_node, node_t* next)
       {
         fip_t set_y = FIPTOI(12,sign * i + y);
 
-        if (set_y >= vid_size[1] || set_y < 0)
+        if (set_y >= vid_px.s[1] || set_y < 0)
         {
           break;
         }
 
-        vid_p[FIPTOI(12,x) + set_y * K_VID_SIZE] = c;
+        vid_px.p[FIPTOI(12,x) + set_y * K_VID_SIZE] = c;
       }
     }
 

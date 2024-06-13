@@ -176,11 +176,11 @@ gui_draw_font(gui_font_t* f, gui_u_t _x, gui_u_t _y, int g, unsigned char color)
 
   // b is the bit index, it goes through glyph as a whole as if it were a bit buffer
   int b = f->row_size * add_y;
-  for (int y = _y + add_y; y < f->height + _y && y < vid_size[1]; y++)
+  for (int y = _y + add_y; y < f->height + _y && y < vid_px.s[1]; y++)
   {
     b += add_x;
 
-    for (int x = _x + add_x; x < width + _x && x < vid_size[0]; x++, b++)
+    for (int x = _x + add_x; x < width + _x && x < vid_px.s[0]; x++, b++)
     {
       char byte = glyph[b >> 3];
       
@@ -188,7 +188,7 @@ gui_draw_font(gui_font_t* f, gui_u_t _x, gui_u_t _y, int g, unsigned char color)
       // We do it from left to right because that's how we draw
       if ((byte << (b % 8)) & (1 << 7))
       {
-        vid_p[x + y * vid_size[0]] = color;
+        vid_px.p[x + y * vid_px.s[0]] = color;
       }
     }
 

@@ -68,8 +68,8 @@ void
 vid_free()
 {
   free(vid_colors);
-  free(vid_p);
-  vid_p = NULL;
+  free(vid_px.p);
+  vid_px.p = NULL;
   vid_colors = NULL;
 
   XDestroyWindow(vid_nix_dsp, vid_nix_window);
@@ -106,13 +106,11 @@ x_error_handler(Display * d, XErrorEvent * e)
 int
 vid_init(int _vid_w, int _vid_h)
 {
-  if ((_vid_w*_vid_h) % sizeof(long long))
+  if (!px_init(&vid_px, _vid_w, _vid_h))
   {
-    fprintf(stderr, "vid_init(): Resolution must be %lu byte aligned.", sizeof(long long));
+    fputs("vid_init(): Failed to allocate px.\n", stderr);
+    return 0;
   }
-
-  vid_size[0] = _vid_w;
-  vid_size[1] = _vid_h;
 
   XSetErrorHandler(x_error_handler);
 
@@ -145,7 +143,7 @@ vid_init(int _vid_w, int _vid_h)
   vid_nix_window = XCreateWindow(
     vid_nix_dsp,
     RootWindow(vid_nix_dsp, vid_nix_scr),
-    0, 0, vid_size[0], vid_size[1],
+    0, 0, vid_px.s[0], vid_px.s[1],
     0, // border width
     BIT_DEPTH, // bit depth
     InputOutput,
@@ -168,7 +166,7 @@ vid_init(int _vid_w, int _vid_h)
   XFlush(vid_nix_dsp); // Wait until window is visible.
 
   // Image creation
-  char* data = malloc(vid_size[0]*32/8 * vid_size[1]); // 32 because of padding >:(
+  char* data = malloc(vid_px.s[0]*32/8 * vid_px.s[1]); // 32 because of padding >:(
   if (data == NULL)
   {
     fputs("vid_init(): Failed to allocate image data.", stderr);
@@ -183,9 +181,9 @@ vid_init(int _vid_w, int _vid_h)
     ZPixmap,
     0,
     data,
-    vid_size[0], vid_size[1],
+    vid_px.s[0], vid_px.s[1],
     32, // bitmap_pad, just the alignment of each pixel I guess
-    vid_size[0]*32/8
+    vid_px.s[0]*32/8
   ); // bytes per scanline, since we have padding of 32, we use 32 instead of 24.
 
   if (!vid_nix_image)
@@ -197,16 +195,13 @@ vid_init(int _vid_w, int _vid_h)
 
   image_data = (unsigned char*) vid_nix_image->data;
 
-  // Allocate the vid_p now
-  vid_p = aligned_alloc(sizeof(long long), vid_size[0] * vid_size[1]);
-
   // Limit window size
   XSizeHints size_hints;
   size_hints.flags = PMinSize | PMaxSize;
-  size_hints.min_width = vid_size[0];
-  size_hints.max_width = vid_size[0];
-  size_hints.min_height = vid_size[1];
-  size_hints.max_height = vid_size[1];
+  size_hints.min_width = vid_px.s[0];
+  size_hints.max_width = vid_px.s[0];
+  size_hints.min_height = vid_px.s[1];
+  size_hints.max_height = vid_px.s[1];
   XSetWMNormalHints(vid_nix_dsp, vid_nix_window, &size_hints);
 
   vid_colors = calloc(256, sizeof (*vid_colors));
@@ -329,11 +324,12 @@ vid_run()
 void
 vid_refresh()
 {
-  for (int i = 0, j = 0; i < vid_size[0] * vid_size[1]; i++, j+=4)
+  for (int i = 0, j = 0; i < vid_px._total; i++, j+=4)
   {
-    image_data[j+2] = vid_colors[vid_p[i]][0];
-    image_data[j+1] = vid_colors[vid_p[i]][1];
-    image_data[j+0] = vid_colors[vid_p[i]][2];
+    // image_data[j+3] = 0;
+    image_data[j+2] = vid_colors[vid_px.p[i]][0];
+    image_data[j+1] = vid_colors[vid_px.p[i]][1];
+    image_data[j+0] = vid_colors[vid_px.p[i]][2];
   }
 
   XPutImage
@@ -344,125 +340,8 @@ vid_refresh()
     vid_nix_image,
     0, 0,
     0, 0,
-    vid_size[0], vid_size[1]
+    vid_px.s[0], vid_px.s[1]
   );
-}
-
-static long long wipe_cache = 0;
-
-void
-vid_wipe_color(unsigned char color)
-{
-  char* c = (char*)&wipe_cache;
-  for (int i = 0; i < sizeof(long long); i++)
-  {
-    c[i] = color;
-  }
-}
-
-void
-vid_wipe()
-{
-  long long* vid_p_ll = (long long*)vid_p;
-  for (int i = 0; i < vid_size[1]*vid_size[0] / sizeof(long long); i++)
-  {
-    vid_p_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
-  }
-}
-
-void
-vid_put_xline(unsigned char color, int xi, int xf, int y)
-{
-  int right = xi > xf ? xi : xf;
-  int left = right == xi? xf : xi;
-
-  for (int x = max(left, 0); x <= min(right, vid_size[0]-1); x++)
-  {
-    vid_p[y*vid_size[0] + x] = color;
-  }
-}
-
-void
-vid_put_yline(unsigned char color, int yi, int yf, int x)
-{
-  int top = yi > yf ? yi : yf;
-  int bottom = top == yi? yf : yi;
-
-  for (int y = max(bottom, 0); y <= min(top, vid_size[1]-1); y++)
-  {
-    vid_p[y*vid_size[0] + x] = color;
-  }
-}
-
-void
-vid_put_rect(unsigned char fill, int left, int top, int right, int bottom)
-{
-  for (int _x = left; _x <= right; _x++)
-  {
-    for (int _y = top; _y <= bottom; _y++)
-    {
-      vid_p[_y*vid_size[0] + _x] = fill;
-    }
-  }
-}
-
-// Reutns slope
-static fip_t
-setup_line_params(int* xi, int* yi, int* xf, int* yf, fip_t* y)
-{
-  if (*xi > *xf)
-  {
-    int tmp = *xi;
-    *xi = *xf;
-    *xf = tmp;
-
-    tmp = *yi;
-    *yi = *yf;
-    *yf = tmp;
-  }
-
-  fip_t m = FIP_DIV(16, ITOFIP(16, *yf-*yi), ITOFIP(16, *xf-*xi));
-
-  *y = ITOFIP(16, *yi);
-
-  return m;
-}
-
-void
-vid_put_line(unsigned char color, int xi, int yi, int xf, int yf)
-{
-  if (yi == yf)
-  {
-    vid_put_xline(color, xi, xf, yi);
-    return;
-  }
-  if (xi == xf)
-  {
-    vid_put_yline(color, yi, yf, xi);
-    return;
-  }
-
-  // XI must be less that xf
-  if (abs(xf-xi) > abs(yf-yi))
-  {
-    fip_t y;
-    fip_t m = setup_line_params(&xi, &yi, &xf, &yf, &y);
-
-    for (int x = xi; x <= xf; x++, y += m)
-    {
-      vid_p[x + FIPTOI(16, y) * vid_size[0]] = color;
-    }
-  }
-  else
-  {
-    fip_t x;
-    fip_t m = setup_line_params(&yi, &xi, &yf, &xf, &x);
-
-    for (int y = yi; y <= yf; y++, x += m)
-    {
-      vid_p[FIPTOI(16, x) + y * vid_size[0]] = color;
-    }
-  }
 }
 
 void

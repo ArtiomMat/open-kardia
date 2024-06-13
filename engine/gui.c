@@ -100,7 +100,7 @@ gui_init(gui_font_t* _font)
   font = _font;
   font_w = gui_get_font_width(font);
 
-  gui_thing_refs = calloc( vid_size[0] * vid_size[1], sizeof (gui_thing_t*));
+  gui_thing_refs = calloc( vid_px.s[0] * vid_px.s[1], sizeof (gui_thing_t*));
 
   gui_title_h = font->height + 2;
 
@@ -110,11 +110,11 @@ gui_init(gui_font_t* _font)
 static gui_thing_t*
 get_pointed_thing()
 {
-  if (vid_cursor[0] < 0 || vid_cursor[1] < 0 || vid_cursor[0] >= vid_size[0] ||  vid_cursor[1] >= vid_size[1])
+  if (vid_cursor[0] < 0 || vid_cursor[1] < 0 || vid_cursor[0] >= vid_px.s[0] ||  vid_cursor[1] >= vid_px.s[1])
   {
     return NULL;
   }
-  return gui_thing_refs[vid_cursor[0] + vid_cursor[1] * vid_size[0]];
+  return gui_thing_refs[vid_cursor[0] + vid_cursor[1] * vid_px.s[0]];
 }
 
 // Just frees a thing with its children, doesn't do extra stuff.
@@ -213,7 +213,7 @@ gui_free(gui_thing_t* t)
     gui_free2(t);
 
     // Clear the refrence buffer, it may still point to freed things
-    for (int i = 0; i < vid_size[0] * vid_size[1]; i++)
+    for (int i = 0; i < vid_px.s[0] * vid_px.s[1]; i++)
     {
       gui_thing_refs[i] = NULL;
     }
@@ -227,8 +227,8 @@ gui_free(gui_thing_t* t)
 static void
 save_mouse_rel(gui_thing_t* gui_window)
 {
-  gui_u_t mouse_x = min(max(vid_cursor[0], 0), vid_size[0]-1);
-  gui_u_t mouse_y = min(max(vid_cursor[1], 0), vid_size[1]-1);
+  gui_u_t mouse_x = min(max(vid_cursor[0], 0), vid_px.s[0]-1);
+  gui_u_t mouse_y = min(max(vid_cursor[1], 0), vid_px.s[1]-1);
 
   gui_window->window.mouse_rel[0] = mouse_x - gui_window->pos[0];
   gui_window->window.mouse_rel[1] = mouse_y - gui_window->pos[1];
@@ -291,7 +291,7 @@ window_on_move(gui_thing_t* window, gui_event_t* gui_e)
 {
   gui_u_t
     l = 0, t = 0,
-    r = vid_size[0]-1, b = vid_size[1]-1;
+    r = vid_px.s[0]-1, b = vid_px.s[1]-1;
   // Move the window if necessary and other logic to keep track of movement
   if (window->window.flags & GUI_WND_RELOCATING)
   {
@@ -969,7 +969,7 @@ draw_ref_rect(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t 
   {
     for (int _y = top; _y <= bottom; _y++)
     {
-      gui_thing_refs[_y*vid_size[0] + _x] = t;
+      gui_thing_refs[_y*vid_px.s[0] + _x] = t;
     }
   }
 }
@@ -978,11 +978,11 @@ draw_ref_rect(gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t 
 static inline void
 draw_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark)
 {
-  vid_put_xline(light, left, right, top);
-  vid_put_xline(dark, left, right, bottom);
+  px_put_xline(&vid_px, light, left, right, top);
+  px_put_xline(&vid_px, dark, left, right, bottom);
 
-  vid_put_yline(light, top, bottom, left);
-  vid_put_yline(dark, top, bottom, right);
+  px_put_yline(&vid_px, light, top, bottom, left);
+  px_put_yline(&vid_px, dark, top, bottom, right);
 }
 
 // Extends draw_rect and also fills the rectangle.
@@ -991,7 +991,7 @@ static inline void
 draw_filled_rect(gui_u_t left, gui_u_t top, gui_u_t right, gui_u_t bottom, int light, int dark, int fill)
 {
   draw_rect(left, top, right, bottom, light, dark);
-  vid_put_rect(fill, left+1, top+1, right-1, bottom-1);
+  px_put_rect(&vid_px, fill, left+1, top+1, right-1, bottom-1);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1183,7 +1183,7 @@ draw_thing(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, 
           x %= tpl;
         }
 
-        vid_put_yline(get_shade(3), y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1);
+        px_put_yline(&vid_px, get_shade(3), y*font->height + top+1, (y+1)*font->height + top-1, x*font_w + left+1);
       }
       
 
@@ -1247,7 +1247,7 @@ draw_window(int depth, gui_thing_t* t)
   // draw_filled_rect(TITLE_LEFT((*t)), TITLE_TOP((*t)), TITLE_RIGHT((*t)), TITLE_BOTTOM((*t)), get_shade(3), get_shade(1), get_shade(2));
 
   // Seperate x button from the rest of the title
-  // vid_put_yline(get_shade(1), TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)));
+  // px_put_yline(&vid_px, get_shade(1), TITLE_TOP((*t)), TITLE_BOTTOM((*t))-1, X_LEFT((*t)));
 
   // X button text
   gui_u_t xx=X_LEFT((*t)) + X_WIDTH/2 - 3, xy=TITLE_TOP((*t))+1;
@@ -1298,7 +1298,7 @@ gui_draw(gui_thing_t* t)
     return;
   }
 
-  draw_thing(-1, t, 0, 0, vid_size[0]-1, vid_size[1]);
+  draw_thing(-1, t, 0, 0, vid_px.s[0]-1, vid_px.s[1]);
 }
 
 extern void

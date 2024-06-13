@@ -48,8 +48,8 @@ wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 int
 vid_init(int _vid_w, int _vid_h)
 {
-	vid_size[0] = _vid_w;
-	vid_size[1] = _vid_h;
+	vid_px.s[0] = _vid_w;
+	vid_px.s[1] = _vid_h;
 
 	// Create the class
 	WNDCLASSEX wc = {0};
@@ -72,8 +72,8 @@ vid_init(int _vid_w, int _vid_h)
 	
 	r.left = 0;
 	r.top = 0;
-	r.right = vid_size[0];
-	r.bottom = vid_size[1];
+	r.right = vid_px.s[0];
+	r.bottom = vid_px.s[1];
 	
 	AdjustWindowRect (&r, WSTYLE, 0);
 	w = r.right - r.left;
@@ -95,8 +95,8 @@ vid_init(int _vid_w, int _vid_h)
 	
 	dibinfo_t di;
 	di.header.biSize          = sizeof(BITMAPINFOHEADER);
-	di.header.biWidth         = vid_size[0];
-	di.header.biHeight        = -vid_size[1];
+	di.header.biWidth         = vid_px.s[0];
+	di.header.biHeight        = -vid_px.s[1];
 	di.header.biPlanes        = 1;
 	di.header.biBitCount      = 8;
 	di.header.biCompression   = BI_RGB;

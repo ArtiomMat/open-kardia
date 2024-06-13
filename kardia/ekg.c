@@ -150,7 +150,7 @@ ekg_draw()
     // Now we just draw a vertical line
     for (int p = bottom; p <= top; p++)
     {
-      vid_p[i + p * K_VID_SIZE] = color;
+      vid_px.p[i + p * K_VID_SIZE] = color;
     }
 
     last = buf[i];

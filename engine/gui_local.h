@@ -26,6 +26,6 @@
 #define CONTENT_TOP(WND) (TITLE_BOTTOM(WND)+1)
 #define CONTENT_BOTTOM(WND) (BORDER_BOTTOM(WND) - BORDER_THICKNESS - 1)
 
-// A bitmap that is always supposed to be vid_size[0]*vid_size[1].
+// A bitmap that is always supposed to be vid_px.s[0]*vid_px.s[1].
 // An index is in it is an index of a pixel on the screen, and every index references the thing at that pixel
 extern gui_thing_t** gui_thing_refs;

@@ -271,6 +271,8 @@ extern int (*gui_on)(gui_event_t* event);
 // The height that the title bar part adds to the total window, this depends heavily on the font used
 extern int gui_title_h;
 
+extern px_t* gui_px;
+
 /**
  * Event handler that must be called so GUI properly works.
  * Returns 1 if the even was eaten, meaning your program shouldn't handle it because it was in the jurisdiction of GUI, returns 0 if it was not eaten, this does not always mean that GUI didn't collect information about the event for itself.

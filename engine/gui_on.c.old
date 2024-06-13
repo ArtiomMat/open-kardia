@@ -21,8 +21,8 @@ send_event(gui_event_t* e)
 static void
 save_mouse_rel()
 {
-  gui_u_t mouse_x = min(max(gui_mouse_pos[0], 0), vid_size[0]-1);
-  gui_u_t mouse_y = min(max(gui_mouse_pos[1], 0), vid_size[1]-1);
+  gui_u_t mouse_x = min(max(gui_mouse_pos[0], 0), vid_px.s[0]-1);
+  gui_u_t mouse_y = min(max(gui_mouse_pos[1], 0), vid_px.s[1]-1);
 
   gui_window.window.mouse_rel[0] = mouse_x - gui_window.pos[0];
   gui_window.window.mouse_rel[1] = mouse_y - gui_window.pos[1];
@@ -121,7 +121,7 @@ window_on_vid(gui_thing_t* gui_window, vid_event_t* e, gui_event_t* gui_e)
   {
     case VID_E_MOVE:
     // TODO: MAke this the actual size the window is allowed to occupy
-    mouse_move_window(0,0, vid_size[0], vid_size[1]);
+    mouse_move_window(0,0, vid_px.s[0], vid_px.s[1]);
     break;
 
     case VID_E_PRESS:
@@ -241,15 +241,15 @@ gui_on_vid(vid_event_t* e)
   {
     case VID_E_MOVE:
     // We also limit it to avoid any possible segfault
-    gui_mouse_pos[0] = max(min(e->move.x, vid_size[0]), 0);
-    gui_mouse_pos[1] = max(min(e->move.y, vid_size[1]), 0);
+    gui_mouse_pos[0] = max(min(e->move.x, vid_px.s[0]), 0);
+    gui_mouse_pos[1] = max(min(e->move.y, vid_px.s[1]), 0);
     break;
   }
 
   gui_event_t gui_e = {.type = _GUI_E_NULL};
 
   // Now pass on to the specific types
-  gui_thing_t* t = gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_size[0]];
+  gui_thing_t* t = gui_thing_refs[gui_mouse_pos[0] + gui_mouse_pos[1] * vid_px.s[0]];
   if (t != NULL)
   {
     printf("%llu\n", (unsigned long long)t%8);

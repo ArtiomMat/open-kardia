@@ -24,7 +24,7 @@ g3d_eye_t* g3d_eye;
 int
 g3d_init(g3d_eye_t* initial_eye)
 {
-  if ((vid_size[0]*vid_size[1]) % sizeof(long long))
+  if ((vid_px.s[0]*vid_px.s[1]) % sizeof(long long))
   {
     return 1;
   }
@@ -34,7 +34,7 @@ g3d_init(g3d_eye_t* initial_eye)
     ((short*)&wipe_cache)[i] = -SHORT_MAX;
   }
 
-  zbuf = aligned_alloc(sizeof(long long), vid_size[0]*vid_size[1] * sizeof(*zbuf));
+  zbuf = aligned_alloc(sizeof(long long), vid_px.s[0]*vid_px.s[1] * sizeof(*zbuf));
 
   // SIN/TAN TABLES SETUP
   for (int i = 0; i < (TBLS/2); i++)
@@ -68,7 +68,7 @@ void
 g3d_wipe()
 {
   long long* zbuf_ll = (long long*)zbuf;
-  for (int i = 0; i < vid_size[1]*vid_size[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
+  for (int i = 0; i < vid_px.s[1]*vid_px.s[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
   {
     zbuf_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
   }
@@ -144,7 +144,7 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
   
 
   // Above, below screen. Or just straight up dimentionless
-  if (c[1] < 0 || a[1] >= vid_size[1] || a[1] == c[1])
+  if (c[1] < 0 || a[1] >= vid_px.s[1] || a[1] == c[1])
   {
     return;
   }
@@ -181,7 +181,7 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
     {
       for (int x = FIPTOI(16,x_l); x <= FIPTOI(16,x_r); x++)
       {
-        vid_p[x + y * vid_size[0]] = color;
+        vid_px.p[x + y * vid_px.s[0]] = color;
       }
     }
   }
@@ -212,7 +212,7 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
     {
       for (int x = FIPTOI(16,x_l); x <= FIPTOI(16,x_r); x++)
       {
-        vid_p[x + y * vid_size[0]] = color;
+        vid_px.p[x + y * vid_px.s[0]] = color;
       }
     }
   }
@@ -233,11 +233,11 @@ rasterize(g3d_i3_t out, g3d_f3_t in)
   g3d_f1_t xrat = FIP_DIV(G3D_DB, in[0], plane);
   g3d_f1_t yrat = FIP_DIV(G3D_DB, in[1], plane);
 
-  xrat = xrat * (vid_size[0]/2);
-  yrat = yrat * (vid_size[1]/2);
+  xrat = xrat * (vid_px.s[0]/2);
+  yrat = yrat * (vid_px.s[1]/2);
 
-  out[0] = FIPTOI(G3D_DB, xrat) + vid_size[0]/2;
-  out[1] = FIPTOI(G3D_DB, yrat) + vid_size[1]/2;
+  out[0] = FIPTOI(G3D_DB, xrat) + vid_px.s[0]/2;
+  out[1] = FIPTOI(G3D_DB, yrat) + vid_px.s[1]/2;
   out[2] = in[2]; // No shift, for maximum accuracy of depth
 }
 

@@ -15,7 +15,7 @@ put_square(int color, int _x, int _y, int size)
   {
     for (int y = max(0, _y - size/2); y < K_VID_SIZE && y <= _y + size/2; y++)
     {
-      vid_p[x + y * K_VID_SIZE] = color;
+      vid_px.p[x + y * K_VID_SIZE] = color;
     }
   }
 }

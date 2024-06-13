@@ -325,14 +325,14 @@ main(int args_n, const char** args)
 
     node_beat();
     vid_run();
-
-    vid_wipe();
+    
+    px_wipe(&vid_px, 0);
       g3d_wipe();
       g3d_draw(NULL);
-      // node_draw(flow_mode);
+      node_draw(flow_mode);
       ekg_draw();
       gui_draw_windows();
-      // vid_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
+      // px_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
     vid_refresh();
     
     // if (i++ > 20)
