@@ -6,6 +6,7 @@
 #include "../engine/com.h"
 #include "../engine/mix.h"
 #include "../engine/g3d.h"
+#include "../engine/net.h"
 
 #include "node.h"
 #include "edit.h"
@@ -319,6 +320,10 @@ main(int args_n, const char** args)
   
   puts("\nRUNNING...\n");
   
+  char s[64];
+  net_atos(s, &net_loopback);
+  puts(s);
+
   while(1)
   {
     clk_begin_tick();

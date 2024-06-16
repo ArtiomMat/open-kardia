@@ -11,6 +11,7 @@ typedef struct
 } px_t;
 
 // What color index is ignored and not drawn
+// So for instance if px_put_px encounters a color px_nil_color it will not be drawn onto the used px.
 extern int px_nil_color;
 
 extern int
@@ -34,3 +35,8 @@ px_put_rect(px_t* m, unsigned char fill, int left, int top, int right, int botto
 // Put OTHER on M with the top-left corner of OTHER on M being Y-X
 extern void
 px_put_px(px_t* restrict m, px_t* restrict o, int x, int y);
+
+// Loads a PNG/JPG image into m, returns 0 if fails, returns 1 if succeeds.
+// NOTE: It converts truecolor into 8 bit indices for vid_colors, the conversion depends on the current state of vid_colors. Additionally, if a PNG is opened, trasnparent pixels are replaced with px_nil_color.
+extern int
+px_load(px_t* m, const char* fp);

@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 
+#include <png.h>
+
 int
 px_init(px_t* m, int w, int h)
 {
@@ -137,7 +139,7 @@ px_put_line(px_t* map, unsigned char color, int xi, int yi, int xf, int yf)
 void
 px_put_px(px_t* restrict m, px_t* restrict o, int x, int y)
 {
-for (int oy = 0; oy < o->s[1]; oy++)
+  for (int oy = 0; oy < o->s[1]; oy++)
   {
     unsigned long ox;
     // First copy as much as possible as longs
@@ -152,5 +154,35 @@ for (int oy = 0; oy < o->s[1]; oy++)
     {
       m->p[(ox+x) + (oy+y) * m->s[0]] = o->p[ox + oy * o->s[0]];
     }
+  }
+}
+
+int
+px_load(px_t* m, const char* fp)
+{
+  FILE* f = fopen(fp, "rb");
+
+  if (f == NULL)
+  {
+    fprintf(stderr, "px_load(): '%s' does not exist.\n", fp);
+    return 0;
+  }
+
+  unsigned char magic[4];
+
+  // Test for png
+  if (!fread(magic, 4, 1, f))
+  {
+    fclose(f);
+    fprintf(stderr, "px_load(): '%s' is not a valid PNG file.\n", fp);
+    return 0;
+  }
+
+  // Test for the PNG magic bytes in ASCII
+  if (magic[0] != 0x89 || magic[1] != 'P' || magic[2] != 'N' || magic[3] != 'G')
+  {
+    fclose(f);
+    fprintf(stderr, "px_load(): '%s' is not a valid PNG file.\n", fp);
+    return 0;
   }
 }
