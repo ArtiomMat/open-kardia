@@ -16,7 +16,7 @@ typedef union
 typedef struct
 {
   net_addr_t addr; // Address to send if net_send(), address sent from if net_recv()
-  char data[NET_MAX_SOCK_DATA]; // Ensures alignment to 8 bits
+  char d[NET_MAX_SOCK_DATA]; // Ensures alignment to 8 bits
   unsigned long long fd;
 } net_sock_t;
 
@@ -25,8 +25,8 @@ extern const net_addr_t net_loopback;
 // Address of the host itself.
 extern net_addr_t net_host_addr;
 
-extern void
-net_init(int max_data_size);
+extern int
+net_init();
 
 // IPv6 address string to an actual IPv6.
 extern int

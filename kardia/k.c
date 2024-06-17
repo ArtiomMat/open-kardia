@@ -315,14 +315,13 @@ main(int args_n, const char** args)
   // clk_time_t time = 0, count = 0;
   // clk_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
-
   g3d_init(NULL);
   
+  net_init();
+
   puts("\nRUNNING...\n");
   
-  char s[64];
-  net_atos(s, &net_loopback);
-  puts(s);
+  net_close(net_open(1));
 
   while(1)
   {
