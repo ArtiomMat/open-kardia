@@ -13,15 +13,15 @@
 #ifdef __x86_64__
   #define COM_LILE 1
 
-  static inline unsigned short
-  com_big16(unsigned short _x)
+  static inline uint16_t
+  com_big16(uint16_t _x)
   {
     union
     {
       struct
       {
-        unsigned short i;
-        unsigned char a[2];
+        uint16_t i;
+        uint8_t a[2];
       };
     } x, y;
     x.i = _x;
@@ -31,15 +31,15 @@
 
     return y.i;
   }
-  static inline unsigned int
-  com_big32(unsigned int _x)
+  static inline uint32_t
+  com_big32(uint32_t _x)
   {
     union
     {
       struct
       {
-        unsigned int i;
-        unsigned char a[4];
+        uint32_t i;
+        uint8_t a[4];
       };
     } x, y;
     x.i = _x;
@@ -51,15 +51,15 @@
 
     return y.i;
   }
-  static inline unsigned long long
-  com_big64(unsigned long long _x)
+  static inline uint64_t
+  com_big64(uint64_t _x)
   {
     union
     {
       struct
       {
-        unsigned long long i;
-        unsigned char a[8];
+        uint64_t i;
+        uint8_t a[8];
       };
     } x, y;
     x.i = _x;
@@ -76,49 +76,49 @@
     return y.i;
   }
 
-  static inline unsigned short
-  com_lil16(unsigned short _x)
+  static inline uint16_t
+  com_lil16(uint16_t _x)
   {
     return _x;
   }
-  static inline unsigned int
-  com_lil32(unsigned int _x)
+  static inline uint32_t
+  com_lil32(uint32_t _x)
   {
     return _x;
   }
-  static inline unsigned long long
-  com_lil64(unsigned long long _x)
+  static inline uint64_t
+  com_lil64(uint64_t _x)
   {
     return _x;
   }
 #elif __arm__
   #define COM_BIGE 1
 
-  static inline unsigned short
-  com_big16(unsigned short _x)
+  static inline uint16_t
+  com_big16(uint16_t _x)
   {
     return _x;
   }
-  static inline unsigned int
-  com_big32(unsigned int _x)
+  static inline uint32_t
+  com_big32(uint32_t _x)
   {
     return _x;
   }
-  static inline unsigned long long
-  com_big64(unsigned long long _x)
+  static inline uint64_t
+  com_big64(uint64_t _x)
   {
     return _x;
   }
 
-  static inline unsigned short
-  com_lil16(unsigned short _x)
+  static inline uint16_t
+  com_lil16(uint16_t _x)
   {
     union
     {
       struct
       {
-        unsigned short i;
-        unsigned char a[2];
+        uint16_t i;
+        uint8_t a[2];
       };
     } x, y;
     x.i = _x;
@@ -128,15 +128,15 @@
 
     return y.i;
   }
-  static inline unsigned int
-  com_lil32(unsigned int _x)
+  static inline uint32_t
+  com_lil32(uint32_t _x)
   {
     union
     {
       struct
       {
-        unsigned int i;
-        unsigned char a[4];
+        uint32_t i;
+        uint8_t a[4];
       };
     } x, y;
     x.i = _x;
@@ -148,15 +148,15 @@
 
     return y.i;
   }
-  static inline unsigned long long
-  com_lil64(unsigned long long _x)
+  static inline uint64_t
+  com_lil64(uint64_t _x)
   {
     union
     {
       struct
       {
-        unsigned long long i;
-        unsigned char a[8];
+        uint64_t i;
+        uint8_t a[8];
       };
     } x, y;
     x.i = _x;

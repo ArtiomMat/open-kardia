@@ -3,7 +3,9 @@
 
 #pragma once
 
-#define NET_MAX_SOCK_DATA 4096
+#include "com.h"
+
+#define NET_MAX_PACK_SIZE 4096
 // How many characters for a string
 #define NET_ADDRSTRLEN 64
 
@@ -13,11 +15,21 @@ typedef union
   long long l[2];
 } net_addr_t;
 
+// Pack is short for packet
 typedef struct
 {
-  net_addr_t addr; // Address to send if net_send(), address sent from if net_recv()
-  char d[NET_MAX_SOCK_DATA]; // Ensures alignment to 8 bits
+  net_addr_t addr; // Address to send to or that was received from.
+  char data[NET_MAX_PACK_SIZE]; // Aligned to 8 bytes due to ordering in struct
+  unsigned short port; // Always considered big endian/network order, so always must be stored as such.
+  unsigned short cur; // Put and Get cursors
+  unsigned short size; // How many bytes in data, can be up to NET_MAX_PACK_SIZE. Remains unused until flush is called.
+} net_pack_t;
+
+typedef struct
+{
   unsigned long long fd;
+  unsigned short bind_port; // The port to which we are bound. Always considered big endian/network order, so always must be stored as such.
+  net_pack_t pin, pout; // In and out packs
 } net_sock_t;
 
 extern const net_addr_t net_loopback;
@@ -48,11 +60,66 @@ net_close(net_sock_t* s);
 extern void
 net_blacklist(net_sock_t* s);
 
-// Send a single packet to TO.
-extern int
-net_send(net_sock_t* s);
+// Set the address of pout. port must be in network byte order(big endian).
+static inline void
+net_set_addr(net_sock_t* s, net_addr_t* addr, int port)
+{
+  s->pout.addr = *addr;
+  s->pout.port = port;
+}
 
-// Returns "from" socket, can be a new socket, net will never close the socket on its own.
-// Data must be at-least max_data_size from net_init().
+// Set pout cursor to 0.
+static inline void
+net_rewind(net_sock_t* s)
+{
+  s->pout.cur = s->pout.size = 0;
+}
+
+// Returns how many bytes left to write into pout after this putting. Does not stop if exceeded write limit, so unsafe.
+static inline int
+net_put8(net_sock_t* s, uint8_t x)
+{
+  s->pout.data[s->pout.cur++] = x;
+  return NET_MAX_PACK_SIZE - s->pout.cur;
+}
+// Return same as put8. DOES PADDING IF MISALIGNED!
 extern int
-net_recv(net_sock_t* s);
+net_put16(net_sock_t* s, uint16_t x);
+// Return same as put8. DOES PADDING IF MISALIGNED!
+extern int
+net_put32(net_sock_t* s, uint32_t x);
+// Return same as put8. Due to the nature of strings, it will stop if encounters the limit of writing(making this one safe), and will return -1 if an overflow is necessary to complete the putting operation.
+extern int
+net_puts(net_sock_t* s, const char* str);
+// Return same as put8.
+extern int
+net_putb(net_sock_t* s, const char* data, int n);
+
+// Returns how many more bytes can be read from pin after this getting. Does not stop if exceeded read limit, so unsafe.
+static inline int
+net_get8(net_sock_t* s, uint8_t* x)
+{
+  *x = s->pin.data[s->pin.cur++];
+  return s->pin.size - s->pin.cur; // TODO: Not NET_MAX_PACK_SIZE, it's not the size
+}
+// Return same as put8. DOES PADDING IF MISALIGNED!
+extern int
+net_get16(net_sock_t* s, uint16_t* x);
+// Return same as put8. DOES PADDING IF MISALIGNED!
+extern int
+net_get32(net_sock_t* s, uint32_t* x);
+// Return same as put8. Puts pointer, doesn't copy data, advances cursor to after the null terminator. If there is no null terminator, no worries, net doesn't trust the sender, it manually null terminates the end of the pack in memory. If string overflowed and had to be null terminated manually, returns -1.
+extern int
+net_gets(net_sock_t* s, const char** str);
+// Return same as put8. Puts pointer, doesn't copy data, advances the cursor n bytes.
+extern int
+net_getb(net_sock_t* s, const char** data, int n);
+
+// Send po packet to TO. Returns if sent all the data fully(atleast from our side).
+extern int
+net_flush(net_sock_t* s);
+
+// Wrapper for recvfrom.
+// Returns how many bytes were received, if not 0. Writes the packet into pin.
+extern int
+net_refresh(net_sock_t* s);

@@ -321,7 +321,31 @@ main(int args_n, const char** args)
 
   puts("\nRUNNING...\n");
   
-  net_close(net_open(1));
+  net_sock_t* sock = net_open(1);
+  
+  net_set_addr(sock, &net_loopback, sock->bind_port);
+  net_puts(sock, "I WANT TO FUCKING KILL MYSELF.");
+  
+  if (!net_flush(sock))
+  {
+    puts("FUCK FLUSH");
+    return 1;
+  }
+
+  clk_wait(10);
+
+  int n;
+  if (!(n = net_refresh(sock)))
+  {
+    puts("FUCK REFRESH");
+    return 1;
+  }
+
+  char* str;
+  net_gets(sock, &str);
+  printf("MESSAGE(%i): %s\n", sock->pin.size, str);
+
+  net_close(sock);
 
   while(1)
   {
