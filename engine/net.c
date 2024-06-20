@@ -3,19 +3,10 @@
 net_addr_t net_host_addr;
 const net_addr_t net_loopback = {.b[15]=1};
 
-#define PAD(WHAT, P) \
-  {\
-    int __off = WHAT % P;\
-    if (__off)\
-    {\
-      WHAT += (1<<P) - __off;\
-    }\
-  }
-
 int
 net_put16(net_sock_t* s, uint16_t x)
 {
-  PAD(s->pout.cur, 2);
+  NET_PAD(s->pout.cur, 2);
 
   *(uint16_t*)(s->pout.data + s->pout.cur) = com_lil16(x);
   s->pout.cur += 2;
@@ -24,7 +15,7 @@ net_put16(net_sock_t* s, uint16_t x)
 int
 net_put32(net_sock_t* s, uint32_t x)
 {
-  PAD(s->pout.cur, 4);
+  NET_PAD(s->pout.cur, 4);
 
   *(uint32_t*)(s->pout.data + s->pout.cur) = com_lil32(x);
   s->pout.cur += 4;
@@ -61,7 +52,7 @@ net_putb(net_sock_t* s, const char* data, int n)
 int
 net_get16(net_sock_t* s, uint16_t* x)
 {
-  PAD(s->pin.cur, 2);
+  NET_PAD(s->pin.cur, 2);
 
   *x = com_lil16(*(uint16_t*)(s->pin.data + s->pin.cur));
   s->pin.cur += 2;
@@ -70,7 +61,7 @@ net_get16(net_sock_t* s, uint16_t* x)
 int
 net_get32(net_sock_t* s, uint32_t* x)
 {
-  PAD(s->pin.cur, 4);
+  NET_PAD(s->pin.cur, 4);
 
   *x = com_lil32(*(uint32_t*)(s->pin.data + s->pin.cur));
   s->pin.cur += 4;

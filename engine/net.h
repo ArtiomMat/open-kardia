@@ -9,10 +9,21 @@
 // How many characters for a string
 #define NET_ADDRSTRLEN 64
 
+#define NET_PAD(WHAT, P) \
+  {\
+    int __off = WHAT % P;\
+    if (__off)\
+    {\
+      WHAT += (1<<P) - __off;\
+    }\
+  }
+
+typedef unsigned short net_port_t;
+
 typedef union
 {
-  char b[16];
-  long long l[2];
+  uint8_t  b[16];
+  uint64_t l[2];
 } net_addr_t;
 
 // Pack is short for packet
@@ -20,7 +31,7 @@ typedef struct
 {
   net_addr_t addr; // Address to send to or that was received from.
   char data[NET_MAX_PACK_SIZE]; // Aligned to 8 bytes due to ordering in struct
-  unsigned short port; // Always considered big endian/network order, so always must be stored as such.
+  net_port_t port; // Always considered big endian/network order, so always must be stored as such.
   unsigned short cur; // Put and Get cursors
   unsigned short size; // How many bytes in data, can be up to NET_MAX_PACK_SIZE. Remains unused until flush is called.
 } net_pack_t;
@@ -28,7 +39,7 @@ typedef struct
 typedef struct
 {
   unsigned long long fd;
-  unsigned short bind_port; // The port to which we are bound. Always considered big endian/network order, so always must be stored as such.
+  net_port_t bind_port; // The port to which we are bound. Always considered big endian/network order, so always must be stored as such.
   net_pack_t pin, pout; // In and out packs
 } net_sock_t;
 
@@ -56,13 +67,9 @@ net_open(int server);
 extern void
 net_close(net_sock_t* s);
 
-// Blacklist current address in S.
-extern void
-net_blacklist(net_sock_t* s);
-
 // Set the address of pout. port must be in network byte order(big endian).
 static inline void
-net_set_addr(net_sock_t* s, net_addr_t* addr, int port)
+net_set_addr(net_sock_t* restrict s, net_addr_t* restrict addr, net_port_t port)
 {
   s->pout.addr = *addr;
   s->pout.port = port;
@@ -115,7 +122,35 @@ net_gets(net_sock_t* s, const char** str);
 extern int
 net_getb(net_sock_t* s, const char** data, int n);
 
-// Send po packet to TO. Returns if sent all the data fully(atleast from our side).
+
+static inline int
+net_can_get8(net_sock_t* s)
+{
+  return s->pin.size - (s->pin.cur + 1) > 0;
+}
+
+static inline int
+net_can_get16(net_sock_t* s)
+{
+  int cur = s->pin.cur; // Include padding
+  NET_PAD(cur, 2);
+  return s->pin.size - (cur + 2) > 0;
+}
+static inline int
+net_can_get32(net_sock_t* s)
+{
+  int cur = s->pin.cur; // Include padding
+  NET_PAD(cur, 4);
+  return s->pin.size - (cur + 4) > 0;
+}
+
+static inline int
+net_can_getb(net_sock_t* s, int n)
+{
+  return s->pin.size - (s->pin.cur + n) > 0;
+}
+
+// Send po packet to TO. Returns if sent all the data fully(atleast from our side). If suceeded will also make sure to net_rewind() for you.
 extern int
 net_flush(net_sock_t* s);
 

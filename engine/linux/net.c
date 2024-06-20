@@ -62,18 +62,18 @@ net_init()
     freeifaddrs(ia);
   }
 
-  if (found)
+  if (!found)
   {
-    char str[64];
-    net_atos(str, &net_host_addr);
-    printf("net_init(): Networking module initialized, host address is %s.\n", str);
-    return 1;
+    fputs("net_init(): No IPv6 address available.", stderr);
+    return 0;
   }
   
   net_stoa(&net_loopback, "::1");
   
-  fputs("net_init(): No IPv6 address available.", stderr);
-  return 0;
+  char str[64];
+  net_atos(str, &net_host_addr);
+  printf("net_init(): Networking module initialized, host address is %s.\n", str);
+  return 1;
 }
 
 net_sock_t*
@@ -139,12 +139,6 @@ net_close(net_sock_t* s)
   free(s);
 }
 
-void
-net_blacklist(net_sock_t* s)
-{
-
-}
-
 int
 net_flush(net_sock_t* s)
 {
@@ -157,7 +151,14 @@ net_flush(net_sock_t* s)
   addr.sin6_port = s->pout.port;
 
   ssize_t r = sendto(s->fd, s->pout.data, s->pout.size, 0, (const struct sockaddr*)&addr, sizeof(addr));
-  return r == s->pout.size;
+  
+  if (r == s->pout.size)
+  {
+    net_rewind(s);
+    return 1;
+  }
+  
+  return 0;
 }
 
 int
