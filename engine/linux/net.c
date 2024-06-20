@@ -140,6 +140,25 @@ net_close(net_sock_t* s)
 }
 
 int
+net_sendto(net_sock_t* s, const char* data, int n)
+{
+  struct sockaddr_in6 addr = {0};
+
+  addr.sin6_family = AF_INET6;
+  memcpy(addr.sin6_addr.__in6_u.__u6_addr8, &s->pout.addr, 16);
+  addr.sin6_port = s->pout.port;
+
+  ssize_t r = sendto(s->fd, data, n, 0, (const struct sockaddr*)&addr, sizeof(addr));
+  
+  if (r == n)
+  {
+    return 1;
+  }
+  
+  return 0;
+}
+
+int
 net_flush(net_sock_t* s)
 {
   s->pout.size = s->pout.cur;
@@ -154,7 +173,6 @@ net_flush(net_sock_t* s)
   
   if (r == s->pout.size)
   {
-    net_rewind(s);
     return 1;
   }
   

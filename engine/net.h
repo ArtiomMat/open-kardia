@@ -122,6 +122,9 @@ net_gets(net_sock_t* s, const char** str);
 extern int
 net_getb(net_sock_t* s, const char** data, int n);
 
+// Get how big the string is(including null terminator), if reaches end without null terminator will return the size measured from the cursor to the end, exactly the way str would work.
+extern int
+net_gets_n(net_sock_t* s);
 
 static inline int
 net_can_get8(net_sock_t* s)
@@ -150,11 +153,15 @@ net_can_getb(net_sock_t* s, int n)
   return s->pin.size - (s->pin.cur + n) > 0;
 }
 
-// Send po packet to TO. Returns if sent all the data fully(atleast from our side). If suceeded will also make sure to net_rewind() for you.
+// Instead of sending pin->data, we send data, this has a very specific purpose in ser.
+extern int
+net_sendto(net_sock_t* s, const char* data, int n);
+
+// Send pout to TO. Returns if sent all the data fully(atleast from our side). Does not net_rewind() for you.
 extern int
 net_flush(net_sock_t* s);
 
 // Wrapper for recvfrom.
-// Returns how many bytes were received, if not 0. Writes the packet into pin.
+// Returns 1 if bytes were received, if not 0. Writes the packet into pin.
 extern int
 net_refresh(net_sock_t* s);

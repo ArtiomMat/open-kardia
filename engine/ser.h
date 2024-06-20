@@ -1,6 +1,7 @@
 // Server module
 #pragma once
 
+#include "clk.h"
 #include "net.h"
 
 #define SER_MAX_CLIENTS 32
@@ -10,10 +11,17 @@
 
 enum
 {
-  SER_E_JOIN, // e->join.accepted can be changed to 0, by default will be 1.
+  SER_E_JOIN, // e->join.accepted can be changed to 0, by default will be 1. checkout ser_sock->pin for info about the client.
   SER_E_REQUEST, // The client sent a request, may expect a reply(depends on your protocol). You now can net_get, and also net_put, if cursor exceeds 0 reply is sent.
   SER_E_TICK, // It's time to net_put a message for all clients, begin writing, if cursor exceeds 0 will be sent to all clients.
   SER_E_ALIVE, // A general alive message if the client has nothing to request.
+};
+
+enum
+{
+  SER_CLI_FREE,
+  SER_CLI_LIVE,
+  SER_CLI_WAIT, // Waiting confirmation that the client
 };
 
 typedef struct
@@ -34,9 +42,10 @@ typedef struct
 
 typedef struct ser_client_s
 {
-  net_addr_t address; // Also used as a sort of key, when clients send their index, checked if the address is in that client index.
+  net_addr_t addr; // Also used as a sort of key, when clients send their index, checked if the address is in that client index.
   net_port_t port;
-  char free;
+  clk_time_t last_pack_time;
+  char status;
 } ser_client_t;
 
 extern int (*ser_on)(ser_event_t* e);

@@ -93,3 +93,14 @@ net_getb(net_sock_t* s, const char** data, int n)
   s->pin.cur += n;
   return s->pin.size - s->pin.cur;
 }
+
+int
+net_gets_n(net_sock_t* s)
+{
+  int i = s->pin.cur;
+
+  for (int i = 0; s->pin.data[i] && i < s->pin.size; i++)
+  {}
+
+  return i - s->pin.cur;
+}
