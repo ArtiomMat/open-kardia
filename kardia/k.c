@@ -1,6 +1,6 @@
 #include "../engine/vid.h"
 #include "../engine/fip.h"
-#include "../engine/clk.h"
+#include "../engine/tmr.h"
 #include "../engine/aud.h"
 #include "../engine/gui.h"
 #include "../engine/com.h"
@@ -282,7 +282,7 @@ main(int args_n, const char** args)
   aud_init();
 
   // Set clk rate to fps if it was initialized by user otherwise screen rate
-  clk_init(1000 / (fps == -1 ? screen_rate : fps));
+  tmr_init(1000 / (fps == -1 ? screen_rate : fps));
 
   node_init(NULL);
 
@@ -314,8 +314,8 @@ main(int args_n, const char** args)
   set_node(7, 200,120, -120,40, (int[]){-1}, 1, (int[]){1,-1});
 
 
-  // clk_time_t time = 0, count = 0;
-  // clk_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
+  // tmr_time_t time = 0, count = 0;
+  // tmr_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
   g3d_init(NULL);
   
@@ -330,7 +330,7 @@ main(int args_n, const char** args)
 
   while(1)
   {
-    clk_begin_tick();
+    tmr_begin_tick();
 
     node_beat();
     vid_run();
@@ -350,7 +350,7 @@ main(int args_n, const char** args)
 
     // if (i++ > 20)
     // {
-    //   printf("%d\n", clk_tick_time);
+    //   printf("%d\n", tmr_tick_time);
     // }
 
     #if 0
@@ -364,13 +364,13 @@ main(int args_n, const char** args)
       }
       else
       {
-        time += clk_tick_time;
+        time += tmr_tick_time;
       }
     }
     #endif
 
 
-    clk_end_tick();
+    tmr_end_tick();
   }
   return 0;
 }

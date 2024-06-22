@@ -1,7 +1,7 @@
 // Server module
 #pragma once
 
-#include "clk.h"
+#include "tmr.h"
 #include "net.h"
 
 #define SER_MAX_CLIENTS 24
@@ -46,7 +46,7 @@ typedef struct
 typedef struct ser_client_s
 {
   net_addr_t addr; // Also used as a sort of key, when clients send their index, checked if the address is in that client index.
-  clk_time_t last_pack_time;
+  tmr_time_t last_pack_time;
   net_port_t port;
   char status;
   char alias[SER_MAX_CLI_ALIAS];

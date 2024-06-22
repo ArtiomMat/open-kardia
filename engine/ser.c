@@ -1,7 +1,7 @@
 #include "net.h"
 #include "ser.h"
 #include "cli.h"
-#include "clk.h"
+#include "tmr.h"
 #include "local.h"
 
 #include <string.h>
@@ -22,8 +22,8 @@ net_sock_t* ser_sock = NULL;
 ser_client_t clients[SER_MAX_CLIENTS] = {0};
 static int clients_n = 0;
 
-static clk_time_t last_tick_time;
-static clk_time_t last_info_time; // Last time info was requested
+static tmr_time_t last_tick_time;
+static tmr_time_t last_info_time; // Last time info was requested
 
 int ser_def_on(ser_event_t* e)
 {
@@ -38,7 +38,7 @@ ser_init(const char* _alias)
   alias = _alias;
 
   clients_n = 0;
-  last_tick_time = clk_now();
+  last_tick_time = tmr_now();
 
   for (int i = 0; i < SER_MAX_CLIENTS; i++)
   {
@@ -72,7 +72,7 @@ ser_run()
   ser_event_t e;
 
   // Time for a tick!
-  if (clk_now() - last_tick_time >= SER_TICK_RATE)
+  if (tmr_now() - last_tick_time >= SER_TICK_RATE)
   {
     // ser_on() the tick
     e.type = SER_E_TICK;
@@ -92,7 +92,7 @@ ser_run()
         // The client status is in wait, gotta make sure they got the memo.
         else if (clients[i].status == SER_CLI_WAIT)
         {
-          clk_time_t now = clk_now();
+          tmr_time_t now = tmr_now();
           if (now - clients[i].last_pack_time >= MAX_WAIT_TIME) // Too late to confirm.
           {
             free_client(i);
@@ -106,13 +106,12 @@ ser_run()
       }
     }
 
-    last_tick_time = clk_now();
+    last_tick_time = tmr_now();
   }
 
   // Now requests
   for (int _refresh_i = 0; _refresh_i < MAX_REFRESHES_PER_RUN && net_refresh(ser_sock); _refresh_i++)
   {
-    uint8_t u8;
     int8_t i8;
 
     if (!net_can_get8(ser_sock))
@@ -147,7 +146,7 @@ ser_run()
             goto _reject_client;
           }
           // Find a free slot
-          char ci;
+          unsigned char ci;
           for (ci = 0; ci < SER_MAX_CLIENTS; ci++)
           {
             if (clients[ci].status == SER_CLI_FREE)
@@ -157,7 +156,7 @@ ser_run()
           }
           // Setup the client
           clients[ci].status = SER_CLI_WAIT;
-          clients[ci].last_pack_time = clk_now();
+          clients[ci].last_pack_time = tmr_now();
           clients[ci].port = ser_sock->pin.port;
           clients[ci].addr = ser_sock->pin.addr;
           memcpy(clients[ci].alias, c_alias, c_alias_n);
@@ -209,7 +208,7 @@ ser_run()
     }
 
     clients[ci].port = ser_sock->pin.port; // Port may have changed.
-    clients[ci].last_pack_time = clk_now();
+    clients[ci].last_pack_time = tmr_now();
 
     net_rewind(ser_sock);
 

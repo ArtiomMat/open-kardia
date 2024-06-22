@@ -12,7 +12,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-#define __USE_MISC // Should be defined, but the C/C++ vscode extension wont do that...
+#ifndef __USE_MISC
+  #define __USE_MISC // Should be defined, but the C/C++ vscode extension wont do that...
+#endif
 #include <net/if.h>
 
 int
@@ -113,7 +115,7 @@ net_open(int server)
       goto _oopsies;
     }
 
-    int addr_len = sizeof(addr);
+    socklen_t addr_len = sizeof(addr);
     getsockname(sock->fd, (struct sockaddr *)&addr, &addr_len);
     sock->bind_port = addr.sin6_port;
   }
@@ -182,7 +184,7 @@ net_refresh(net_sock_t* s)
   struct sockaddr_in6 addr = {0};
   socklen_t addr_len = sizeof(addr);
   
-  ssize_t r = recvfrom(s->fd, s->pin.data, NET_MAX_PACK_SIZE, 0, (const struct sockaddr*)&addr, &addr_len);
+  ssize_t r = recvfrom(s->fd, s->pin.data, NET_MAX_PACK_SIZE, 0, (struct sockaddr*)&addr, &addr_len);
   
   if (r > 0 && addr_len == sizeof(addr))
   {

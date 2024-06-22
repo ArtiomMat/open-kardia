@@ -1,7 +1,7 @@
 #include "gui_local.h"
 #include "com.h"
 #include "fip.h"
-#include "clk.h"
+#include "tmr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1166,7 +1166,7 @@ draw_thing(int depth, gui_thing_t* t, gui_u_t left, gui_u_t top, gui_u_t right, 
       draw_filled_rect(left, top, right, bottom, get_shade(0), get_shade(3), get_shade(1));
 
       // Drawing the cursor, if the time is even
-      if (selected && ((clk_begin_time>>9)%2))
+      if (selected && ((tmr_begin_time>>9)%2))
       {
         // FIXME: Doesn't work always, sometimes the cursor overshoots 1 chracter forward, might have to do with even-ness of tpl or something similar.
         int tpl = text_per_line(right-left);

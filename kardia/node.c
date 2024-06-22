@@ -2,7 +2,7 @@
 #include "node.h"
 #include "../engine/fip.h"
 #include "k.h"
-#include "../engine/clk.h"
+#include "../engine/tmr.h"
 #include "ekg.h"
 #include "../engine/gui.h"
 #include "../engine/mix.h"
@@ -145,7 +145,7 @@ node_beat()
 
       if (node->countdown > 0) // If we have a countdown we decrease it.
       {
-        node->countdown -= clk_tick_time; // The time between beats
+        node->countdown -= tmr_tick_time; // The time between beats
         // If didn't overshoot we still wait, otherwise we can safely just begin flowing the ionization!
         if (node->countdown > 0)
         {
@@ -159,8 +159,8 @@ node_beat()
 
       int send_halt = 0; // If we need to now send the halt, 1 when the node empties
 
-      fip_t fip_clk_tick_time = (clk_tick_time/1000) * (1 << 8);
-      fip_t real_flow = FIP_MUL(8,node->flow, fip_clk_tick_time);
+      fip_t fip_tmr_tick_time = (tmr_tick_time/1000) * (1 << 8);
+      fip_t real_flow = FIP_MUL(8,node->flow, fip_tmr_tick_time);
       // Because if the flow is too big for this beat, we have unexpected behaviour when just using it, we need to normalize it
       if (real_flow >= node->ion)
       {
@@ -181,7 +181,7 @@ node_beat()
         }
         else
         {
-          node_all[node->next_flows[j]].countdown = clk_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
+          node_all[node->next_flows[j]].countdown = tmr_tick_time * 100; // The loop may just go over this one next and prematurely flow its ionization too, we don't want that until the next beat
         }
       }
     }

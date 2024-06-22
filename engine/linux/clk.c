@@ -1,26 +1,28 @@
-#include "../clk.h"
+#include "../tmr.h"
 
 #include <time.h>
 #include <stdio.h>
+#include <linux/time.h>
+#include <bits/time.h>
 
-static clk_time_t t0;
+static tmr_time_t t0;
 
 // Initialize right before the loop
 void
-clk_init(clk_time_t initial_tick_time)
+tmr_init(tmr_time_t initial_tick_time)
 {
-  clk_target_tick_time = clk_tick_time = initial_tick_time;
+  tmr_target_tick_time = tmr_tick_time = initial_tick_time;
 
   struct timespec res;
   clock_getres(CLOCK_MONOTONIC, &res);
   
-  t0 = clk_now();
+  t0 = tmr_now();
 
-  printf("clk_init(): Cloak module initialized, %ldns resolution.\n", res.tv_nsec);
+  printf("tmr_init(): Timer module initialized, %ldns resolution.\n", res.tv_nsec);
 }
 
 void
-clk_wait(clk_time_t millis)
+tmr_wait(tmr_time_t millis)
 {
   struct timespec req, rem;
   req.tv_sec = millis / 1000;
@@ -28,8 +30,8 @@ clk_wait(clk_time_t millis)
   nanosleep(&req, &rem);
 }
 
-clk_time_t
-clk_now()
+tmr_time_t
+tmr_now()
 {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);

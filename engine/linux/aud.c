@@ -9,7 +9,7 @@
 
 #define BUF_SIZE 1024
 
-static int err;
+// static int err;
 
 /*
 static snd_pcm_t* pcm;

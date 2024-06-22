@@ -3,7 +3,7 @@
 #include "node.h"
 #include "k.h"
 #include "../engine/aud.h"
-#include "../engine/clk.h"
+#include "../engine/tmr.h"
 #include "../engine/gui.h"
 #include "../engine/mix.h"
 
@@ -48,7 +48,7 @@ read_into_buf()
   static fip_t time_since_beep = 0;
 
   x++;
-  time_since_beep += clk_tick_time;
+  time_since_beep += tmr_tick_time;
 
   if (x >= K_VID_SIZE)
   {
