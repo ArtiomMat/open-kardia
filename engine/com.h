@@ -18,17 +18,14 @@
   {
     union
     {
-      struct
-      {
-        uint16_t i;
-        uint8_t a[2];
-      };
+      uint16_t i;
+      uint8_t a[2];
     } x, y;
     x.i = _x;
 
     y.a[0] = x.a[1];
     y.a[1] = x.a[0];
-
+    
     return y.i;
   }
   static inline uint32_t
@@ -36,11 +33,8 @@
   {
     union
     {
-      struct
-      {
-        uint32_t i;
-        uint8_t a[4];
-      };
+      uint32_t i;
+      uint8_t a[4];
     } x, y;
     x.i = _x;
 
@@ -56,11 +50,8 @@
   {
     union
     {
-      struct
-      {
-        uint64_t i;
-        uint8_t a[8];
-      };
+      uint64_t i;
+      uint8_t a[8];
     } x, y;
     x.i = _x;
 
@@ -115,11 +106,8 @@
   {
     union
     {
-      struct
-      {
-        uint16_t i;
-        uint8_t a[2];
-      };
+      uint16_t i;
+      uint8_t a[2];
     } x, y;
     x.i = _x;
 
@@ -133,11 +121,8 @@
   {
     union
     {
-      struct
-      {
-        uint32_t i;
-        uint8_t a[4];
-      };
+      uint32_t i;
+      uint8_t a[4];
     } x, y;
     x.i = _x;
 
@@ -153,11 +138,8 @@
   {
     union
     {
-      struct
-      {
-        uint64_t i;
-        uint8_t a[8];
-      };
+      uint64_t i;
+      uint8_t a[8];
     } x, y;
     x.i = _x;
 

@@ -11,6 +11,7 @@
 #define MAX_REFRESHES_PER_RUN (SER_MAX_CLIENTS+8)
 
 #define MAX_WAIT_TIME 1000
+#define MAX_IDLE_TIME 1000
 
 #define INFO_COOLDOWN 500
 
@@ -44,12 +45,23 @@ ser_init(const char* _alias)
     clients[i].status = SER_CLI_FREE;
   }
   
-  ser_sock = net_open(1);
+  if ((ser_sock = net_open(1)) == NULL)
+  {
+    return 0;
+  }
+
+  int x = com_big16(ser_sock->bind_port);
+  printf("net_open(): Opened server socket, port %i.\n", x);
+  return 1;
 }
 
 static void
 free_client(int i)
 {
+  // 0 out the address so a disconnected client can't just play around.
+  clients[i].addr.l[0] = 0;
+  clients[i].addr.l[1] = 0;
+
   clients[i].status = SER_CLI_FREE;
   clients_n--;
 }
@@ -205,11 +217,18 @@ ser_run()
     {
       case CLI_I_GOT_ACCEPT:
       clients[ci].status = SER_CLI_LIVE;
+      clients_n++;
       break;
 
       case CLI_I_REQUEST:
-      e.type = SER_I_REPLY;
+      e.type = SER_E_REQUEST;
       ser_on(&e);
+      break;
+
+      case CLI_I_EXIT:
+      e.type = SER_E_EXIT;
+      ser_on(&e);
+      free_client(ci);
       break;
 
       case CLI_I_INFO:

@@ -41,6 +41,9 @@ cli_run();
 extern int
 cli_join(net_addr_t* addr, net_port_t port);
 
+extern int
+cli_exit();
+
 // Returns if the info request was sent from our end.
 extern int
 cli_info(net_addr_t* addr, net_port_t port);

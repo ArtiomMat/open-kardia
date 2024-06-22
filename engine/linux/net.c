@@ -116,13 +116,10 @@ net_open(int server)
     int addr_len = sizeof(addr);
     getsockname(sock->fd, (struct sockaddr *)&addr, &addr_len);
     sock->bind_port = addr.sin6_port;
-
-    printf("net_open(): Opened server, port %i.\n", ntohs(addr.sin6_port));
   }
   else
   {
     sock->bind_port = 0; // No bind port.
-    printf("net_open(): Opened client.\n");
   }
 
   return sock;

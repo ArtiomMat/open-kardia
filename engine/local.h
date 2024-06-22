@@ -15,6 +15,7 @@ enum
   CLI_I_JOIN, // for join
   CLI_I_GOT_ACCEPT,
   CLI_I_REQUEST,
+  CLI_I_EXIT,
 };
 
 enum

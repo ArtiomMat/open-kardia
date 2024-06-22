@@ -12,7 +12,7 @@ static const char* alias;
 
 net_sock_t* cli_sock = NULL;
 
-static uint8_t my_index;
+static int8_t my_index = -1;
 
 static char want_reply;
 static char want_info;
@@ -29,8 +29,22 @@ int
 cli_init(const char* _alias)
 {
   alias = _alias;
-  cli_sock = net_open(0);
+  if ((cli_sock = net_open(0)) == NULL)
+  {
+    return 0;
+  }
   want_reply = want_info = want_join = 0;
+  my_index = -1;
+
+  puts("cli_init(): Opened client socket.");
+  return 1;
+}
+
+void
+cli_free()
+{
+  cli_exit(); // Do the server a favor
+  net_close(cli_sock);
 }
 
 void
@@ -116,14 +130,31 @@ cli_begin_request(int _want_reply)
 }
 
 int
+cli_exit()
+{
+  if (my_index == -1)
+  {
+    return 0;
+  }
+
+  net_rewind(cli_sock);
+  net_put8(cli_sock, CLI_I_EXIT);
+  net_put8(cli_sock, my_index);
+  net_flush(cli_sock);
+}
+
+int
 cli_join(net_addr_t* addr, net_port_t port)
 {
+  cli_exit(); // Exit first any server we are in
+
   net_set_addr(cli_sock, addr, port);
   net_rewind(cli_sock);
   
   net_put8(cli_sock, CLI_I_JOIN);
   net_puts(cli_sock, alias);
   
-  net_flush(cli_sock);
   want_join = 1;
+
+  return net_flush(cli_sock);
 }

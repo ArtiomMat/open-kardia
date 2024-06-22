@@ -52,14 +52,15 @@
 
  CLI_I_REQUEST: request for the server, for which it sends SER_I_REPLY
  u8: index
- EMPTY
 
  CLI_I_JOIN: request to join
  str[SER_MAX_CLI_ALIAS]: alias
+ 
+ CLI_I_EXIT: notification of exiting the connecting
+ u8: index
 
  CLI_I_GOT_ACCEPT: the client got the accept of the server
  u8: index that the client got
-
 
 ===========
  Compiling

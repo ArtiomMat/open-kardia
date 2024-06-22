@@ -21,6 +21,7 @@ enum
   SER_E_TICK, // It's time to net_put a message for all clients, begin writing, if cursor exceeds 0 will be sent to all clients, otherwise this tick is not considered.
   // SER_E_ALIVE, // A general alive message if the client has nothing to request.
   SER_E_INFO, // The client asked for info about the server, can net_put the info now, if cursor exceeds 0 info is sent.
+  SER_E_EXIT, // Client is exiting. Just note it.
 };
 
 enum
