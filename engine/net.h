@@ -75,7 +75,7 @@ net_set_addr(net_sock_t* restrict s, net_addr_t* restrict addr, net_port_t port)
   s->pout.port = port;
 }
 
-// Set pout cursor to 0.
+// Set pout cursor and size to 0.
 static inline void
 net_rewind(net_sock_t* s)
 {
@@ -129,7 +129,7 @@ net_gets_n(net_sock_t* s);
 static inline int
 net_can_get8(net_sock_t* s)
 {
-  return s->pin.size - (s->pin.cur + 1) > 0;
+  return s->pin.size - (s->pin.cur + 1) >= 0;
 }
 
 static inline int
@@ -137,20 +137,20 @@ net_can_get16(net_sock_t* s)
 {
   int cur = s->pin.cur; // Include padding
   NET_PAD(cur, 2);
-  return s->pin.size - (cur + 2) > 0;
+  return s->pin.size - (cur + 2) >= 0;
 }
 static inline int
 net_can_get32(net_sock_t* s)
 {
   int cur = s->pin.cur; // Include padding
   NET_PAD(cur, 4);
-  return s->pin.size - (cur + 4) > 0;
+  return s->pin.size - (cur + 4) >= 0;
 }
 
 static inline int
 net_can_getb(net_sock_t* s, int n)
 {
-  return s->pin.size - (s->pin.cur + n) > 0;
+  return s->pin.size - (s->pin.cur + n) >= 0;
 }
 
 // Instead of sending pin->data, we send data, this has a very specific purpose in ser.

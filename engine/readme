@@ -11,6 +11,57 @@
  The engine is compiled with -ffast-math -O3, this can be disabled by just removing it from the makefile, I haven't tested the effect of such operations on the speed of the engine. From what I have read, you are able to compile your binary that uses the engine without -ffast-math. With that being said, you must be enformed that -ffast-math makes assumptions, one of them being that there are no infinities, no division by 0, etc. And it will not care if you make it divide by 0 in floats, it will keep going.
 
 ===========
+ Protocols
+===========
+
+ Every packet starts with a header containing a single i8, designating what the rest of the data means.
+ NOTE: EVERY PACKET, can have extra information that he protocol of the game itself takes care of, after all the data that the server writes the game can handle writing and reading extra info on the client and server sides. So even if "EMPTY" is written, the game may still add extra data. For str[x], str is limited to be the size of x at most(including null terminator).
+
+ For the server:
+ ---------------
+
+ SER_I_TICK: server tick, a global message sent to all clients connected.
+ EMPTY
+
+ SER_I_REPLY: a reply to a request made by the client, a request does not include JOIN, rather it's CLI_I_REQUEST.
+ EMPTY
+
+ SER_I_ACCEPT: the server accepted the client join request
+ u8: index of client
+
+ SER_I_REJECT: the server rejected the client's join request
+ u8: pad that is to be skipped, due to the way i programmed the fucking server the reject and accept headers must be the same sizes.
+
+ SER_I_INFO: (for joined clients) general info about the connecting
+ u16: ping time, will also help calculate ping-pong time aswell
+ u8: how many connected
+
+ SER_I_INFO: (for unjoined clients) general info about server before joining
+ str[SER_MAX_SER_ALIAS]: alias
+ str[SER_MAX_SER_DESC]: description(not optional but can be just left null terminated at start)
+ u8: how many connected
+ 
+ For the client:
+ ---------------
+
+ CLI_I_INFO: (for joined clients) client wants info.
+ u8: index
+
+ CLI_I_INFO: (for unjoined clients) client wants info.
+ EMPTY
+
+ CLI_I_REQUEST: request for the server, for which it sends SER_I_REPLY
+ u8: index
+ EMPTY
+
+ CLI_I_JOIN: request to join
+ str[SER_MAX_CLI_ALIAS]: alias
+
+ CLI_I_GOT_ACCEPT: the client got the accept of the server
+ u8: index that the client got
+
+
+===========
  Compiling
 ===========
 

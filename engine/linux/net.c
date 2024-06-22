@@ -68,7 +68,7 @@ net_init()
     return 0;
   }
   
-  net_stoa(&net_loopback, "::1");
+  // net_stoa(&net_loopback, "::1");
   
   char str[64];
   net_atos(str, &net_host_addr);
@@ -198,4 +198,3 @@ net_refresh(net_sock_t* s)
   
   return 0;
 }
-

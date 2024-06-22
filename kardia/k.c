@@ -7,6 +7,8 @@
 #include "../engine/mix.h"
 #include "../engine/g3d.h"
 #include "../engine/net.h"
+#include "../engine/ser.h"
+#include "../engine/cli.h"
 
 #include "node.h"
 #include "edit.h"
@@ -318,34 +320,12 @@ main(int args_n, const char** args)
   g3d_init(NULL);
   
   net_init();
+  cli_init("C++SUCKS");
+  ser_init("test");
+
+  cli_join(&net_loopback, ser_sock->bind_port);
 
   puts("\nRUNNING...\n");
-  
-  net_sock_t* sock = net_open(1);
-  
-  net_set_addr(sock, &net_loopback, sock->bind_port);
-  net_puts(sock, "I WANT TO FUCKING KILL MYSELF.");
-  
-  if (!net_flush(sock))
-  {
-    puts("FUCK FLUSH");
-    return 1;
-  }
-
-  clk_wait(10);
-
-  int n;
-  if (!(n = net_refresh(sock)))
-  {
-    puts("FUCK REFRESH");
-    return 1;
-  }
-
-  char* str;
-  net_gets(sock, &str);
-  printf("MESSAGE(%i): %s\n", sock->pin.size, str);
-
-  net_close(sock);
 
   while(1)
   {
@@ -353,6 +333,9 @@ main(int args_n, const char** args)
 
     node_beat();
     vid_run();
+
+    ser_run();
+    cli_run();
     
     px_wipe(&vid_px, 0);
       g3d_wipe();
@@ -363,6 +346,7 @@ main(int args_n, const char** args)
       // px_put_line(2, vid_cursor[0], vid_cursor[1], 150, 150);
     vid_refresh();
     
+
     // if (i++ > 20)
     // {
     //   printf("%d\n", clk_tick_time);
