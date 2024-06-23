@@ -6,11 +6,11 @@
 static int res;
 static TIMECAPS tc;
 
-static tmr_time_t t0;
+static tmr_ms_t t0;
 
 // Initialize right before the loop
 void
-tmr_init(tmr_time_t initial_tick_time)
+tmr_init(tmr_ms_t initial_tick_time)
 {
   timeGetDevCaps(&tc, sizeof (tc));
 
@@ -23,7 +23,7 @@ tmr_init(tmr_time_t initial_tick_time)
 }
 
 void
-tmr_wait(tmr_time_t milis)
+tmr_wait(tmr_ms_t milis)
 {
   Sleep(milis);
 }
@@ -33,7 +33,7 @@ void tmr_free()
   timeEndPeriod(tc.wPeriodMin);
 }
 
-tmr_time_t
+tmr_ms_t
 tmr_now()
 {
   return GetTickCount64();

@@ -4,10 +4,10 @@
   #include <stdio.h>
 #endif
 
-tmr_time_t tmr_target_tick_time;
-tmr_time_t tmr_tick_time;
+tmr_ms_t tmr_target_tick_time;
+tmr_ms_t tmr_tick_time;
 
-tmr_time_t tmr_begin_time = 0;
+tmr_ms_t tmr_begin_time = 0;
 
 void
 tmr_begin_tick()
@@ -18,8 +18,8 @@ tmr_begin_tick()
 int
 tmr_end_tick()
 {
-  tmr_time_t now = tmr_now();
-  tmr_time_t delta = now - tmr_begin_time;
+  tmr_ms_t now = tmr_now();
+  tmr_ms_t delta = now - tmr_begin_time;
 
   if (delta < tmr_target_tick_time)
   {

@@ -314,16 +314,15 @@ main(int args_n, const char** args)
   set_node(7, 200,120, -120,40, (int[]){-1}, 1, (int[]){1,-1});
 
 
-  // tmr_time_t time = 0, count = 0;
-  // tmr_time_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
+  // tmr_ms_t time = 0, count = 0;
+  // tmr_ms_t times[] = {0};// {FTOFIP(8,1), FTOFIP(8,0.7), FTOFIP(8,0.6), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,1), FTOFIP(8,0.5), FTOFIP(8,0.3), FTOFIP(8,0.25), FTOFIP(8,0.25), FTOFIP(8,0.15), FTOFIP(8,0.15), FTOFIP(8,0.15)};
 
   g3d_init(NULL);
   
   net_init();
-  cli_init("C++SUCKS");
+  cli_init("Klaus");
   ser_init("test");
 
-  cli_join(&net_loopback, ser_sock->bind_port);
   cli_join(&net_loopback, ser_sock->bind_port);
 
   puts("\nRUNNING...\n");

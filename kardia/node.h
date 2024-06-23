@@ -37,9 +37,9 @@ typedef struct node_s
   // If ionization reaches beyond NODE_MAX_ION it is capped, various factors depend on NODE_MAX_ION being the maximum possible value.
   fip_t ion;
   // In seconds, after this node is emptied, how long this nodes holds on to the next node's flow before allowing it to begin flowing. This allows for delays, the heart is know to have those.
-  tmr_time_t halt;
+  tmr_ms_t halt;
   // In seconds, the halt that the parent signal node sent to this one, the node needs to decrease this value until it's zero.
-  tmr_time_t countdown;
+  tmr_ms_t countdown;
 } node_t;
 
 extern node_t node_all[NODE_MAX];

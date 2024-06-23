@@ -10,8 +10,7 @@
 
 #define MAX_REFRESHES_PER_RUN (SER_MAX_CLIENTS+8)
 
-#define MAX_WAIT_TIME 1000
-#define MAX_IDLE_TIME 1000
+#define MAX_WAIT_MS 1000
 
 #define INFO_COOLDOWN 500
 
@@ -19,11 +18,11 @@ static const char* alias;
 
 net_sock_t* ser_sock = NULL;
 
-ser_client_t clients[SER_MAX_CLIENTS] = {0};
-static int clients_n = 0;
+ser_client_t ser_clis[SER_MAX_CLIENTS];
+int ser_clis_n;
 
-static tmr_time_t last_tick_time;
-static tmr_time_t last_info_time; // Last time info was requested
+static tmr_ms_t last_tick_ms;
+static tmr_ms_t last_info_ms; // Last time info was requested
 
 int ser_def_on(ser_event_t* e)
 {
@@ -37,12 +36,12 @@ ser_init(const char* _alias)
 {
   alias = _alias;
 
-  clients_n = 0;
-  last_tick_time = tmr_now();
+  ser_clis_n = 0;
+  last_tick_ms = tmr_now();
 
   for (int i = 0; i < SER_MAX_CLIENTS; i++)
   {
-    clients[i].status = SER_CLI_FREE;
+    ser_clis[i].status = SER_CLI_FREE;
   }
   
   if ((ser_sock = net_open(1)) == NULL)
@@ -56,79 +55,111 @@ ser_init(const char* _alias)
 }
 
 static void
+live_client(int i)
+{
+  ser_clis[i].status = SER_CLI_LIVE;
+  ser_clis_n++;
+}
+
+static void
 free_client(int i)
 {
   // 0 out the address so a disconnected client can't just play around.
-  clients[i].addr.l[0] = 0;
-  clients[i].addr.l[1] = 0;
+  ser_clis[i].addr.l[0] = 0;
+  ser_clis[i].addr.l[1] = 0;
 
-  clients[i].status = SER_CLI_FREE;
-  clients_n--;
+  ser_clis[i].status = SER_CLI_FREE;
+  ser_clis_n--;
+}
+
+//
+static void
+handle_wait_status(int i, tmr_ms_t now)
+{
+  if (now - ser_clis[i].last_pack_ms >= MAX_WAIT_MS) // Too late to confirm.
+  {
+    free_client(i);
+  }
+  else if (now - ser_clis[i].last_pack_ms >= MAX_WAIT_MS/2) // Last chance to confirm the accept, we resend it.
+  {
+    char data[2] = {SER_I_ACCEPT, i};
+    net_sendto(ser_sock, data, 2);
+  }
 }
 
 void
 ser_run()
 {
   ser_event_t e;
+  tmr_ms_t now = tmr_now();
 
   // Time for a tick!
-  if (tmr_now() - last_tick_time >= SER_TICK_RATE)
+  if (now - last_tick_ms >= SER_TICK_RATE)
   {
     // ser_on() the tick
     e.type = SER_E_TICK;
     net_rewind(ser_sock);
+    net_put8(ser_sock, SER_I_TICK);
     ser_on(&e);
     
-    // Only send if there is any data in the tick, also, retry 
-    if (ser_sock->pout.cur > 0)
+    if (ser_sock->pout.cur > 1) // If a tick was written handle both sending it and the wait ser_clis.
     {
       for (int i = 0; i < SER_MAX_CLIENTS; i++)
       {
-        if (clients[i].status == SER_CLI_LIVE)
+        switch (ser_clis[i].status)
         {
-          net_set_addr(ser_sock, &clients[i].addr, clients[i].port);
-          net_flush(ser_sock);
-        }
-        // The client status is in wait, gotta make sure they got the memo.
-        else if (clients[i].status == SER_CLI_WAIT)
-        {
-          tmr_time_t now = tmr_now();
-          if (now - clients[i].last_pack_time >= MAX_WAIT_TIME) // Too late to confirm.
+          case SER_CLI_LIVE:
+          // Idle for too long
+          if (ser_clis[i].last_pack_ms >= PROT_MAX_IDLE_MS)
           {
             free_client(i);
+            break;
           }
-          else if (now - clients[i].last_pack_time >= MAX_WAIT_TIME/2) // Last chance to confirm the accept, we resend it.
-          {
-            char data[2] = {SER_I_ACCEPT, i};
-            net_sendto(ser_sock, data, 2);
-          }
+
+          net_set_addr(ser_sock, &ser_clis[i].addr, ser_clis[i].port);
+          net_flush(ser_sock);
+          break;
+
+          case SER_CLI_WAIT:
+          handle_wait_status(i, now);
+          break;
+        }
+      }
+    }
+    else // Only handle waits
+    {
+      for (int i = 0; i < SER_MAX_CLIENTS; i++)
+      {
+        if (ser_clis[i].status == SER_CLI_WAIT)
+        {
+          handle_wait_status(i, now);
         }
       }
     }
 
-    last_tick_time = tmr_now();
+    last_tick_ms = tmr_now();
   }
 
   // Now requests
   for (int _refresh_i = 0; _refresh_i < MAX_REFRESHES_PER_RUN && net_refresh(ser_sock); _refresh_i++)
   {
-    int8_t i8;
+    int8_t first_byte;
 
     if (!net_can_get8(ser_sock))
     {
       continue;
     }
-    net_get8(ser_sock, &i8);
+    net_get8(ser_sock, &first_byte);
 
     // Join request
-    if (i8 == CLI_I_JOIN)
+    if (first_byte == CLI_I_JOIN)
     {
       int c_alias_n = net_gets_n(ser_sock);
 
       if (c_alias_n <= SER_MAX_CLI_ALIAS) // Everything is fine, can technically accept
       {
         const char* c_alias;
-        net_gets(ser_sock, &c_alias);
+        net_getb(ser_sock, &c_alias, c_alias_n);
 
         net_set_addr(ser_sock, &ser_sock->pin.addr, ser_sock->pin.port);
         net_rewind(ser_sock);
@@ -140,32 +171,33 @@ ser_run()
         
         if (e.join.accepted)
         {
-          // Too many
-          if (clients_n >= SER_MAX_CLIENTS)
+          if (ser_clis_n >= SER_MAX_CLIENTS)
           {
             goto _reject_client;
           }
+
           // Find a free slot
           unsigned char ci;
           for (ci = 0; ci < SER_MAX_CLIENTS; ci++)
           {
-            if (clients[ci].status == SER_CLI_FREE)
+            if (ser_clis[ci].status == SER_CLI_FREE)
             {
               break;
             }
           }
+
           // Setup the client
-          clients[ci].status = SER_CLI_WAIT;
-          clients[ci].last_pack_time = tmr_now();
-          clients[ci].port = ser_sock->pin.port;
-          clients[ci].addr = ser_sock->pin.addr;
-          memcpy(clients[ci].alias, c_alias, c_alias_n);
+          ser_clis[ci].status = SER_CLI_WAIT;
+          ser_clis[ci].last_pack_ms = tmr_now();
+          ser_clis[ci].port = ser_sock->pin.port;
+          ser_clis[ci].addr = ser_sock->pin.addr;
+          memcpy(ser_clis[ci].alias, c_alias, c_alias_n);
 
           ser_sock->pout.data[0] = SER_I_ACCEPT;
           ser_sock->pout.data[1] = ci;
           net_flush(ser_sock);
 
-          printf("ser_run(): '%s' has been accepted as #%i.\n", clients[ci].alias, ci);
+          printf("ser_run(): '%s' has been accepted as #%i.\n", ser_clis[ci].alias, ci);
         }
         else // !e.join.accepted
         {
@@ -191,37 +223,40 @@ ser_run()
     }
     net_get8(ser_sock, &ci);
 
-    // Invalid in general
-    if (ci < 0 || ci >= SER_MAX_CLIENTS || clients[ci].status == SER_CLI_FREE)
+    // Invalid index
+    if (ci < 0 || ci >= SER_MAX_CLIENTS || ser_clis[ci].status != SER_CLI_LIVE)
     {
       continue;
     }
 
     // The wrong address sent this index.
     if (
-      ser_sock->pin.addr.l[0] != clients[ci].addr.l[0] || 
-      ser_sock->pin.addr.l[1] != clients[ci].addr.l[1]
+      ser_sock->pin.addr.l[0] != ser_clis[ci].addr.l[0] || 
+      ser_sock->pin.addr.l[1] != ser_clis[ci].addr.l[1]
       )
     {
       // TODO: something about it.
       continue;
     }
 
-    clients[ci].port = ser_sock->pin.port; // Port may have changed.
-    clients[ci].last_pack_time = tmr_now();
+    ser_clis[ci].port = ser_sock->pin.port; // Port may have changed.
+    ser_clis[ci].last_pack_ms = tmr_now();
 
     net_rewind(ser_sock);
+    int do_flush = 0;
 
-    switch(i8)
+    switch(first_byte)
     {
       case CLI_I_GOT_ACCEPT:
-      clients[ci].status = SER_CLI_LIVE;
-      clients_n++;
+      live_client(ci);
       break;
 
       case CLI_I_REQUEST:
       e.type = SER_E_REQUEST;
+      net_put8(ser_sock, SER_I_REPLY);
       ser_on(&e);
+      
+      do_flush = ser_sock->pout.cur > 1;
       break;
 
       case CLI_I_EXIT:
@@ -236,9 +271,9 @@ ser_run()
     }
 
     // If the cursor was anything more than 0 we send
-    if (ser_sock->pout.cur > 0)
+    if (do_flush)
     {
-      net_set_addr(ser_sock, &clients[ci].addr, clients[ci].port);
+      net_set_addr(ser_sock, &ser_clis[ci].addr, ser_clis[ci].port);
       net_flush(ser_sock);
     }
   }

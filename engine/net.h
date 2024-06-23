@@ -123,6 +123,7 @@ extern int
 net_getb(net_sock_t* s, const char** data, int n);
 
 // Get how big the string is(including null terminator), if reaches end without null terminator will return the size measured from the cursor to the end, exactly the way str would work.
+// After this you should use net_getb because you know n.
 extern int
 net_gets_n(net_sock_t* s);
 

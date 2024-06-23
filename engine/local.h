@@ -7,6 +7,8 @@
 #define PROT_MAJOR_VERSION 0
 #define PROT_MINOR_VERSION 1
 
+#define PROT_MAX_IDLE_MS 3000
+
 // Values for that first byte that the client sends
 enum
 {

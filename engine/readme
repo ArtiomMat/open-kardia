@@ -33,7 +33,6 @@
  u8: pad that is to be skipped, due to the way i programmed the fucking server the reject and accept headers must be the same sizes.
 
  SER_I_INFO: (for joined clients) general info about the connecting
- u16: ping time, will also help calculate ping-pong time aswell
  u8: how many connected
 
  SER_I_INFO: (for unjoined clients) general info about server before joining

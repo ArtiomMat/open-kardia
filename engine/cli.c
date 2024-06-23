@@ -3,6 +3,7 @@
 #include "ser.h"
 #include "local.h"
 
+#include <string.h>
 #include <stdio.h>
 
 // To also avoid any accidental receives.
@@ -29,6 +30,12 @@ int
 cli_init(const char* _alias)
 {
   alias = _alias;
+  if (strlen(alias)+1 >= SER_MAX_CLI_ALIAS)
+  {
+    puts("cli_init(): Alias too long.");
+    return 0;
+  }
+
   if ((cli_sock = net_open(0)) == NULL)
   {
     return 0;
@@ -38,6 +45,11 @@ cli_init(const char* _alias)
 
   puts("cli_init(): Opened client socket.");
   return 1;
+}
+
+static inline int is_disjoined()
+{
+  return my_index == -1 && !want_join;
 }
 
 void
@@ -50,6 +62,12 @@ cli_free()
 void
 cli_run()
 {
+  // Disconnected
+  if (is_disjoined())
+  {
+    return;
+  }
+
   cli_event_t e;
 
   for (int _refresh_i = 0; _refresh_i < MAX_REFRESHES_PER_RUN && net_refresh(cli_sock); _refresh_i++)
@@ -65,14 +83,14 @@ cli_run()
     }
 
     // All good, this is the server talking
-    int8_t i8;
+    int8_t first_byte;
     if (!net_can_get8(cli_sock))
     {
       continue;
     }
-    net_get8(cli_sock, &i8);
+    net_get8(cli_sock, &first_byte);
 
-    switch (i8)
+    switch (first_byte)
     {
       case SER_I_ACCEPT: // Accepted :D
       case SER_I_REJECT:
@@ -82,7 +100,7 @@ cli_run()
         break;
       }
 
-      if (i8 == SER_I_ACCEPT) // ACCEPTED :D
+      if (first_byte == SER_I_ACCEPT) // ACCEPTED :D
       {
         if (!net_can_get8(cli_sock))
         {
@@ -132,7 +150,7 @@ cli_begin_request(int _want_reply)
 int
 cli_exit()
 {
-  if (my_index == -1)
+  if (is_disjoined())
   {
     return 0;
   }
@@ -140,7 +158,11 @@ cli_exit()
   net_rewind(cli_sock);
   net_put8(cli_sock, CLI_I_EXIT);
   net_put8(cli_sock, my_index);
-  net_flush(cli_sock);
+
+  my_index = -1;
+  want_reply = want_info = want_join = 0;
+
+  return net_flush(cli_sock);
 }
 
 int

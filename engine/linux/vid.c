@@ -354,4 +354,3 @@ vid_set_cursor_type(int t)
 {
   XDefineCursor(vid_nix_dsp, vid_nix_window, cursors[t]);
 }
-
