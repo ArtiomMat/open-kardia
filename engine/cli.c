@@ -174,11 +174,10 @@ cli_exit()
 }
 
 int
-cli_join(net_addr_t* addr, net_port_t port)
+cli_join()
 {
   cli_exit(); // Exit first any server we are in
 
-  net_set_addr(cli_sock, addr, port);
   net_rewind(cli_sock);
   
   net_put8(cli_sock, CLI_I_JOIN);

@@ -333,7 +333,8 @@ main(int args_n, const char** args)
   ser_init("test");
   cli_on = on_cli;
 
-  cli_join(&net_loopback, ser_sock->bind_port);
+  net_set_addr(cli_sock, &net_loopback, ser_sock->bind_port);
+  cli_join();
 
   puts("\nRUNNING...\n");
 

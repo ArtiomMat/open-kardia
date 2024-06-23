@@ -2,6 +2,7 @@
 #pragma once
 
 #include "net.h"
+#include "tmr.h"
 
 enum
 {
@@ -20,6 +21,14 @@ typedef struct
     {
       char accepted;
     } join;
+
+    struct
+    {
+      const char* alias;
+      const char* desc;
+      tmr_ms_t pp_ms; // Ping-pong time
+      int clis_n;
+    } info;
   };
 } cli_event_t;
 
@@ -37,16 +46,18 @@ cli_free();
 extern void
 cli_run();
 
+// Call net_set_addr() first
 // Returns if the join was sent, from our end.
 extern int
-cli_join(net_addr_t* addr, net_port_t port);
+cli_join();
 
 extern int
 cli_exit();
 
+// Uses cli_sock->pout.addr and port, so call net_set_addr() first
 // Returns if the info request was sent from our end.
 extern int
-cli_info(net_addr_t* addr, net_port_t port);
+cli_info();
 
 // Calls net_rewind because header must be in beginning. Sets up headers so the server can understand what's going on. After calling this use net_put and flush when ready with cli_sock.
 extern void

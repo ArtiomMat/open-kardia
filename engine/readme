@@ -61,6 +61,8 @@
  CLI_I_GOT_ACCEPT: the client got the accept of the server
  u8: index that the client got
 
+ CLI_I_ALIVE: the client has nothing to send so it's just alive
+
 ===========
  Compiling
 ===========
