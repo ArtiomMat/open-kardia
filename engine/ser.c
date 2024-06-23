@@ -10,7 +10,7 @@
 
 #define MAX_REFRESHES_PER_RUN (SER_MAX_CLIENTS+8)
 
-#define MAX_WAIT_MS 1000
+#define MAX_WAIT_MS 3000
 
 #define INFO_COOLDOWN 500
 
@@ -57,19 +57,25 @@ ser_init(const char* _alias)
 static void
 live_client(int i)
 {
-  ser_clis[i].status = SER_CLI_LIVE;
-  ser_clis_n++;
+  if (ser_clis[i].status == SER_CLI_WAIT)
+  {
+    ser_clis[i].status = SER_CLI_LIVE;
+    ser_clis_n++;
+  }
 }
 
 static void
 free_client(int i)
 {
-  // 0 out the address so a disconnected client can't just play around.
-  ser_clis[i].addr.l[0] = 0;
-  ser_clis[i].addr.l[1] = 0;
+  if (ser_clis[i].status != SER_CLI_FREE)
+  {
+    // 0 out the address so a disconnected client can't just play around.
+    ser_clis[i].addr.l[0] = 0;
+    ser_clis[i].addr.l[1] = 0;
 
-  ser_clis[i].status = SER_CLI_FREE;
-  ser_clis_n--;
+    ser_clis[i].status = SER_CLI_FREE;
+    ser_clis_n--;
+  }
 }
 
 //
@@ -98,6 +104,7 @@ ser_run()
   {
     // ser_on() the tick
     e.type = SER_E_TICK;
+    e.i = -1;
     net_rewind(ser_sock);
     net_put8(ser_sock, SER_I_TICK);
     ser_on(&e);
@@ -166,6 +173,7 @@ ser_run()
 
         ser_sock->pout.cur = 2; // Allocate space for either reject or accept headers
         e.type = SER_E_JOIN;
+        e.i = -1;
         e.join.accepted = 1;
         ser_on(&e);
         
@@ -224,18 +232,15 @@ ser_run()
     net_get8(ser_sock, &ci);
 
     // Invalid index
-    if (ci < 0 || ci >= SER_MAX_CLIENTS || ser_clis[ci].status != SER_CLI_LIVE)
+    if (ci < 0 || ci >= SER_MAX_CLIENTS || ser_clis[ci].status == SER_CLI_FREE)
     {
       continue;
     }
 
     // The wrong address sent this index.
-    if (
-      ser_sock->pin.addr.l[0] != ser_clis[ci].addr.l[0] || 
-      ser_sock->pin.addr.l[1] != ser_clis[ci].addr.l[1]
-      )
+    if ( ser_sock->pin.addr.l[0] != ser_clis[ci].addr.l[0] || 
+         ser_sock->pin.addr.l[1] != ser_clis[ci].addr.l[1] )
     {
-      // TODO: something about it.
       continue;
     }
 
@@ -243,14 +248,22 @@ ser_run()
     ser_clis[ci].last_pack_ms = tmr_now();
 
     net_rewind(ser_sock);
-    int do_flush = 0;
+    int do_flush = 0; // Whether to do a flush back to the client
+    e.i = ci; // index for event
+
+    // If the client is on wait status we only accept one type of pack
+    if (ser_clis[ci].status == SER_CLI_WAIT)
+    {
+      if (first_byte == CLI_I_GOT_ACCEPT)
+      {
+        live_client(ci);
+      }
+
+      continue;
+    }
 
     switch(first_byte)
     {
-      case CLI_I_GOT_ACCEPT:
-      live_client(ci);
-      break;
-
       case CLI_I_REQUEST:
       e.type = SER_E_REQUEST;
       net_put8(ser_sock, SER_I_REPLY);

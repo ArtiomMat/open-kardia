@@ -33,7 +33,8 @@ enum
 
 typedef struct
 {
-  int type;
+  uint8_t type;
+  uint8_t i; // Client index -1 for N/A like for tick, or join(can read address in ser_sock->pin.addr)
   union
   {
     struct

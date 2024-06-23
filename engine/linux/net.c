@@ -192,6 +192,8 @@ net_refresh(net_sock_t* s)
     memcpy(&s->pin.addr, addr.sin6_addr.__in6_u.__u6_addr8, 16);
     s->pin.size = r;
 
+    s->pin.cur = 0; // Reset the cursor, this was not here until a very long time just saying, had to fix this.
+
     return 1;
   }
   

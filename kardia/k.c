@@ -107,6 +107,15 @@ on_vid(vid_event_t* e)
   return 1;
 }
 
+static int
+on_cli(cli_event_t* e)
+{
+  if (e->type == CLI_E_JOIN && e->join.accepted)
+  {
+    cli_exit(); 
+  }
+}
+
 static void
 k_init()
 {
@@ -322,6 +331,7 @@ main(int args_n, const char** args)
   net_init();
   cli_init("Klaus");
   ser_init("test");
+  cli_on = on_cli;
 
   cli_join(&net_loopback, ser_sock->bind_port);
 

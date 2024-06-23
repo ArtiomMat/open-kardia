@@ -99,6 +99,7 @@ cli_run()
       {
         break;
       }
+      want_join = 0;
 
       if (first_byte == SER_I_ACCEPT) // ACCEPTED :D
       {
@@ -111,6 +112,11 @@ cli_run()
         net_get8(cli_sock, &my_index);
         e.join.accepted = 1;
         puts("cli_run(): OMFG I WAS ACCEPTED!!!");
+
+        // Notify server that we got it
+        net_rewind(cli_sock);
+        net_put8(cli_sock, CLI_I_GOT_ACCEPT);
+        net_put8(cli_sock, my_index);
       }
       else // REJECTED :(
       {
@@ -126,6 +132,8 @@ cli_run()
       {
         break;
       }
+      want_reply = 0;
+
       e.type = CLI_E_REPLY;
       cli_on(&e);
       break;
