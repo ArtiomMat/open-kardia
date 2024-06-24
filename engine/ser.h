@@ -1,4 +1,4 @@
-// Server module
+// Server module, designed to be thread-safe, but can be used in 1 thread.
 #pragma once
 
 #include "tmr.h"
@@ -16,7 +16,7 @@
 
 enum
 {
-  SER_E_JOIN, // e->join.accepted can be changed to 0, by default will be 1. can freely net_get and net_put your custom extra data, the server already allocated space for headers before calling on.
+  SER_E_JOIN, // e->join.accepted can be changed to 0, by default will be 1. can freely net_get and net_put your custom extra data, the server already allocated space for headers before calling on. If e->i is -1 it means the client wants the total server information as if not connected(whether they are or not).
   SER_E_REQUEST, // The client sent a request, may expect a reply(depends fully on your custom protocol). You now can net_get, and also net_put, if net_put the reply is sent, otherwise no reply.
   SER_E_TICK, // It's time to net_put a message for all clients, begin writing, if cursor exceeds 0 will be sent to all clients, otherwise this tick is not considered.
   // SER_E_ALIVE, // A general alive message if the client has nothing to request.
@@ -57,13 +57,15 @@ typedef struct ser_client_s
 extern int (*ser_on)(ser_event_t* e);
 
 extern ser_client_t ser_clis[SER_MAX_CLIENTS];
+// Live clients, does not include clients with wait status
 extern int ser_clis_n;
 
 // Will always be NULL if server not initialized
 extern net_sock_t* ser_sock;
 
+// desc can be null, alias has to be not null.
 extern int
-ser_init(const char* alias);
+ser_init(const char* _alias, const char* desc);
 
 extern void
 ser_free();

@@ -29,7 +29,7 @@ net_puts(net_sock_t* s, const char* str)
     s->pout.data[s->pout.cur++] = *str;
     if (s->pout.cur >= NET_MAX_PACK_SIZE)
     {
-      // s->pout.data[s->pout.cur-1] = 0; // Null terminate
+      s->pout.data[NET_MAX_PACK_SIZE-1] = 0; // Null terminate
       return -1;
     }
     str++;

@@ -26,11 +26,8 @@
  SER_I_REPLY: a reply to a request made by the client, a request does not include JOIN, rather it's CLI_I_REQUEST.
  EMPTY
 
- SER_I_ACCEPT: the server accepted the client join request
- u8: index of client
-
- SER_I_REJECT: the server rejected the client's join request
- u8: pad that is to be skipped, due to the way i programmed the fucking server the reject and accept headers must be the same sizes.
+ SER_I_JOIN: the server accepted the client join request
+ i8: index of client, if rejected -1
 
  SER_I_INFO: (for joined clients) general info about the connecting
  u8: how many connected
@@ -44,22 +41,20 @@
  ---------------
 
  CLI_I_INFO: (for joined clients) client wants info.
- u8: index
-
- CLI_I_INFO: (for unjoined clients) client wants info.
- EMPTY
+ i8: index, -1 for info as if disjoined(whether joined or not).
 
  CLI_I_REQUEST: request for the server, for which it sends SER_I_REPLY
- u8: index
+ i8: index
 
  CLI_I_JOIN: request to join
+ i8: index, but is meaningless and ignored, just has to be there because of how the server works.
  str[SER_MAX_CLI_ALIAS]: alias
  
  CLI_I_EXIT: notification of exiting the connecting
- u8: index
+ i8: index
 
  CLI_I_GOT_ACCEPT: the client got the accept of the server
- u8: index that the client got
+ i8: index that the client got
 
  CLI_I_ALIVE: the client has nothing to send so it's just alive
 

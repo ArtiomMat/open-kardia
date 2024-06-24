@@ -24,8 +24,7 @@ enum
 {
   SER_I_INFO = -127, // for info
   SER_I_ERR,
-  SER_I_ACCEPT,
-  SER_I_REJECT, // rejection of a join request
+  SER_I_JOIN,
   SER_I_REPLY,
   SER_I_TICK,
 };

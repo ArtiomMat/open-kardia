@@ -112,7 +112,12 @@ on_cli(cli_event_t* e)
 {
   if (e->type == CLI_E_JOIN && e->join.accepted)
   {
-    cli_exit(); 
+    cli_info(0);
+  }
+  else if (e->type == CLI_E_INFO)
+  {
+    printf("%s\n", e->info.alias);
+    printf("%s\n", e->info.desc);
   }
 }
 
@@ -330,7 +335,7 @@ main(int args_n, const char** args)
   
   net_init();
   cli_init("Klaus");
-  ser_init("test");
+  ser_init("test", "a test server, that's all.");
   cli_on = on_cli;
 
   net_set_addr(cli_sock, &net_loopback, ser_sock->bind_port);

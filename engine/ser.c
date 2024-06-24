@@ -15,6 +15,7 @@
 #define INFO_COOLDOWN 500
 
 static const char* alias;
+static const char* desc;
 
 net_sock_t* ser_sock = NULL;
 
@@ -32,9 +33,10 @@ int ser_def_on(ser_event_t* e)
 int (*ser_on)(ser_event_t* e) = ser_def_on;
 
 int
-ser_init(const char* _alias)
+ser_init(const char* _alias, const char* _desc)
 {
   alias = _alias;
+  desc = _desc;
 
   ser_clis_n = 0;
   last_tick_ms = tmr_now();
@@ -57,7 +59,7 @@ ser_init(const char* _alias)
 static void
 live_client(int i)
 {
-  if (ser_clis[i].status == SER_CLI_WAIT)
+  if (ser_clis[i].status != SER_CLI_LIVE)
   {
     ser_clis[i].status = SER_CLI_LIVE;
     ser_clis_n++;
@@ -88,7 +90,7 @@ handle_wait_status(int i, tmr_ms_t now)
   }
   else if (now - ser_clis[i].last_pack_ms >= MAX_WAIT_MS/2) // Last chance to confirm the accept, we resend it.
   {
-    char data[2] = {SER_I_ACCEPT, i};
+    char data[2] = {SER_I_JOIN, i};
     net_sendto(ser_sock, data, 2);
   }
 }
@@ -151,12 +153,18 @@ ser_run()
   for (int _refresh_i = 0; _refresh_i < MAX_REFRESHES_PER_RUN && net_refresh(ser_sock); _refresh_i++)
   {
     int8_t first_byte;
-
     if (!net_can_get8(ser_sock))
     {
       continue;
     }
     net_get8(ser_sock, &first_byte);
+
+    int8_t ci;
+    if (!net_can_get8(ser_sock))
+    {
+      continue;
+    }
+    net_get8(ser_sock, &ci);
 
     // Join request
     if (first_byte == CLI_I_JOIN)
@@ -171,7 +179,7 @@ ser_run()
         net_set_addr(ser_sock, &ser_sock->pin.addr, ser_sock->pin.port);
         net_rewind(ser_sock);
 
-        ser_sock->pout.cur = 2; // Allocate space for either reject or accept headers
+        ser_sock->pout.cur = 2; // Allocate space for either join header
         e.type = SER_E_JOIN;
         e.i = -1;
         e.join.accepted = 1;
@@ -201,11 +209,10 @@ ser_run()
           ser_clis[ci].addr = ser_sock->pin.addr;
           memcpy(ser_clis[ci].alias, c_alias, c_alias_n);
 
-          ser_sock->pout.data[0] = SER_I_ACCEPT;
+          ser_sock->pout.data[0] = SER_I_JOIN;
           ser_sock->pout.data[1] = ci;
           net_flush(ser_sock);
 
-          printf("ser_run(): '%s' has been accepted as #%i.\n", ser_clis[ci].alias, ci);
         }
         else // !e.join.accepted
         {
@@ -215,22 +222,32 @@ ser_run()
       else
       {
         _reject_client:
-        ser_sock->pout.data[0] = SER_I_REJECT;
-        ser_sock->pout.data[1] = 0; // Padding
+        ser_sock->pout.data[0] = SER_I_JOIN;
+        ser_sock->pout.data[1] = -1; // Rejected
         net_flush(ser_sock);
       }
 
       continue;
     }
-
-    // Otherwise the client is connected.
-    int8_t ci;
-    if (!net_can_get8(ser_sock))
+    // Info request, as disjoined client
+    if (first_byte == CLI_I_INFO && ci < 0)
     {
+      net_set_addr(ser_sock, &ser_sock->pin.addr, ser_sock->pin.port);
+      net_rewind(ser_sock);
+      net_put8(ser_sock, SER_I_INFO);
+      net_put8(ser_sock, ser_clis_n);
+      net_puts(ser_sock, alias);
+      net_puts(ser_sock, desc);
+
+      e.type = SER_E_INFO;
+      e.i = -1;
+      ser_on(&e);
+
+      net_flush(ser_sock);
+
       continue;
     }
-    net_get8(ser_sock, &ci);
-
+    
     // Invalid index
     if (ci < 0 || ci >= SER_MAX_CLIENTS || ser_clis[ci].status == SER_CLI_FREE)
     {
@@ -257,6 +274,7 @@ ser_run()
       if (first_byte == CLI_I_GOT_ACCEPT)
       {
         live_client(ci);
+        printf("ser_run(): '%s' joined at index %hhi.\n", ser_clis[ci].alias, ci);
       }
 
       continue;
@@ -265,8 +283,9 @@ ser_run()
     switch(first_byte)
     {
       case CLI_I_REQUEST:
-      e.type = SER_E_REQUEST;
       net_put8(ser_sock, SER_I_REPLY);
+
+      e.type = SER_E_REQUEST;
       ser_on(&e);
       
       do_flush = ser_sock->pout.cur > 1;
@@ -278,8 +297,13 @@ ser_run()
       free_client(ci);
       break;
 
-      case CLI_I_INFO:
-      // TODO
+      case CLI_I_INFO: // Already did all the logic, it will 100% be info as joined client.
+      net_put8(ser_sock, ser_clis_n);
+
+      e.type = SER_E_INFO;
+      ser_on(&e);
+
+      do_flush = 1;
       break;
     }
 
