@@ -1,4 +1,4 @@
-// Server module, designed to be thread-safe, but can be used in 1 thread.
+// Server module, not thread safe by default.
 #pragma once
 
 #include "tmr.h"
@@ -71,8 +71,6 @@ extern void
 ser_free();
 
 // Refreshes socket until dried out, and calls ser_on().
+// Not thread safe, use mutexes if multi-threading.
 extern void
 ser_run();
-
-extern void
-ser_reply(ser_client_t* c);

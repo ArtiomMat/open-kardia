@@ -7,7 +7,7 @@
 #include <time.h>
 #include <stdio.h>
 
-static tmr_ms_t t0;
+static unsigned long long t0;
 
 // Initialize right before the loop
 void
@@ -15,7 +15,10 @@ tmr_init(tmr_ms_t initial_tick_time)
 {
   tmr_target_tick_time = tmr_tick_time = initial_tick_time;
 
-  t0 = tmr_now();
+  // Setup t0
+  struct timespec tp;
+  clock_gettime(CLOCK_MONOTONIC, &tp);
+  t0 = ((tp.tv_sec * 1000) + (tp.tv_nsec / 1000000));
 
   #define RESOLUTION_TEST_TIME 100
 

@@ -9,6 +9,7 @@
 #include "../engine/net.h"
 #include "../engine/ser.h"
 #include "../engine/cli.h"
+#include "../engine/mt.h"
 
 #include "node.h"
 #include "edit.h"
@@ -116,8 +117,7 @@ on_cli(cli_event_t* e)
   }
   else if (e->type == CLI_E_INFO)
   {
-    printf("%s\n", e->info.alias);
-    printf("%s\n", e->info.desc);
+    printf("on_cli(): Server name '%s', description '%s'\n", e->info.alias, e->info.desc);
   }
 }
 
@@ -191,6 +191,19 @@ set_node(int i, int pol_x, int pol_y, int depol_off_x, int depol_off_y, int flow
   node_all[i].depol_off[1] = ITOFIP(8,depol_off_y);
 
   node_all[i].flow = ITOFIP(8,10);
+}
+
+void
+test_free()
+{
+  puts("Free lol");
+}
+void*
+test_init()
+{
+  puts("Init lol");
+  while (1) {tmr_wait(100);}
+  return NULL;
 }
 
 int
@@ -338,10 +351,10 @@ main(int args_n, const char** args)
   ser_init("test", "a test server, that's all.");
   cli_on = on_cli;
 
+  puts("\nRUNNING...\n");
+
   net_set_addr(cli_sock, &net_loopback, ser_sock->bind_port);
   cli_join();
-
-  puts("\nRUNNING...\n");
 
   while(1)
   {

@@ -23,10 +23,12 @@ extern tmr_ms_t tmr_begin_time;
 extern void
 tmr_init(tmr_ms_t initial_tick_time);
 
+// Thread safe.
 // Returns the time in miliseconds since initialization of the cloak module
 extern tmr_ms_t
 tmr_now();
 
+// Thread safe.
 extern void
 tmr_wait(tmr_ms_t t);
 

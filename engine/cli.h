@@ -1,4 +1,4 @@
-// Client module, designed to be thread-safe, but can be used in 1 thread.
+// Client module, not thread safe by default.
 #pragma once
 
 #include "net.h"
@@ -43,6 +43,7 @@ cli_init(const char* alias);
 extern void
 cli_free();
 
+// Not thread safe, use mutexes if multi-threading.
 extern void
 cli_run();
 
