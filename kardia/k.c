@@ -367,7 +367,6 @@ main(int args_n, const char** args)
     cli_run();
     
     px_wipe(&vid_px, 0);
-      g3d_wipe();
       g3d_draw(NULL);
       node_draw(flow_mode);
       ekg_draw();

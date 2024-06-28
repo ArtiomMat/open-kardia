@@ -17,7 +17,7 @@ static short sintbl[TBLS/2];
 static g3d_f1_t tantbl[TBLS/2];
 
 static long long wipe_cache;
-static short* zbuf;
+px_t z_px;
 
 g3d_eye_t* g3d_eye;
 
@@ -34,7 +34,7 @@ g3d_init(g3d_eye_t* initial_eye)
     ((short*)&wipe_cache)[i] = -SHORT_MAX;
   }
 
-  zbuf = aligned_alloc(sizeof(long long), vid_px.s[0]*vid_px.s[1] * sizeof(*zbuf));
+  px_init(&z_px, vid_px.s[0], vid_px.s[1]);
 
   // SIN/TAN TABLES SETUP
   for (int i = 0; i < (TBLS/2); i++)
@@ -64,15 +64,15 @@ g3d_init(g3d_eye_t* initial_eye)
   return 1;
 }
 
-void
-g3d_wipe()
-{
-  long long* zbuf_ll = (long long*)zbuf;
-  for (int i = 0; i < vid_px.s[1]*vid_px.s[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
-  {
-    zbuf_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
-  }
-}
+// void
+// g3d_wipe()
+// {
+//   long long* zbuf_ll = (long long*)zbuf;
+//   for (int i = 0; i < vid_px.s[1]*vid_px.s[0] / (sizeof(long long) / sizeof(*zbuf)); i++)
+//   {
+//     zbuf_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
+//   }
+// }
 
 g3d_f1_t
 g3d_tan(g3d_f1_t a)
@@ -143,7 +143,7 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
   }
   
 
-  // Above, below screen. Or just straight up dimentionless
+  // Above OR below screen. Or just straight up dimentionless
   if (c[1] < 0 || a[1] >= vid_px.s[1] || a[1] == c[1])
   {
     return;
@@ -156,8 +156,8 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
   // NOTE: slopes are dx/dy, not dy/dx, forgor why, sticked around from older attempts
   g3d_f1_t m_ac = FIP_DIV(16, ITOFIP(16, a[0]-c[0]), ITOFIP(16, a[1]-c[1]));
 
-  // The top triangle
-  if (a[1] != b[1])
+  // The top triangle, only if atleast b is below top
+  if (b[1] >= 0 && a[1] != b[1])
   {
     g3d_f1_t m_ab = FIP_DIV(16, ITOFIP(16, a[0]-b[0]), ITOFIP(16, a[1]-b[1]));
     
@@ -179,19 +179,27 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
     
     for (int y = a[1]; y <= b[1]; y++, x_l += m_l, x_r += m_r)
     {
-      for (int x = FIPTOI(16,x_l); x <= FIPTOI(16,x_r); x++)
+      if (y >= vid_px.s[1])
+      {
+        break; // We done at this point
+      }
+      else if (y < 0)
+      {
+        continue; 
+      }
+
+      int from = max(FIPTOI(16,x_l), 0);
+      int to = min(FIPTOI(16,x_r), vid_px.s[0]-1);
+
+      for (int x = from; x <= to; x++)
       {
         vid_px.p[x + y * vid_px.s[0]] = color;
       }
     }
   }
-  else
-  {
-    x_r = ITOFIP(16,a[0]);
-  }
 
-  // The bottom triangle
-  if (b[1] != c[1])
+  // The bottom triangle, only if b is above bottom
+  if (b[1] < vid_px.s[1] && b[1] != c[1])
   {
     g3d_f1_t m_bc = FIP_DIV(16, ITOFIP(16, b[0]-c[0]), ITOFIP(16, b[1]-c[1]));
     
@@ -210,7 +218,19 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
 
     for (int y = c[1]; y > b[1]; y--, x_l -= m_l, x_r -= m_r)
     {
-      for (int x = FIPTOI(16,x_l); x <= FIPTOI(16,x_r); x++)
+      if (y >= vid_px.s[1])
+      {
+        continue;
+      }
+      else if (y < 0)
+      {
+        break; // We done at this point
+      }
+
+      int from = max(FIPTOI(16,x_l), 0);
+      int to = min(FIPTOI(16,x_r), vid_px.s[0]-1);
+
+      for (int x = from; x <= to; x++)
       {
         vid_px.p[x + y * vid_px.s[0]] = color;
       }
@@ -219,6 +239,7 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
 }
 
 // Assumes that camera is at 0,0,0... For now.
+// out[0] will be on the scale of -.5 and .5
 static void
 rasterize(g3d_i3_t out, g3d_f3_t in)
 {
@@ -247,21 +268,21 @@ g3d_draw(g3d_model_t* model)
   static g3d_f3_t i[3];
   static g3d_i3_t o[3];
   static int x = 0;
-  // x+=1;
+  x+=1;
   
   i[0][0] = ITOFIP(G3D_DB, 10);
   i[0][1] = ITOFIP(G3D_DB, 1);
-  i[0][2] = ITOFIP(G3D_DB, 30+x);
+  i[0][2] = ITOFIP(G3D_DB, 2+x);
   
   
   i[1][0] = ITOFIP(G3D_DB, -2);
   i[1][1] = ITOFIP(G3D_DB, 10);
-  i[1][2] = ITOFIP(G3D_DB, 30+x);
+  i[1][2] = ITOFIP(G3D_DB, 2+x);
   
   
   i[2][0] = ITOFIP(G3D_DB, -3);
   i[2][1] = ITOFIP(G3D_DB, -8);
-  i[2][2] = ITOFIP(G3D_DB, 30+x);
+  i[2][2] = ITOFIP(G3D_DB, 2+x);
   
   rasterize(o[0], i[0]);
   rasterize(o[1], i[1]);
