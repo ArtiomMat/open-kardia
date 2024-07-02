@@ -29,7 +29,7 @@ mix_push(int i, int r, int g, int b)
   // Add 1 to n
   mix_sets[i].n++;
   mix_set(push_start, r, g, b);
-  mix_shifts[push_start].grad_i = i;
+  mix_shifts[push_start].set_i = i;
 
   push_start++;
   return push_start;

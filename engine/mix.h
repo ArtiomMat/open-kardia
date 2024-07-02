@@ -19,7 +19,7 @@ extern mix_set_t mix_sets[MIX_MAX_SETS];
 // Done 
 extern struct mix_shift
 {
-  unsigned char grad_i;
+  unsigned char set_i;
 } mix_shifts[256];
 
 extern int
@@ -80,7 +80,7 @@ mix_pickr(int i)
 static inline unsigned char
 mix_shl(unsigned char color_i, unsigned n)
 {
-  unsigned start = mix_sets[mix_shifts[color_i].grad_i].start;
+  unsigned start = mix_sets[mix_shifts[color_i].set_i].start;
   if ((unsigned)color_i - n < start)
   {
     return start;
@@ -94,7 +94,7 @@ mix_shl(unsigned char color_i, unsigned n)
 static inline unsigned char
 mix_shr(unsigned char color_i, unsigned n)
 {
-  mix_set_t* g = &mix_sets[mix_shifts[color_i].grad_i];
+  mix_set_t* g = &mix_sets[mix_shifts[color_i].set_i];
   unsigned end = g->start + g->n - 1;
   if ((unsigned)color_i + n > end)
   {

@@ -13,8 +13,8 @@
 // This is also the fraction bits for an angle value.
 #define G3D_AB 8
 
-// Where the z of the far plane is
-#define G3D_FAR_Z ITOFIP(G3D_DB, 256)
+// Where the z of the far plane is, in same units of distances but after FIPTOI()
+#define G3D_FAR_Z 255
 
 typedef int g3d_i3_t[3], g3d_i2_t[2], g3d_i1_t;
 typedef fip_t g3d_f3_t[3], g3d_f2_t[2], g3d_f1_t;

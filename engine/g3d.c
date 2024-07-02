@@ -16,10 +16,10 @@ static short sintbl[TBLS/2];
 // Repeats every PI/2
 static g3d_f1_t tantbl[TBLS/2];
 
-static long long wipe_cache;
 px_t z_px;
 
 g3d_eye_t* g3d_eye;
+static g3d_eye_t def_eye = {0};
 
 int
 g3d_init(g3d_eye_t* initial_eye)
@@ -27,11 +27,6 @@ g3d_init(g3d_eye_t* initial_eye)
   if ((vid_px.s[0]*vid_px.s[1]) % sizeof(long long))
   {
     return 1;
-  }
-
-  for (int i = 0; i < sizeof(long long) / sizeof(short); i++)
-  {
-    ((short*)&wipe_cache)[i] = -SHORT_MAX;
   }
 
   px_init(&z_px, vid_px.s[0], vid_px.s[1]);
@@ -54,8 +49,9 @@ g3d_init(g3d_eye_t* initial_eye)
   }
   else
   {
-    g3d_eye = calloc(sizeof (g3d_eye_t), 1);
-    g3d_eye->fov = ITOFIP(G3D_AB, 1) / 4; //PI/2
+    def_eye = (g3d_eye_t){0};
+    g3d_eye = &def_eye;
+    g3d_eye->fov = ITOFIP(G3D_AB, 1) / 4; // PI/2
   }
   g3d_set_fov(g3d_eye, g3d_eye->fov);
 
@@ -73,6 +69,12 @@ g3d_init(g3d_eye_t* initial_eye)
 //     zbuf_ll[i] = wipe_cache; // We use the padding as the index, I am a fucking genius 
 //   }
 // }
+
+void
+g3d_wipe()
+{
+  px_wipe(&z_px, 255);
+}
 
 g3d_f1_t
 g3d_tan(g3d_f1_t a)
@@ -141,7 +143,6 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
     b = c;
     c = tmp;
   }
-  
 
   // Above OR below screen. Or just straight up dimentionless
   if (c[1] < 0 || a[1] >= vid_px.s[1] || a[1] == c[1])
@@ -149,7 +150,8 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
     return;
   }
 
-  short depth = (c[2] + b[2] + a[2]) / 3 * SHORT_MAX / INT_MAX;
+  int z_depth = (c[2] + b[2] + a[2]) / 3; // Average, XXX: Maybe divide by 4 to make it faster?
+  z_depth = z_depth * G3D_FAR_Z / 255; // Scale it to what is allowed in the z-buffer.
 
   g3d_f1_t x_l, x_r;
   g3d_f1_t m_l, m_r;
@@ -193,7 +195,10 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
 
       for (int x = from; x <= to; x++)
       {
-        vid_px.p[x + y * vid_px.s[0]] = color;
+        if (z_px.p[x + y * vid_px.s[0]] > z_depth)
+        {
+          vid_px.p[x + y * vid_px.s[0]] = color;
+        }
       }
     }
   }
@@ -232,7 +237,10 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
 
       for (int x = from; x <= to; x++)
       {
-        vid_px.p[x + y * vid_px.s[0]] = color;
+        if (z_px.p[x + y * vid_px.s[0]] > z_depth)
+        {
+          vid_px.p[x + y * vid_px.s[0]] = color;
+        }
       }
     }
   }
@@ -259,7 +267,7 @@ rasterize(g3d_i3_t out, g3d_f3_t in)
 
   out[0] = FIPTOI(G3D_DB, xrat) + vid_px.s[0]/2;
   out[1] = FIPTOI(G3D_DB, yrat) + vid_px.s[1]/2;
-  out[2] = in[2]; // No shift, for maximum accuracy of depth
+  out[2] = FIPTOI(G3D_DB, in[2]); // Convert to integer
 }
 
 void
