@@ -17,7 +17,7 @@ enum
 };
 
 enum keys {
-  KEY_ESCAPE=-64,
+  KEY_ESCAPE=190,
   KEY_ENTER,
   KEY_SPACE,
   KEY_BS,

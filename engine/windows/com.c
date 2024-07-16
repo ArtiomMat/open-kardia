@@ -15,5 +15,3 @@ com_init(int _args_n, const char** _args)
   
   return _com_init_dir();
 }
-
-

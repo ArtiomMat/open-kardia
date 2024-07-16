@@ -14,6 +14,8 @@
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XShm.h> // For fast drawing!
 
 #define BIT_DEPTH 24
 
@@ -45,7 +47,7 @@ static const char xkeymap[256] = {
 
 static const char xbuttonmap[4] = {-1, KEY_LMOUSE, KEY_MMOUSE,KEY_RMOUSE};
 
-Display* vid_nix_dsp = 0;
+Display* vid_nix_dsp = NULL;
 int vid_nix_scr;
 Visual* vid_nix_visual;
 Atom vid_nix_wmdeletewnd_atom;
@@ -62,6 +64,10 @@ static Cursor cursors[_VID_CUR_N];
 static Pixmap null_pixmap;
 static char null_data[8] = {0,0,0,0, 0,0,0,0};
 static XColor black = {0};
+
+static int xf_queried;
+static int xf_event_base, xf_error_base;
+Atom xf_buf_atom;
 
 // TODO: It's not exactly that safe
 void
@@ -225,6 +231,14 @@ vid_init(int _vid_w, int _vid_h)
   cursors[VID_CUR_NULL] = XCreatePixmapCursor(vid_nix_dsp, null_pixmap,null_pixmap, &black, &black, 0, 0);
 
   vid_set_cursor_type(VID_CUR_POINTER);
+
+  // XFixes, for clipboard
+  if (!(xf_queried = XFixesQueryExtension(vid_nix_dsp, &xf_event_base, &xf_error_base)))
+  {
+    puts("vid_init(): Could not query XFixes, necessary for clipboard stuff!");
+  }
+  xf_buf_atom = XInternAtom(vid_nix_dsp, "CLIPBOARD", False);
+  XFixesSelectSelectionInput(vid_nix_dsp, root_window, xf_buf_atom, XFixesSetSelectionOwnerNotifyMask);
 
   // Get screen refresh rate
   int rates_n;

@@ -151,7 +151,14 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
   }
 
   int z_depth = (c[2] + b[2] + a[2]) / 3; // Average, XXX: Maybe divide by 4 to make it faster?
-  z_depth = z_depth * G3D_FAR_Z / 255; // Scale it to what is allowed in the z-buffer.
+  z_depth = z_depth * 255 / G3D_FAR_Z; // Scale it to what is allowed in the z-buffer.
+
+  if (z_depth < 0 || z_depth > 255) // Outside view
+  {
+    return;
+  }
+
+  color = 1 + z_depth * 254 / 255;
 
   g3d_f1_t x_l, x_r;
   g3d_f1_t m_l, m_r;
@@ -246,6 +253,48 @@ draw_tri(unsigned char color, g3d_i3_t a, g3d_i3_t b, g3d_i3_t c)
   }
 }
 
+static g3d_f1_t
+dot_product(g3d_f3_t a, g3d_f3_t b)
+{
+  return FIP_MUL(G3D_DB, a[0], b[0]) + FIP_MUL(G3D_DB, a[1], b[1]) + FIP_MUL(G3D_DB, a[2], b[2]);
+}
+
+// zxy order
+static void
+rotate(g3d_f3_t out, g3d_f3_t in, g3d_f3_t angles)
+{
+  g3d_f1_t c, s; // Used to store cos and sin for given axis
+  g3d_f1_t a, b; // Saved to do the multiplications with cos and sin, because we override these values
+
+  out[0] = in[0];
+  out[1] = in[1];
+  out[2] = in[2];
+
+  // Z
+  c = g3d_cos(angles[2]);
+  s = g3d_sin(angles[2]);
+  a = out[0];
+  b = out[1];
+  out[0] = FIP_MUL(G3D_DB, a, c) - FIP_MUL(G3D_DB, b, s);
+  out[1] = FIP_MUL(G3D_DB, a, s) + FIP_MUL(G3D_DB, b, c);
+
+  // X
+  c = g3d_cos(angles[0]);
+  s = g3d_sin(angles[0]);
+  a = out[1];
+  b = out[2];
+  out[1] = FIP_MUL(G3D_DB, a, c) - FIP_MUL(G3D_DB, b, s);
+  out[2] = FIP_MUL(G3D_DB, a, s) + FIP_MUL(G3D_DB, b, c);
+
+  // Y
+  c = g3d_cos(angles[1]);
+  s = g3d_sin(angles[1]);
+  a = out[2];
+  b = out[0];
+  out[2] = FIP_MUL(G3D_DB, a, c) - FIP_MUL(G3D_DB, b, s);
+  out[0] = FIP_MUL(G3D_DB, a, s) + FIP_MUL(G3D_DB, b, c);
+}
+
 // Assumes that camera is at 0,0,0... For now.
 // out[0] will be on the scale of -.5 and .5
 static void
@@ -276,21 +325,23 @@ g3d_draw(g3d_model_t* model)
   static g3d_f3_t i[3];
   static g3d_i3_t o[3];
   static int x = 0;
-  x+=1;
+  // x+=1;
   
-  i[0][0] = ITOFIP(G3D_DB, 10);
-  i[0][1] = ITOFIP(G3D_DB, 1);
-  i[0][2] = ITOFIP(G3D_DB, 2+x);
+  i[0][0] = ITOFIP(G3D_DB, 30) - g3d_eye->origin[0];
+  i[0][1] = ITOFIP(G3D_DB, 12) - g3d_eye->origin[1];
+  i[0][2] = ITOFIP(G3D_DB, 2+x) - g3d_eye->origin[2];
   
+  i[1][0] = ITOFIP(G3D_DB, -22) - g3d_eye->origin[0];
+  i[1][1] = ITOFIP(G3D_DB, 30) - g3d_eye->origin[1];
+  i[1][2] = ITOFIP(G3D_DB, 2+x) - g3d_eye->origin[2];
   
-  i[1][0] = ITOFIP(G3D_DB, -2);
-  i[1][1] = ITOFIP(G3D_DB, 10);
-  i[1][2] = ITOFIP(G3D_DB, 2+x);
+  i[2][0] = ITOFIP(G3D_DB, -23) - g3d_eye->origin[0];
+  i[2][1] = ITOFIP(G3D_DB, -18) - g3d_eye->origin[1];
+  i[2][2] = ITOFIP(G3D_DB, 2+x) - g3d_eye->origin[2];
   
-  
-  i[2][0] = ITOFIP(G3D_DB, -3);
-  i[2][1] = ITOFIP(G3D_DB, -8);
-  i[2][2] = ITOFIP(G3D_DB, 2+x);
+  // rotate(i[0], i[0], (g3d_f3_t){0, 0, x,});
+  // rotate(i[1], i[1], (g3d_f3_t){0, 0, x,});
+  // rotate(i[2], i[2], (g3d_f3_t){0, 0, x,});
   
   rasterize(o[0], i[0]);
   rasterize(o[1], i[1]);

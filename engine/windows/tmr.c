@@ -6,7 +6,7 @@
 static int res;
 static TIMECAPS tc;
 
-static tmr_ms_t t0;
+static unsigned long long t0;
 
 // Initialize right before the loop
 void
@@ -17,7 +17,7 @@ tmr_init(tmr_ms_t initial_tick_time)
   int res = tc.wPeriodMin; // in milliseconds
   timeBeginPeriod(tc.wPeriodMin);
 
-  t0 = tmr_now();
+  t0 = GetTickCount64();
   
   printf("tmr_init(): Cloak module initialized, %dns resolution.\n", res*1000000);
 }
@@ -36,6 +36,6 @@ void tmr_free()
 tmr_ms_t
 tmr_now()
 {
-  return GetTickCount64();
+  return GetTickCount64() - t0;
 }
 

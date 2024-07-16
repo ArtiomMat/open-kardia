@@ -60,6 +60,8 @@ on_gui(gui_event_t* e)
   return 1;
 }
 
+static int velocity = 0;
+
 static int
 on_vid(vid_event_t* e)
 {
@@ -88,6 +90,14 @@ on_vid(vid_event_t* e)
     else if (e->press.code == 'b' || e->press.code == KEY_LMOUSE)
     {
       node_all[0].ion = NODE_MAX_ION;
+    }
+    else if (e->press.code == 'w')
+    {
+      velocity = 120;
+    }
+    else if (e->press.code == 's')
+    {
+      velocity = -120;
     }
     break;
 
@@ -124,10 +134,10 @@ on_cli(cli_event_t* e)
 static void
 k_init()
 {
-  mix_push(K_MISC_MIXS, 0, 0, 0);
+  // mix_push(K_MISC_MIXS, 0, 0, 0);
   
-  mix_push(K_NODE_MIXS, 255,100,0);
-  mix_push_gradient(K_NODE_MIXS, 31, 0,100,255);
+  // mix_push(K_NODE_MIXS, 255,255,255);
+  // mix_push_gradient(K_NODE_MIXS, 254, 0,0,0);
   
   mix_push(K_EKG_MIXS, 0,0,0);
   mix_push_gradient(K_EKG_MIXS, 31, 0,255,100);
@@ -360,7 +370,10 @@ main(int args_n, const char** args)
   {
     tmr_begin_tick();
 
-    node_beat();
+    g3d_eye->origin[2] += velocity;
+    // printf("%d\n", g3d_eye->origin[2]);
+
+    // node_beat();
     vid_run();
 
     ser_run();
@@ -370,8 +383,8 @@ main(int args_n, const char** args)
       g3d_wipe();
       g3d_draw(NULL);
 
-      node_draw(flow_mode);
-      ekg_draw();
+      // node_draw(flow_mode);
+      // ekg_draw();
       gui_draw_windows();
     vid_refresh();
     

@@ -6,6 +6,8 @@
 
 #include <png.h>
 
+int px_nil_color = 0;
+
 int
 px_init(px_t* m, int w, int h)
 {

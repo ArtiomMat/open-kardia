@@ -172,9 +172,6 @@ extern int
 gui_get_font_width(gui_font_t* f);
 
 
-/**
- * Used religiously in various shit, and it is just a base struct for multi prupose use, like gui_film_t, cached image of the window, x button, etc.
-*/
 typedef struct gui_bmap
 {
   unsigned char* data;

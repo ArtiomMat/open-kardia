@@ -13,6 +13,8 @@ enum
   _CFG_F_FOUND = 1<<5, // For internal use!
 };
 
+typedef struct cfg_var_s* cfg_var_t;
+
 extern int
 cfg_init(const char* fp);
 
@@ -24,26 +26,26 @@ cfg_free();
  * One time per each variable, once it's found you can't refind it. to speed this up as much as I can.
  * Returns an ID for the variable, -1 if not found.
  */
-extern int
+extern cfg_var_t
 cfg_find(const char* name);
 
 /**
  * Test if a flag is set in a variable.
  */
 extern int
-cfg_flag(int id, int flag);
+cfg_flag(cfg_var_t id, int flag);
 
 /**
  * STR is copied over.
  */
 extern void
-cfg_sets(int id, const char* str);
+cfg_sets(cfg_var_t id, const char* str);
 extern void
-cfg_seti(int id, long long x);
+cfg_seti(cfg_var_t id, long long x);
 
 // Not thread safe, uses a static char[]!
 extern char*
-cfg_gets(int id);
+cfg_gets(cfg_var_t id);
 extern long long
-cfg_geti(int id);
+cfg_geti(cfg_var_t id);
 

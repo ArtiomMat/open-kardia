@@ -3,6 +3,7 @@
 *.swp
 *.o
 *.so
+*.dll
 */kardia
 kardia.exe
 */thinger

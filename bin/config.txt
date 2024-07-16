@@ -1,7 +1,0 @@
-Vol 70
-
-VidX -1 p
-VidY -1 p
-
-GuiCached 0 p
-

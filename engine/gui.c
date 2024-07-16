@@ -1339,7 +1339,6 @@ gui_open(const char* fp)
   for (int i = 0; i < n; i++)
   {
     buf[i] = calloc(sizeof (gui_thing_t), 1);
-      printf("%p\n", buf[i]);
   }
   
   // All freads use n of 1, so if read_ret comes out 0 after doing &= to it, there was an error.

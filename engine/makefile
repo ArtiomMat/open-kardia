@@ -22,7 +22,7 @@ ifeq ($(BIN_OS),linux)
 $(error Please compile the program with WSL, it's easiest.)
 	endif
 	
-	LIBS += -lX11 -lXrandr -lm -lpulse -lpulse-simple
+	LIBS += -lX11 -lXrandr -lm -lpulse -lpulse-simple -lXfixes
 	BIN = $(BIN_DIR)/libengine.so
 	
 # Otherwise compiling for Windows
