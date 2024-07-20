@@ -12,7 +12,7 @@ BIN = $(BIN_DIR)/mal
 
 # Compiler and flags
 CC = g++
-CFLAGS = -Wall -O3 -I$(INC_DIR) -ggdb -D NODEBUG
+CFLAGS = -Wall -O3 -I$(INC_DIR) -ggdb -D PARANOID
 LIBS =
 
 # Compiling for Linux

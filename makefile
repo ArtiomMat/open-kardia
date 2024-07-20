@@ -1,41 +1,44 @@
-PROJECT_NAME = kardia
+all:
+	cd src-cpp && make
 
-# Directories
-SRC_DIR = $(PROJECT_NAME)
-OBJ_DIR = $(SRC_DIR)
-BIN_DIR = $(SRC_DIR)/../bin
-INC_DIR = $(SRC_DIR)
+# PROJECT_NAME = kardia
 
-# Binary name, more defined in the ifeqs
-BIN = $(BIN_DIR)/$(PROJECT_NAME)
+# # Directories
+# SRC_DIR = $(PROJECT_NAME)
+# OBJ_DIR = $(SRC_DIR)
+# BIN_DIR = $(SRC_DIR)/../bin
+# INC_DIR = $(SRC_DIR)
 
-# Compiler and flags
-CC = gcc
-CFLAGS = -Wall -O3 -L$(BIN_DIR) -I$(INC_DIR) -I$(SRC_DIR)/../engine -ggdb -Wl,-R,'$$ORIGIN'
-LIBS = -lengine
+# # Binary name, more defined in the ifeqs
+# BIN = $(BIN_DIR)/$(PROJECT_NAME)
 
-# Source files
-SRC = $(wildcard $(SRC_DIR)/*.c)
-# Object files
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
+# # Compiler and flags
+# CC = gcc
+# CFLAGS = -Wall -O3 -L$(BIN_DIR) -I$(INC_DIR) -I$(SRC_DIR)/../engine -ggdb -Wl,-R,'$$ORIGIN'
+# LIBS = -lengine
 
-# Rule to build binary
-$(BIN): $(OBJS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+# # Source files
+# SRC = $(wildcard $(SRC_DIR)/*.c)
+# # Object files
+# OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
 
-# Rule to compile object files, with PIC
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+# # Rule to build binary
+# $(BIN): $(OBJS) | $(BIN_DIR)
+# 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-# Create necessary directories
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+# # Rule to compile object files, with PIC
+# $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+# 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Phony targets
-.PHONY: all clean run
+# # Create necessary directories
+# $(BIN_DIR):
+# 	mkdir -p $(BIN_DIR)
 
-all: $(BIN)
+# # Phony targets
+# .PHONY: all clean run
 
-clean:
-	rm -f -I $(OBJS)
+# all: $(BIN)
+
+# clean:
+# 	rm -f -I $(OBJS)
 

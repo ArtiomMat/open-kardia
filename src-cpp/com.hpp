@@ -7,6 +7,26 @@
   #error Only 64 bit systems are supported.
 #endif
 
+#ifdef PARANOID
+#include <cstdio>
+// Paranoid mesage
+#define COM_PARANOID_M(msg) \
+    do { \
+      fprintf(stderr, "PARANOIAC(MSG): %s\n", msg); \
+    } while (0)
+// Paranoid assersion
+#define COM_PARANOID_A(cond, msg) \
+    do { \
+        if (!(cond)) { \
+            fprintf(stderr, "PARANOIAC(FAT): %s\n", msg); \
+            abort(); \
+        } \
+    } while (0)
+#else
+#define COM_PARANOID_M(msg) do { } while (0)
+#define COM_PARANOID_A(cond, msg) do { } while (0)
+#endif
+
 namespace com
 {
   // Little endian
@@ -162,18 +182,50 @@ namespace com
 
   struct str_t
   {
+    public:
     char* c; // Be careful when using this, don't screw around.
+    int n_real, n;
 
     str_t(const char* str);
     str_t();
+
+    ~str_t();
 
     str_t& put(const char* x);
     str_t& put(str_t& x);
     str_t& put(char x);
     str_t& put(long long x);
-    str_t& put(float x);
+    str_t& put(double x);
 
-    // void find(const char* substr);
+    str_t& put(float x) { return put(static_cast<double>(x)); }
+    str_t& put(short x) { return put(static_cast<long long>(x)); }
+    str_t& put(int x) { return put(static_cast<long long>(x)); }
+    str_t& put(unsigned long long x) { return put(static_cast<long long>(x)); }
+    str_t& put(unsigned short x) { return put(static_cast<long long>(x)); }
+    str_t& put(unsigned int x) { return put(static_cast<long long>(x)); }
+
+    template<typename t_t>
+    inline str_t& operator +(t_t x)
+    {
+      return put(x);
+    }
+
+    inline operator const char*()
+    {
+      return c;
+    }
+
+    inline char get(int i)
+    {
+      return c[i];
+    }
+
+    // Returns -1 if not found.
+    int find(const char* substr) { return find(substr, 0, n); }
+    // Returns -1 if not found.
+    int find(const char* substr, int from) { return find(substr, from, n); }
+    // Returns -1 if not found.
+    int find(const char* substr, int from, int to);
   };
 
   static inline constexpr long long
@@ -221,38 +273,3 @@ namespace com
   int set_cb(const char* set_cb, int size);
 
 }
-
-
-// typedef struct com::node_s
-// {
-//   struct com::node_s *r, *l;
-//   union
-//   {
-//     void* p;
-//     unsigned long long u;
-//     long long i;
-//   };
-// } com::node_t;
-
-// extern com::node_t*
-// com::init_node(void* p);
-// // Pushes so that left->next = n(and other stuff for safety).
-// // If left is NULL returns n, otherwise returns left. This is incase you want to make a sort of list, and have a variable called "nodes" or some shit, and it starts out as NULL because there are no "nodes".
-// extern com::node_t*
-// com::push_node(com::node_t* left, com::node_t* n);
-// // Returns the left node to n, NULl if there was none.
-// extern com::node_t*
-// com::pull_node(com::node_t* n);
-// // Also calls com::pull_node(), essentially all it adds is a free() call, so you can do it too if you want to avoid double calling of pull.
-// // Returns what pull returns.
-// extern com::node_t* 
-// com::free_node(com::node_t* n);
-// // Free all nodes, NULL can be put in place ofn
-// extern void
-// com::free_nodes(com::node_t* n);
-// // Return the left most node in the list
-// extern com::node_t*
-// com::leftest_node(com::node_t* n);
-// // Return the right most node in the list
-// extern com::node_t*
-// com::rightest_node(com::node_t* n);

@@ -92,10 +92,21 @@ namespace net
     inet_ntop(AF_INET6, &(sin6.sin6_addr), str, size);
   }
 
+  sock_t::sock_t()
+  {
+    fd = INVALID_SOCKET;
+  }
+
   bool sock_t::open(bool server)
   {
     fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    
+
+    if (fd == INVALID_SOCKET)
+    {
+      fputs("net::sock_t::open(): Failed to open socket.\n", stderr);
+      return false;
+    }
+
     // Make socket non blocking
     {
       unsigned long mode = 1; 
@@ -133,15 +144,37 @@ namespace net
 
   void sock_t::close()
   {
-    closesocket(fd);
+    if (fd != INVALID_SOCKET) // Because it's also called in destructor
+    {
+      fd = INVALID_SOCKET;
+      closesocket(fd);
+    }
   }
 
   bool sock_t::sendto(const char* data, int n)
   {
+    COM_PARANOID_A(fd != INVALID_SOCKET, "net_t::sock_t: Operation with invalid socket");
+
+    struct sockaddr_in6 addr = {0};
+
+    addr.sin6_family = AF_INET6;
+    memcpy(&addr.sin6_addr, &pout.addr, 16);
+    addr.sin6_port = pout.port;
+    
+    int r = ::sendto(fd, data, n, 0, (const struct sockaddr*)&addr, sizeof(addr));
+    
+    if (r == n)
+    {
+      return true;
+    }
+
+    return false;
   }
 
   bool sock_t::flush()
   {
+    COM_PARANOID_A(fd != INVALID_SOCKET, "net_t::sock_t: Operation with invalid socket");
+
     pout.size = pout.cur;
 
     struct sockaddr_in6 addr = {0};
@@ -162,6 +195,8 @@ namespace net
 
   bool sock_t::refresh()
   {
+    COM_PARANOID_A(fd != INVALID_SOCKET, "net_t::sock_t: Operation with invalid socket");
+
     struct sockaddr_in6 addr = {0};
     socklen_t addr_len = sizeof(addr);
     

@@ -8,8 +8,11 @@ int main(int args_n, const char** args)
   com::initialize(args_n, args);
   net::initialize();
 
+  com::str_t lol = "Fuck";
+  puts(lol + " me. I have " + 1.2 + " shekels");
+
   net::sock_t sock;
-  if (sock.open(1))
+  if (sock.open(true))
   {
     puts(net::host_name);
   }

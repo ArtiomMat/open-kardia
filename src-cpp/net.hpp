@@ -44,7 +44,8 @@ namespace net
     port_t bound_port; // The port to which we are bound. Always considered big endian/network order, so always must be stored as such.
     pack_t pin, pout; // In and out packs
     
-    sock_t() = default;
+    // Sets FD to a reset value, and platfrom dependent
+    sock_t();
     ~sock_t() { close(); }
 
     bool open(bool server);
@@ -119,7 +120,7 @@ namespace net
       return pin.size - (pin.cur + n) >= 0;
     }
 
-    // Instead of sending pin->data, we send data, this has a very specific purpose in ser.
+    // Instead of sending pin->data, we send data, this has a very specific purpose in the server, when we can't wipe.
     bool sendto(const char* data, int n);
 
     // Send pout to TO. Returns if sent all the data fully(atleast from our side). Does not rewind() for you.
