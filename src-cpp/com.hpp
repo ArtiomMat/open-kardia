@@ -181,6 +181,51 @@ namespace com
 
   constexpr int PATH_SIZE = 512;
 
+  struct ex_t
+  {
+    const char* str;
+    ex_t(const char* _str) : str(_str) {}
+  };
+
+  // General networking exception
+  struct net_ex_t : ex_t
+  {
+    net_ex_t(const char* _str) : ex_t(_str) {}
+  };
+
+  // Exception with allocation or deletion.
+  struct memory_ex_t : ex_t
+  {
+    memory_ex_t(const char* _str) : ex_t(_str) {}
+  };
+
+  // General file exception.
+  struct file_ex_t : ex_t
+  {
+    file_ex_t(const char* _str) : ex_t(_str) {}
+  };
+  // Exception with opening a file.
+  struct open_ex_t : file_ex_t
+  {
+    open_ex_t(const char* _str) : file_ex_t(_str) {}
+  };
+  // Exception with opening a file.
+  struct read_ex_t : file_ex_t
+  {
+    read_ex_t(const char* _str) : file_ex_t(_str) {}
+  };
+  // Exception with opening a file.
+  struct write_ex_t : file_ex_t
+  {
+    write_ex_t(const char* _str) : file_ex_t(_str) {}
+  };
+
+  // A system exception that has an unspecified reason, but from the libraries used.
+  struct system_ex_t : ex_t
+  {
+    system_ex_t(const char* _str) : ex_t(_str) {}
+  };
+
   struct str_t
   {
     public:
@@ -253,11 +298,11 @@ namespace com
   extern bool initialized;
 
   // For internal use, this is the cross platform part of initialize()
-  bool _initialize2();
+  void _initialize2();
 
   // Some COM functionality depends on the initialization!
-  // Returns 0 if something failed, for instance getting com::dir, otherwise 1.
-  bool initialize(int args_n, const char** args);
+  // Expect the throw of com::system_ex_t if the setup of the relfp logic failes.
+  void initialize(int args_n, const char** args);
   void shutdown();
   
   int arg(const char* arg);

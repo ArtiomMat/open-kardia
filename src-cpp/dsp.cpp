@@ -2,34 +2,47 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <malloc.h>
 
 namespace dsp
 {
   bool initialized = false;
 
+  void ctx_t::handler(event_t& e)
+  {
+    if (e.type == E_CLOSE)
+    {
+      exit(0);
+    }
+  }
+
   map_t::map_t(int w, int h, int fn)
   {
+    p = static_cast<px_t*>( _aligned_malloc(w * h * fn, 8) );
+
+    if (p == NULL)
+    {
+      throw com::memory_ex_t("Allocation of pixels.");
+    }
+
     this->w = w;
     this->h = h;
     this->fn = fn;
-
-    p = static_cast<px_t*>( _aligned_malloc(w * h * fn, 8) );
 
     _ppf = w * h;
   }
   
   map_t::~map_t()
   {
-    free(p);
+    _aligned_free(p);
   }
 
-  bool map_t::open(const char* fp)
+  map_t::map_t(const char* fp)
   {
     FILE* f = fopen(fp, "wb");
     if (f == NULL)
     {
-      printf("map_t::save(): Could not open a file to read '%s'!\n", fp);
-      return false;
+      throw com::open_ex_t("");
     }
 
     free(p);
@@ -55,20 +68,16 @@ namespace dsp
 
     if (!status)
     {
-      printf("map_t::save(): Could not read all data to '%s'!\n", fp);
-      return false;
+      throw com::read_ex_t("");
     }
-
-    return true;
   }
 
-  bool map_t::save(const char* fp)
+  void map_t::save(const char* fp)
   {
     FILE* f = fopen(fp, "wb");
     if (f == NULL)
     {
-      printf("map_t::save(): Could not open a file to write '%s'!\n", fp);
-      return false;
+      throw com::open_ex_t("");
     }
     uint16_t u16;
     
@@ -87,10 +96,7 @@ namespace dsp
 
     if (!status)
     {
-      printf("map_t::save(): Could not write all data to '%s'!\n", fp);
-      return false;
+      throw com::write_ex_t("");
     }
-
-    return true;
   }
 }

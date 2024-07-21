@@ -45,10 +45,9 @@ namespace net
     pack_t pin, pout; // In and out packs
     
     // Sets FD to a reset value, and platfrom dependent
-    sock_t();
+    sock_t(bool server);
     ~sock_t() { close(); }
 
-    bool open(bool server);
     void close();
 
     inline void set_addr(const addr_t& addr, port_t port)
@@ -145,7 +144,7 @@ namespace net
 
   extern bool initialized;
 
-  bool initialize();
+  void initialize();
   
   void shutdown();
 

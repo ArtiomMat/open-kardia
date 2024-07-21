@@ -12,7 +12,7 @@ namespace dsp
 
   struct map_t
   {
-    px_t* p;
+    px_t* p = nullptr;
     
     union
     {
@@ -23,14 +23,13 @@ namespace dsp
     uint16_t fi = 0; // Frame index
     uint16_t fn; // Total frames
 
-    map_t() { p = nullptr; }
     map_t(int w, int h) : map_t(w, h, 1) { }
     map_t(int w, int h, int frames);
+    // Loads the data, throws a specific file exception if fails.
+    map_t(const char* fp);
     ~map_t();
 
-    // Loads the data, if we fail to open the file the data is not freed or overwritten, but an error in reading the file still frees the data so careful.
-    bool open(const char* fp);
-    bool save(const char* fp);
+    void save(const char* fp);
 
     inline void go(unsigned frame)
     {
@@ -77,10 +76,9 @@ namespace dsp
 
   struct system_data_t;
 
+  // It is highly recommended to inherit this class and override handler to something that suits you!
   struct ctx_t
   {
-    map_t map;
-
     struct event_t
     {
       int type;
@@ -97,20 +95,31 @@ namespace dsp
       };
     };
 
-    system_data_t* sys;
+    map_t map;
 
-    void (*handler)(event_t& e);
+    system_data_t* sys = nullptr;
+    
+    char palette[256][3];
 
-    ctx_t(short w, short h) : ctx_t(w, h, 1) {}
-    ctx_t(short w, short h, short frames);
+    virtual void handler(event_t& e);
+    
+    // Throws com::system_ex_t if fails.
+    ctx_t(short w, short h) : ctx_t(w, h, "AVE GAME") {}
+    // Throws com::system_ex_t if fails.
+    ctx_t(short w, short h, const char* title);
+
     ~ctx_t();
 
-    void run(); // This is when we call the handler
+    // handler will be called if events are present, so make sure to set it up!
+    void run();
+    // Refreshes the actual context on the system level, the window buffer, using map.
     void refresh();
+    // Realizes the palette, many systems require copying of the palette to an internal buffer.
+    void realize_palette();
   };
 
   extern bool initialized;
 
-  bool initialize();
+  void initialize();
   void shutdown();
 }

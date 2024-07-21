@@ -1,4 +1,5 @@
 #include "../net.hpp"
+#include "../com.hpp"
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -13,17 +14,16 @@ namespace net
 
   static WSADATA wsadata;
 
-  bool initialize()
+  void initialize()
   { 
     if (initialized)
     {
-      return true;
+      return;
     }
 
     if (WSAStartup(MAKEWORD(2, 2), &wsadata))
     {
-      puts("net::initialize(): WSAStartup failed.");
-      return true;
+      throw com::system_ex_t("WSAStartup failed.");
     }
 
     host_name = new char[NI_MAXHOST];
@@ -39,9 +39,7 @@ namespace net
 
     int result2;
     if ( (result2 = getaddrinfo(host_name, NULL, &hints, &result)) ) {
-      printf("net::initialize(): Failed to get list of host addresses. %d\n", result2);
-      shutdown();
-      return false;
+      throw com::system_ex_t("Failed to get list of host addresses.");
     }
 
     for (; result != nullptr; result = result->ai_next)
@@ -56,10 +54,9 @@ namespace net
 
     char str[ADDRSTRLEN];
     atos(str, host_addr, ADDRSTRLEN);
-    printf("net::initialize(): Networking module initialized, host address is %s.\n", str);
+    printf("Networking module initialized, host address is %s.\n", str);
 
     initialized = true;
-    return true;
   }
 
   void shutdown()
@@ -101,19 +98,13 @@ namespace net
     inet_ntop(AF_INET6, &(sin6.sin6_addr), str, size);
   }
 
-  sock_t::sock_t()
-  {
-    fd = INVALID_SOCKET;
-  }
-
-  bool sock_t::open(bool server)
+  sock_t::sock_t(bool server)
   {
     fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
     if (fd == INVALID_SOCKET)
     {
-      fputs("net::sock_t::open(): Failed to open socket.\n", stderr);
-      return false;
+      throw com::net_ex_t("Failed to open socket.");
     }
 
     // Make socket non blocking
@@ -121,9 +112,7 @@ namespace net
       unsigned long mode = 1; 
       if (ioctlsocket(fd, FIONBIO, &mode))
       {
-        fputs("net::sock_t::open(): Failed to make socket non blocking, essential for net.\n", stderr);
-        close();
-        return false;
+        throw com::net_ex_t("Failed to make socket non blocking, essential for net.");
       }
     }
 
@@ -134,9 +123,7 @@ namespace net
 
       if (bind(fd, (const struct sockaddr *)&sin6, sizeof(sin6)))
       {
-        fputs("net::sock_t::open(): Failed to bind socket for server use.\n", stderr);
-        close();
-        return false;
+        throw com::net_ex_t("Failed to bind socket for server use.");
       }
 
       socklen_t addr_len = sizeof(sin6);
@@ -147,8 +134,6 @@ namespace net
     {
       bound_port = 0; // No bind port.
     }
-
-    return true;
   }
 
   void sock_t::close()

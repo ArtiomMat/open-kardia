@@ -18,7 +18,7 @@ namespace com
   const char** args;
   int args_n;
 
-  bool _initialize2()
+  void _initialize2()
   {
     // Setting up _dir_end, and null terminating _global_dir after the slash.
     int found_slash = 0;
@@ -35,12 +35,11 @@ namespace com
     // If we didn't find a slash it means something went wrong, perhaps _dir_end was =-1 to begin with
     if (!found_slash)
     {
-      fputs("com::initialize(): Getting executable's directory failed.", stderr);
-      return false;
+      throw com::system_ex_t("Getting executable's directory failed.");
     }
 
     puts(
-      "com::initialize(): Common module initialized, "
+      "Common module initialized, "
       #ifdef LILE
         "lil"
       #else
@@ -49,7 +48,6 @@ namespace com
       " endian system.");
 
     initialized = true;
-    return true;
   }
 
   void shutdown()

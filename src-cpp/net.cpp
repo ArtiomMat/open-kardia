@@ -3,7 +3,7 @@
 namespace net
 {
   addr_t host_addr = {0};
-  const char* host_name = "NET UNITIALIZED";
+  const char* host_name = nullptr;
 
   int sock_t::put16(uint16_t x)
   {

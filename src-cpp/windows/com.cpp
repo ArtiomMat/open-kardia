@@ -7,11 +7,11 @@
 
 namespace com
 {
-  bool initialize(int _args_n, const char** _args)
+  void initialize(int _args_n, const char** _args)
   {
     if (initialized)
     {
-      return false;
+      return;
     }
     
     args = _args;
@@ -19,7 +19,7 @@ namespace com
     
     _dir_end = GetModuleFileName(NULL, _global_dir, PATH_SIZE) - 1;
     
-    return _initialize2();
+    _initialize2();
   }
 
   int get_cb_size()

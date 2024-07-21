@@ -12,7 +12,7 @@ BIN = $(BIN_DIR)/mal
 
 # Compiler and flags
 CC = g++
-CFLAGS = -Wall -O3 -I$(INC_DIR) -ggdb -D PARANOID
+CFLAGS = -Wall -O3 -I$(INC_DIR) -D PARANOID -ggdb
 LIBS =
 
 # Compiling for Linux
@@ -24,7 +24,7 @@ ifeq ($(BIN_OS),linux)
 	
 	CFLAGS += -Wl,-R,'$$ORIGIN'
 	LIBS += -lX11 -lXrandr -lm -lpulse -lpulse-simple -lXfixes
-	
+
 # Otherwise compiling for Windows
 else ifeq ($(BIN_OS),windows)
 

@@ -11,17 +11,14 @@ namespace tmr
 
   bool initialized = false;
 
-  void
-  begin_tick()
+  void begin_tick()
   {
     begin_time = now();
   }
 
-  int
-  end_tick()
+  int end_tick()
   {
-    ms_t now = tmr::now();
-    ms_t delta = now - begin_time;
+    ms_t delta = now() - begin_time;
 
     if (delta < target_tick_time)
     {
@@ -29,6 +26,7 @@ namespace tmr
       tick_time = target_tick_time;
       return 0;
     }
+    // printf("%d %d\n", delta, target_tick_time);
 
     COM_PARANOID_M("tmr::end_tick(): tick longer than target_tick_time.");
 

@@ -17,13 +17,15 @@ namespace tmr
       return;
     }
 
+    target_tick_time = initial_tick_time;
+
     timeGetDevCaps(&tc, sizeof (tc));
 
     timeBeginPeriod(tc.wPeriodMin);
 
     t0 = GetTickCount64();
     
-    printf("tmr::initialize(): Timer module initialized, %dns resolution.\n", tc.wPeriodMin*1000000);
+    printf("Timer module initialized, %dns resolution.\n", tc.wPeriodMin*1000000);
 
     initialized = true;
   }
