@@ -12,6 +12,11 @@ namespace tmr
   // Initialize right before the loop
   void initialize(ms_t initial_tick_time)
   {
+    if (initialized)
+    {
+      return;
+    }
+
     timeGetDevCaps(&tc, sizeof (tc));
 
     timeBeginPeriod(tc.wPeriodMin);
@@ -30,6 +35,10 @@ namespace tmr
 
   void shutdown()
   {
+    if (!initialized)
+    {
+      return;
+    }
     timeEndPeriod(tc.wPeriodMin);
     initialized = false;
   }

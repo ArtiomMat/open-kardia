@@ -9,6 +9,11 @@ namespace com
 {
   bool initialize(int _args_n, const char** _args)
   {
+    if (initialized)
+    {
+      return false;
+    }
+    
     args = _args;
     args_n = _args_n;
     

@@ -9,6 +9,7 @@
 
 #ifdef PARANOID
 #include <cstdio>
+#include <cstdlib>
 // Paranoid mesage
 #define COM_PARANOID_M(msg) \
     do { \

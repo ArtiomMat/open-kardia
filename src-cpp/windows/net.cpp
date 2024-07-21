@@ -14,7 +14,12 @@ namespace net
   static WSADATA wsadata;
 
   bool initialize()
-  {
+  { 
+    if (initialized)
+    {
+      return true;
+    }
+
     if (WSAStartup(MAKEWORD(2, 2), &wsadata))
     {
       puts("net::initialize(): WSAStartup failed.");
@@ -59,6 +64,10 @@ namespace net
 
   void shutdown()
   {
+    if (!initialized)
+    {
+      return;
+    }
     delete [] host_name;
     WSACleanup();
     initialized = false;
