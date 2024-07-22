@@ -78,7 +78,7 @@ namespace dsp
     wc.lpszClassName = "DSP_CLASS";
     if (!RegisterClassEx(&wc))
     {
-      throw com::system_ex_t("Class failed to register.");
+      throw com::system_ex_t("Registering window class.");
     }
 
     puts("Display module initialized.");
@@ -122,7 +122,7 @@ namespace dsp
     
     if (!sys->hwnd)
     {
-      throw com::system_ex_t("Window creation failed.");
+      throw com::system_ex_t("Creating window.");
     }
     
     sys->hdc = GetDC(sys->hwnd);
@@ -140,22 +140,22 @@ namespace dsp
     di.header.biClrUsed       = 256;
     di.header.biClrImportant  = 256;
     
-    void* map_p_copy = map.p; // Had a lot of pain when debugging and understanding that it's an INOUT variable
+    _aligned_free(map.p); // FIXME: Obviously will cause a segfault, but we need to find a way to either make CreateDIBSection allocate aligned data, or just ditch the aligned optimizations we did, or make the optimizations slower by first getting to aligned data and then starting all the bullshit, no idea.
     
-    if (!( sys->hdib = CreateDIBSection( sys->hdc, (BITMAPINFO*)&di, DIB_RGB_COLORS, &map_p_copy, NULL, 0) ))
+    if (!( sys->hdib = CreateDIBSection( sys->hdc, (BITMAPINFO*)&di, DIB_RGB_COLORS, reinterpret_cast<void**>(&map.p), NULL, 0) ))
     {
-      com::system_ex_t("Creation of DIB section failed.");
+      com::system_ex_t("Creating DIB section.");
     }
     
     if (!( sys->hdibdc = CreateCompatibleDC( sys->hdc ) ))
     {
-      com::system_ex_t("Creation of compatible DC failed failed.");
+      com::system_ex_t("Creating compatible DC.");
     }
     
     sys->old_hdib = SelectObject( sys->hdibdc, sys->hdib );
     if (!( SetDIBColorTable(sys->hdibdc, 0, 256, di.colors) ))
     {
-      com::system_ex_t("Palette was not created.");
+      com::system_ex_t("Creating palette.");
     }
   }
 
@@ -172,17 +172,17 @@ namespace dsp
 
   void ctx_t::realize_palette()
   {
-    char* _pal = (char*)palette; // Save of pal
-    RGBQUAD			colors[256];
+    RGBQUAD rgbs[256];
 
-    for (int i = 0; i < 256; i++, _pal += 3 )
+    for (int i = 0; i < 256; i++)
     {
-      colors[i].rgbRed   = _pal[0];
-      colors[i].rgbGreen = _pal[1];
-      colors[i].rgbBlue  = _pal[2];
-      colors[i].rgbReserved = 0;
+      rgbs[i].rgbRed   = palette[i][0];
+      rgbs[i].rgbGreen = palette[i][1];
+      rgbs[i].rgbBlue  = palette[i][2];
+      rgbs[i].rgbReserved = 0;
     }
-    SetDIBColorTable(sys->hdibdc, 0, 256, colors);
+
+    SetDIBColorTable(sys->hdibdc, 0, 256, rgbs);
   }
 
   void ctx_t::refresh()

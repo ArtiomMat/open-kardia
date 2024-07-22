@@ -104,7 +104,7 @@ namespace net
 
     if (fd == INVALID_SOCKET)
     {
-      throw com::net_ex_t("Failed to open socket.");
+      throw com::net_ex_t("Opening socket.");
     }
 
     // Make socket non blocking
@@ -112,7 +112,7 @@ namespace net
       unsigned long mode = 1; 
       if (ioctlsocket(fd, FIONBIO, &mode))
       {
-        throw com::net_ex_t("Failed to make socket non blocking, essential for net.");
+        throw com::net_ex_t("Making socket non blocking, essential for net.");
       }
     }
 
@@ -123,7 +123,7 @@ namespace net
 
       if (bind(fd, (const struct sockaddr *)&sin6, sizeof(sin6)))
       {
-        throw com::net_ex_t("Failed to bind socket for server use.");
+        throw com::net_ex_t("Binding socket for server use.");
       }
 
       socklen_t addr_len = sizeof(sin6);

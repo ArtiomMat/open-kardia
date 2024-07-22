@@ -1,4 +1,4 @@
-// Common functionality module, a m
+// Common functionality module
 #pragma once
 
 #include <cstdint>
@@ -317,5 +317,4 @@ namespace com
   int get_cb(char* get_cb, int max_size);
   // Write a buffer into the clipboard
   int set_cb(const char* set_cb, int size);
-
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "com.hpp"
+#include "psf.hpp"
 
 namespace dsp
 {
@@ -17,7 +18,10 @@ namespace dsp
     union
     {
       uint16_t s[2]; // The size but per frame
-      uint16_t w, h; // The size but per frame
+      struct
+      {
+        uint16_t w, h; // The size but per frame
+      };
     };
     uint32_t _ppf; // Cached pixels per frame(w*h)
     uint16_t fi = 0; // Frame index
@@ -25,10 +29,11 @@ namespace dsp
 
     map_t(int w, int h) : map_t(w, h, 1) { }
     map_t(int w, int h, int frames);
-    // Loads the data, throws a specific file exception if fails.
+    // Loads the data. Throws a specific file exception if fails.
     map_t(const char* fp);
     ~map_t();
 
+    // Throws a specific file exception if fails.
     void save(const char* fp);
 
     inline void go(unsigned frame)
@@ -40,12 +45,12 @@ namespace dsp
     inline void put(px_t p, uint16_t x, uint16_t y)
     {
       COM_PARANOID_A(x+y*w < w*h*fn, "map_t::go(): Bad frame");
-      this->p[x + y * w + _ppf] = p;
+      this->p[x + y * w + fi] = p;
     }
 
     inline void put(px_t p, uint32_t i)
     {
-      this->p[i + _ppf] = p;
+      this->p[i + fi] = p;
     }
 
     // Appxoimately 8 times faster than manual put, because utilizes 64 bit aligned memory and shit.
@@ -60,6 +65,8 @@ namespace dsp
     // If we encounter p[i]=0 then we replace it with bg, if we encounter any other color we replace it with fg.
     // Slower than regular put, because needs to compare individual pixels.
     void put(map_t& m, uint16_t x, uint16_t y, px_t fg, px_t bg);
+
+    void put(psf::font_t& font, unsigned glyph, px_t fg, px_t bg);
   };
 
   enum event_type_t
@@ -95,10 +102,8 @@ namespace dsp
       };
     };
 
-    map_t map;
-
     system_data_t* sys = nullptr;
-    
+    map_t map;
     char palette[256][3];
 
     virtual void handler(event_t& e);
