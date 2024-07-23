@@ -274,6 +274,30 @@ namespace com
     int find(const char* substr, int from, int to);
   };
 
+  enum
+  {
+    SEEK_SET,
+    SEEK_CUR,
+    SEEK_END,
+  };
+
+  // If you are dealing with big files, and want to load memory, this is your pal.
+  // Instead of loading the entire buffer like a simpleton, you use this big boy, and it deals with the nasty space optimization itself, while giving you the free
+  struct big_read_t
+  {
+    char* bufs[2]; // The buffers
+    int buf_i; // Buffer that is actually being read
+    int buf_n;
+    unsigned long long fd;
+
+    // max_read is the maximum read size you intend to perform, read calls shall not surpass this.
+    big_read_t(int max_read);
+
+    void read(int n);
+    void seek(int x, int type);
+    void rewind() { seek(0, SEEK_SET); }
+  };
+
   static inline constexpr long long
   max(long long a, long long b)
   {

@@ -76,7 +76,7 @@ namespace wav
     printf("Wave module initialized, buffer duration of %dms.\n", buffer_duration);
   }
 
-  void begin()
+  void begin_playback()
   {
     UINT32 padding;
 
@@ -85,49 +85,20 @@ namespace wav
     CHECKR("Getting padding.");
     
     write_samples_n = buf_n - padding;
-    if (write_samples_n <= 0)
-    {
-      throw com::ex_t("Well shit");
-    }
     
     hr = render_client->GetBuffer(write_samples_n, &samples);
     CHECKR("Getting buffer for rendering.");
 
     memset(samples, 0, write_samples_n * CHANNELS_N * BITS_PER_SAMPLE/8);
-    // for (int i = 0; i < write_samples_n * CHANNELS_N * BITS_PER_SAMPLE/8; i++)
-    // {
-    //   samples[i] = rand();
-    // }
   }
 
-  void end()
+  void end_playback()
   {
     // Multiply each amplitude by master volume.
     for (int i = 0; i < write_samples_n * CHANNELS_N; i++)
     {
-      switch (BITS_PER_SAMPLE)
-      {
-        case 8:
-        {
-          INT8& amp8 = reinterpret_cast<INT8*>(samples)[i];
-          amp8 = (INT16)amp8 * volume / 100;
-        }
-        break;
-
-        case 16:
-        {
-          INT16& amp16 = reinterpret_cast<INT16*>(samples)[i];
-          amp16 = (INT32)amp16 * volume / 100;
-        }
-        break;
-
-        case 32:
-        {
-          INT32& amp32 = reinterpret_cast<INT32*>(samples)[i];
-          amp32 = (INT64)amp32 * volume / 100;
-        }
-        break;
-      }
+      INT16& amp16 = reinterpret_cast<INT16*>(samples)[i];
+      amp16 = (INT32)amp16 * volume / 100;
     }
 
     hr = render_client->ReleaseBuffer(write_samples_n, 0);

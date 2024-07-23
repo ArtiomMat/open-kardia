@@ -9,13 +9,13 @@
 
 int main(int args_n, const char** args)
 {
-  puts("\nINITIALIZE...\n");
+  puts("\nINITIALIZING...\n");
 
   com::initialize(args_n, args);
   net::initialize();
   dsp::initialize("Xalurzia");
-  tmr::initialize(30);
-  wav::initialize(60);
+  tmr::initialize(16);
+  wav::initialize(30);
 
   com::str_t lol = "Fuck";
   puts(lol + " me. I have " + 1.2 + " shekels");
@@ -27,7 +27,6 @@ int main(int args_n, const char** args)
   wav::source_t music_src(music);
 
   psf::file_t font(com::relfp("roman.psf"));
-
 
   x.palette[0][0] = 0;
   x.palette[0][1] = 0;
@@ -42,15 +41,15 @@ int main(int args_n, const char** args)
   x.palette[2][2] = 0;
   x.realize_palette();
 
-  puts("\nRUN...\n");
+  puts("\nRUNNIG...\n");
 
   while (1)
   {
     tmr::begin_tick();
 
-    wav::begin();
+    wav::begin_playback();
     music_src.play();
-    wav::end();
+    wav::end_playback();
 
     // x.map.clear(5);
     x.map.put(font, 'G', 10, 15, 1, 0);
@@ -62,7 +61,7 @@ int main(int args_n, const char** args)
     tmr::end_tick();
   }
 
-  puts("\nSHUTDOWN...\n");
+  puts("\nSHUTTING DOWN...\n");
 
   wav::shutdown();
   dsp::shutdown();

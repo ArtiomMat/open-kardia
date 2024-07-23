@@ -109,8 +109,6 @@ namespace psf
 
 
     }
-
-    printf("Font %s' has been successfully opened!\n", fp);
   }
 
   int file_t::get_width()

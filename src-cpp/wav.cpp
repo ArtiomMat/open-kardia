@@ -75,7 +75,7 @@ namespace wav
     if (channels_n != 1 && channels_n != 2)
     {
       fclose(f);
-      throw com::open_ex_t("Only 1/2 channel audio is supported.");
+      throw com::read_ex_t("Only 1/2 channel audio is supported.");
     }
 
     uint32_t sample_rate;
@@ -88,6 +88,11 @@ namespace wav
     uint16_t bits_per_sample;
     fread(&bits_per_sample, 2, 1, f);
     bits_per_sample = com::lil16(bits_per_sample);
+    if (bits_per_sample != BITS_PER_SAMPLE)
+    {
+      fclose(f);
+      throw com::read_ex_t("Only 16 bps audio is supported.");
+    }
 
     // Skipping: Data marker or List chunk if present
     fread(riff, 4, 1, f);
@@ -124,7 +129,7 @@ namespace wav
     int old_samples_n = samples_n;
 
     // How many samples in the old audio there are per single sample in the converted audio.
-    float rate_ratio = 1.0f * sample_rate / SAMPLE_RATE;
+    double rate_ratio = 1.0 * sample_rate / SAMPLE_RATE;
 
     samples_n = samples_n / rate_ratio; // / because inverse
     samples = new char[samples_n * CHANNELS_N * (BITS_PER_SAMPLE/8)];
@@ -138,7 +143,37 @@ namespace wav
     {
       unsigned old_sample_i = sample_i * rate_ratio;
 
-      // TODO
+      if (channels_n != CHANNELS_N)
+      {
+        switch (CHANNELS_N)
+        {
+          case 1: // We need to average 2 channels.
+          {
+            int16_t& old_a = reinterpret_cast<int16_t*>(old_samples)[old_sample_i * channels_n];
+            int16_t& old_b = reinterpret_cast<int16_t*>(old_samples)[old_sample_i * channels_n + 1];
+
+            reinterpret_cast<int16_t*>(samples)[sample_i] = ((int32_t)old_a + old_b) / 2;
+          }
+          break;
+          
+          case 2: // Duplicate the samples.
+          {
+            int16_t& old = reinterpret_cast<int16_t*>(old_samples)[old_sample_i];
+
+            reinterpret_cast<int16_t*>(samples)[sample_i * CHANNELS_N] = old;
+            reinterpret_cast<int16_t*>(samples)[sample_i * CHANNELS_N + 1] = old;
+          }
+          break;
+        }
+      }
+      else // Channels are eqaul and we just copy it
+      {
+        for (int c = 0; c < CHANNELS_N; c++)
+        {
+          int16_t& old = reinterpret_cast<int16_t*>(old_samples)[old_sample_i * CHANNELS_N + c];
+          reinterpret_cast<int16_t*>(samples)[sample_i * CHANNELS_N + c] = old;
+        }
+      }
     }
 
     delete [] old_samples;
@@ -149,10 +184,8 @@ namespace wav
     delete [] samples;
   }
 
-  source_t::source_t(file_t& f) : audio(f)
-  {
-    
-  }
+  source_t::source_t(file_t& f) : file(f)
+  { }
 
   void source_t::play()
   {
@@ -160,7 +193,7 @@ namespace wav
 
     for (uint32_t i = 0; i < write_samples_n * CHANNELS_N; i++, j++)
     {
-      if (j >= this->audio.samples_n * CHANNELS_N)
+      if (j >= this->file.samples_n * CHANNELS_N)
       {
         if (loop)
         {
@@ -172,29 +205,23 @@ namespace wav
         }
       }
 
-      switch (BITS_PER_SAMPLE)
+      // NOTE: BITS_PER_SAMPLE is always 16 bit, so this is ok.
+  
+      int16_t& amp16 = reinterpret_cast<int16_t*>(this->file.samples)[j];
+      int16_t& out16 = reinterpret_cast<int16_t*>(samples)[i];
+      int32_t out32 = (int32_t)out16 + ((int32_t)amp16 * volume / 100);
+      constexpr int16_t min16 = (int16_t)((1 << (sizeof(int16_t)*8 -1)));
+      // Clamp to min and max
+      if (out32 < min16)
       {
-        case 8:
-        {
-          int8_t& amp8 = reinterpret_cast<int8_t*>(this->audio.samples)[j];
-          reinterpret_cast<int8_t*>(samples)[i] += (int16_t)amp8 / 2;
-        }
-        break;
-
-        case 16:
-        {
-          int16_t& amp16 = reinterpret_cast<int16_t*>(this->audio.samples)[j];
-          reinterpret_cast<int16_t*>(samples)[i] += (int32_t)amp16 / 2;
-        }
-        break;
-
-        case 32:
-        {
-          int32_t& amp32 = reinterpret_cast<int32_t*>(this->audio.samples)[j];
-          reinterpret_cast<int32_t*>(samples)[i] += (int64_t)amp32 / 2;
-        }
-        break;
+        out32 = min16;
       }
+      else if (out32 > ~min16)
+      {
+        out32 = ~min16;
+      }
+      
+      out16 = out32;
     }
 
     sample_i = j / CHANNELS_N;
