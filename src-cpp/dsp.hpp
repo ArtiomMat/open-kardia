@@ -29,6 +29,8 @@ namespace dsp
 
     map_t(int w, int h) : map_t(w, h, 1) { }
     map_t(int w, int h, int frames);
+    // If you wish it's available.
+    map_t(px_t* data, int w, int h, int frames);
     // Loads the data. Throws a specific file exception if fails.
     map_t(const char* fp);
     ~map_t();
@@ -66,7 +68,7 @@ namespace dsp
     // Slower than regular put, because needs to compare individual pixels.
     void put(map_t& m, uint16_t x, uint16_t y, px_t fg, px_t bg);
 
-    void put(psf::font_t& font, unsigned glyph, px_t fg, px_t bg);
+    void put(psf::file_t& font, unsigned glyph, uint16_t x, uint16_t y, px_t fg, px_t bg);
   };
 
   enum event_type_t
@@ -105,13 +107,12 @@ namespace dsp
     system_data_t* sys = nullptr;
     map_t map;
     char palette[256][3];
+    char pixel_size;
 
     virtual void handler(event_t& e);
     
     // Throws com::system_ex_t if fails.
-    ctx_t(short w, short h) : ctx_t(w, h, "AVE GAME") {}
-    // Throws com::system_ex_t if fails.
-    ctx_t(short w, short h, const char* title);
+    ctx_t(short w, short h);
 
     ~ctx_t();
 
@@ -125,6 +126,6 @@ namespace dsp
 
   extern bool initialized;
 
-  void initialize();
+  void initialize(const char* title);
   void shutdown();
 }

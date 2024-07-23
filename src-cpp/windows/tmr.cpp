@@ -25,7 +25,7 @@ namespace tmr
 
     t0 = GetTickCount64();
     
-    printf("Timer module initialized, %dns resolution.\n", tc.wPeriodMin*1000000);
+    printf("Timer module initialized, %dns resolution.\n", tc.wPeriodMin*1'000'000);
 
     initialized = true;
   }

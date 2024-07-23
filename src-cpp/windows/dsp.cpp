@@ -42,6 +42,8 @@ namespace dsp
   // The current ctx that run was called on, to identify in wndproc
   static thread_local ctx_t* running_ctx = nullptr;
 
+  static const char* title = "No title";
+
   LRESULT CALLBACK 
   wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
   {
@@ -61,12 +63,14 @@ namespace dsp
     return 0;
   }
 
-  void initialize()
+  void initialize(const char* title)
   {
     if (initialized)
     {
       return;
     }
+
+    dsp::title = title;
 
     // Create the class
     WNDCLASSEX wc = {0};
@@ -96,7 +100,7 @@ namespace dsp
   }
 
 
-  ctx_t::ctx_t(short _vid_w, short _vid_h, const char* title) : map(_vid_w, _vid_h, 1)
+  ctx_t::ctx_t(short _vid_w, short _vid_h) : map(nullptr, _vid_w, _vid_h, 1)
   {
     sys = new system_data_t;
 
@@ -140,8 +144,7 @@ namespace dsp
     di.header.biClrUsed       = 256;
     di.header.biClrImportant  = 256;
     
-    _aligned_free(map.p); // FIXME: Obviously will cause a segfault, but we need to find a way to either make CreateDIBSection allocate aligned data, or just ditch the aligned optimizations we did, or make the optimizations slower by first getting to aligned data and then starting all the bullshit, no idea.
-    
+    // So we pass &map.p because it was literally setup to be nullptr from the start.
     if (!( sys->hdib = CreateDIBSection( sys->hdc, (BITMAPINFO*)&di, DIB_RGB_COLORS, reinterpret_cast<void**>(&map.p), NULL, 0) ))
     {
       com::system_ex_t("Creating DIB section.");

@@ -34,7 +34,7 @@ else ifeq ($(BIN_OS),windows)
 	endif
 	
 	CFLAGS += -static-libgcc -static-libstdc++
-	LIBS += -lgdi32 -lwinmm -lmsvcrt -lmingw32 -lws2_32
+	LIBS += -lgdi32 -lwinmm -lmsvcrt -lmingw32 -lws2_32 -lole32 -lavrt
 	
 endif
 

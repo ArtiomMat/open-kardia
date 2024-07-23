@@ -8,9 +8,9 @@ namespace dsp
 {
   map_t::map_t(int w, int h, int fn)
   {
-    p = static_cast<px_t*>( _aligned_malloc(w * h * fn, 8) );
+    p = new px_t[w * h * fn];
 
-    if (p == NULL)
+    if (p == nullptr)
     {
       throw com::memory_ex_t("Allocating pixels.");
     }
@@ -21,10 +21,21 @@ namespace dsp
 
     _ppf = w * h;
   }
+
+  map_t::map_t(px_t* data, int w, int h, int frames)
+  {
+    this->p = data;
+
+    this->w = w;
+    this->h = h;
+    this->fn = frames;
+
+    _ppf = w * h;
+  }
   
   map_t::~map_t()
   {
-    _aligned_free(p);
+    delete [] p;
   }
 
   map_t::map_t(const char* fp)
@@ -69,17 +80,22 @@ namespace dsp
 
   void map_t::clear(px_t color)
   {
-    unsigned long i;
+    // unsigned long i;
   
-    for (i = 0; i < sizeof(long long); i++)
+    // for (i = 0; i < sizeof(long long); i++)
+    // {
+    //   p[i] = color;
+    // }
+
+    // int total = s[0] * s[1];
+    // for (i = 1; i < total / sizeof(long long); i++)
+    // {
+    //   ((long long*)(p))[i] = *((long long*)(p));
+    // }
+    // TODO: Restore the peace and order, add back the alignment stuff
+    for (uint32_t i = fi * _ppf; i < w * h + fi * _ppf; i++)
     {
       p[i] = color;
-    }
-
-    int total = s[0] * s[1];
-    for (i = 1; i < total / sizeof(long long); i++)
-    {
-      ((long long*)(p))[i] = *((long long*)(p));
     }
   }
 
@@ -111,7 +127,7 @@ namespace dsp
     }
   }
 
-  void map_t::put(psf::font_t& font, unsigned glyph_i, px_t fg, px_t bg)
+  void map_t::put(psf::file_t& font, unsigned glyph_i, uint16_t _x, uint16_t _y, px_t fg, px_t bg)
   {
     char* glyph = font.get_glyph(glyph_i);
     int font_width = font.get_width();
@@ -119,9 +135,10 @@ namespace dsp
 
     // bit_i is the bit index, it goes through glyph as a whole as if it were a bit buffer
     int bit_i = 0;
-    for (int y = 0; y < font.height && y < s[1]; y++)
+
+    for (int y = 0; y < font.height && (y+_y) < s[1]; y++)
     {
-      for (int x = 0; x < font_width && x < s[0]; x++, bit_i++)
+      for (int x = 0; x < font_width && (x+_x) < s[0]; x++, bit_i++)
       {
         char byte = glyph[bit_i / 8];
         
@@ -130,7 +147,7 @@ namespace dsp
         // If the bit is on then pixel=1 otherwise 0 ofc
         px_t pixel = ((byte << (bit_i % 8)) & (1 << 7)) ? fg : bg;
         
-        put(pixel, x, y);
+        put(pixel, x + _x, y + _y);
       }
 
       bit_i += padding;

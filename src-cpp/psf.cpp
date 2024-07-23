@@ -5,13 +5,13 @@
 
 namespace psf
 {
-  font_t::~font_t()
+  file_t::~file_t()
   {
     delete [] data;
     fclose(fd);
   }
 
-  font_t::font_t(const char* fp, int priority)
+  file_t::file_t(const char* fp, int priority)
   {
     fd = fopen(fp, "rb");
     type = 0;
@@ -64,7 +64,12 @@ namespace psf
 
       if (psf1.mode)
       {
-        throw com::ex_t("Modes are not supported yet!");
+        if (psf1.mode & PSF1_MODE512)
+        {
+          chars_n = 512;
+        }
+        
+        puts("Note frome font: Unicode table not supported yet.");
       }
 
       // Setup row size, psf1 width is always 8 pixels
@@ -101,17 +106,19 @@ namespace psf
       {
         __array[i] = com::lil32(__array[i]);
       }
+
+
     }
 
-    printf("gui_open_font(): '%s' has been successfully opened!\n", fp);
+    printf("Font %s' has been successfully opened!\n", fp);
   }
 
-  int font_t::get_width()
+  int file_t::get_width()
   {
     return type == PSF1 ? 8 : psf2.width;
   }
 
-  char* font_t::get_glyph(unsigned g)
+  char* file_t::get_glyph(unsigned g)
   {
     // TODO: This is hard coded to strictly work with ascii, gotta improve.
     if (g < 0)

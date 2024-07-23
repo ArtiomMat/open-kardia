@@ -47,7 +47,7 @@ namespace psf
     P_MEMORY, // Prioritize less memory, expands single bit to bitmaps in realtime
   };
 
-  struct font_t
+  struct file_t
   {
     // Union because depends on priority
     char* data; // For speed priority
@@ -64,10 +64,10 @@ namespace psf
       uint32_t __array[8]; // For quickly swapping endian in psf2
     };
 
-    font_t(const char* fp) : font_t(fp, P_AUTO) {}
+    file_t(const char* fp) : file_t(fp, P_AUTO) {}
     // p is priority, check out P_* enum
-    font_t(const char* fp, int p);
-    ~font_t();
+    file_t(const char* fp, int p);
+    ~file_t();
 
     int get_width();
     char* get_glyph(unsigned g);
