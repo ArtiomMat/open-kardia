@@ -62,12 +62,7 @@ namespace dsp
     // Quite fast like clear because also utilizes memory alignment.
     void put(map_t& m, uint16_t x, uint16_t y);
 
-    // As funny as it is, it serves the specific purpose of emulating terminal graphics.
-    // Puts m at its current frame, at x and y, on the current frame of this one(fi).
-    // If we encounter p[i]=0 then we replace it with bg, if we encounter any other color we replace it with fg.
-    // Slower than regular put, because needs to compare individual pixels.
-    void put(map_t& m, uint16_t x, uint16_t y, px_t fg, px_t bg);
-
+    
     void put(psf::file_t& font, unsigned glyph, uint16_t x, uint16_t y, px_t fg, px_t bg);
   };
 
