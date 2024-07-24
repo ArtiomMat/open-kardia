@@ -7,11 +7,16 @@ namespace psf
 {
   file_t::~file_t()
   {
+    if (data == nullptr)
+    {
+      return;
+    }
+    
     delete [] data;
     fclose(fd);
   }
 
-  file_t::file_t(const char* fp, int priority)
+  void file_t::open(const char* fp, int priority)
   {
     fd = fopen(fp, "rb");
     type = 0;

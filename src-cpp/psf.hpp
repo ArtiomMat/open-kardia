@@ -49,9 +49,8 @@ namespace psf
 
   struct file_t
   {
-    // Union because depends on priority
-    char* data; // For speed priority
-    FILE* fd; // For memory priority
+    char* data = nullptr; // For speed priority
+    FILE* fd = nullptr; // For memory priority
     unsigned data_size;
     unsigned char type; // Either sizeof(psf2_s) or sizeof(psf1_s)
     unsigned char p; // Priority
@@ -63,11 +62,15 @@ namespace psf
       psf2_t psf2;
       uint32_t __array[8]; // For quickly swapping endian in psf2
     };
+    
+    file_t() = default;
 
     file_t(const char* fp) : file_t(fp, P_AUTO) {}
     // p is priority, check out P_* enum
-    file_t(const char* fp, int p);
+    file_t(const char* fp, int p) { open(fp, p); }
     ~file_t();
+    
+    void open(const char* fp, int p);
 
     int get_width();
     char* get_glyph(unsigned g);

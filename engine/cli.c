@@ -19,7 +19,7 @@ static char want_reply;
 static char want_info; // 0 for nope, 1 for yope but not as a client, 2 for yep but as a joined client.
 static char want_join;
 
-tmr_ms_t info_ask_ms; // When the info was asked for
+static tmr_ms_t info_ask_ms; // When the info was asked for
 
 int cli_def_on(cli_event_t* e)
 {

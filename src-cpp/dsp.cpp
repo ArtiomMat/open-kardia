@@ -6,12 +6,11 @@ namespace dsp
 {
   bool initialized = false;
 
-  void ctx_t::handler(event_t& e)
+  void context_t::handler(event_t& e)
   {
     if (e.type == E_CLOSE)
     {
       exit(0);
     }
   }
-
 }

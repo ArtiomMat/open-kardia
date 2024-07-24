@@ -61,7 +61,6 @@ namespace dsp
     // Puts m at its current frame, at x and y, on the current frame of this one(fi).
     // Quite fast like clear because also utilizes memory alignment.
     void put(map_t& m, uint16_t x, uint16_t y);
-
     
     void put(psf::file_t& font, unsigned glyph, uint16_t x, uint16_t y, px_t fg, px_t bg);
   };
@@ -71,7 +70,7 @@ namespace dsp
     _E_NULL,
     E_CLOSE, // Close event, user wants to close the application
     E_HIDE, // When the video module is hidden and cannot be seen by the user
-    E_SHOW, // When the video module is shown and seen by the user(sends it on ctx_t() too)
+    E_SHOW, // When the video module is shown and seen by the user(sends it on context_t() too)
 
     E_PRESS, // Press key/button
     E_RELEASE, // Release key/button
@@ -81,7 +80,7 @@ namespace dsp
   struct system_data_t;
 
   // It is highly recommended to inherit this class and override handler to something that suits you!
-  struct ctx_t
+  struct context_t
   {
     struct event_t
     {
@@ -99,17 +98,16 @@ namespace dsp
       };
     };
 
-    system_data_t* sys = nullptr;
+    system_data_t* sys = nullptr; // Means that it's uninitialized
     map_t map;
     char palette[256][3];
     char pixel_size;
 
     virtual void handler(event_t& e);
-    
-    // Throws com::system_ex_t if fails.
-    ctx_t(short w, short h);
 
-    ~ctx_t();
+    // Throws com::system_ex_t if fails.
+    context_t(short w, short h);
+    virtual ~context_t();
 
     // handler will be called if events are present, so make sure to set it up!
     void run();

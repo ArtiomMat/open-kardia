@@ -198,6 +198,11 @@ namespace com
   {
     memory_ex_t(const char* _str) : ex_t(_str) {}
   };
+  // Exception when indexing memory.
+  struct index_ex_t : memory_ex_t
+  {
+    index_ex_t(const char* _str) : memory_ex_t(_str) {}
+  };
 
   // General file exception.
   struct file_ex_t : ex_t

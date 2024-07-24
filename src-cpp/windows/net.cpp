@@ -98,6 +98,11 @@ namespace net
     inet_ntop(AF_INET6, &(sin6.sin6_addr), str, size);
   }
 
+  sock_t::sock_t()
+  {
+    fd = INVALID_SOCKET;
+  }
+
   sock_t::sock_t(bool server)
   {
     fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
@@ -138,7 +143,7 @@ namespace net
 
   void sock_t::close()
   {
-    if (fd != INVALID_SOCKET) // Because it's also called in destructor
+    if (fd != INVALID_SOCKET) // Because it's also called in destructor and sock() is allowed
     {
       fd = INVALID_SOCKET;
       closesocket(fd);

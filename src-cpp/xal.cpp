@@ -1,73 +1,92 @@
-#include <cstdio>
+#include "xal.hpp"
 
-#include "com.hpp"
-#include "net.hpp"
-#include "dsp.hpp"
-#include "tmr.hpp"
-#include "psf.hpp"
-#include "wav.hpp"
-
-int main(int args_n, const char** args)
+namespace xal
 {
-  puts("\nINITIALIZING...\n");
+  bool initialized = false;
 
-  com::initialize(args_n, args);
-  net::initialize();
-  dsp::initialize("Xalurzia");
-  tmr::initialize(16);
-  wav::initialize(30);
+  wav::file_t* menu_music = nullptr;
 
-  com::str_t lol = "Fuck";
-  puts(lol + " me. I have " + 1.2 + " shekels");
+  wav::player_t* player = nullptr;
 
-  // net::sock_t sock(true);
-  dsp::ctx_t x(640, 400);
+  dsp_context_t* context = nullptr;
 
-  wav::file_t music(com::relfp("nolove.wav"));
-  wav::source_t music_src(music);
+  psf::file_t* font_f = nullptr;
 
-  psf::file_t font(com::relfp("roman.psf"));
+  void dsp_context_t::handler(dsp::context_t::event_t& e)
+  {
+    switch (e.type)
+    {
+      case dsp::E_CLOSE:
+      shutdown();
+      break;
 
-  x.palette[0][0] = 0;
-  x.palette[0][1] = 0;
-  x.palette[0][2] = 0;
+      case dsp::E_RELEASE:
+      
+      break;
+    }
+  }
 
-  x.palette[1][0] = 170;
-  x.palette[1][1] = 128;
-  x.palette[1][2] = 200;
+  void initialize()
+  {
+    if (initialized)
+    {
+      return;
+    }
+    
+    // net::sock_t sock(true);
+    
+    menu_music = new wav::file_t(com::relfp("nolove.wav"));
+    player = new wav::player_t(*menu_music);
 
-  x.palette[2][0] = 0;
-  x.palette[2][1] = 128;
-  x.palette[2][2] = 0;
-  x.realize_palette();
+    context = new dsp_context_t(640, 400);
 
-  puts("\nRUNNIG...\n");
+    font_f = new psf::file_t(com::relfp("roman.psf"));
 
-  while (1)
+    context->palette[0][0] = 0;
+    context->palette[0][1] = 0;
+    context->palette[0][2] = 0;
+
+    context->palette[1][0] = 255;
+    context->palette[1][1] = 255;
+    context->palette[1][2] = 255;
+
+    context->realize_palette();
+
+    initialized = true;
+  }
+  
+  void shutdown()
+  {
+    if (!initialized)
+    {
+      return;
+    }
+
+    delete player;
+    delete menu_music;
+
+    delete context;
+
+    delete font_f;
+
+    initialized = false;
+  }
+  
+  void run()
   {
     tmr::begin_tick();
 
     wav::begin_playback();
-    music_src.play();
+    player->play();
     wav::end_playback();
 
-    // x.map.clear(5);
-    x.map.put(font, 'G', 10, 15, 1, 0);
-    x.map.put(font, 'g', 19, 15, 1, 0);
-    // x.map.put(1, 10, 10);
-    x.refresh();
-    x.run();
+    context->run();
+    
+    context->map.clear(0);
+    context->map.put(*font_f, 'G', 10, 15, 1, 0);
+    context->map.put(*font_f, 'g', 19, 15, 1, 0);
+    context->refresh();
 
     tmr::end_tick();
   }
-
-  puts("\nSHUTTING DOWN...\n");
-
-  wav::shutdown();
-  dsp::shutdown();
-  net::shutdown();
-  com::shutdown();
-  tmr::shutdown();
-  
-  return 0;
 }

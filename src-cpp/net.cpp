@@ -47,25 +47,25 @@ namespace net
     return MAX_PACK_SIZE - this->pout.cur;
   }
 
-  int sock_t::get16(uint16_t& x)
+  uint16_t sock_t::get16()
   {
     NET_PAD(this->pin.cur, 2);
 
-    x = com::lil16(*(uint16_t*)(this->pin.data + this->pin.cur));
+    uint16_t x = com::lil16(*(uint16_t*)(this->pin.data + this->pin.cur));
     this->pin.cur += 2;
-    return this->pin.size - this->pin.cur;
+    return x;
   }
-  int sock_t::get32(uint32_t& x)
+  uint32_t sock_t::get32()
   {
     NET_PAD(this->pin.cur, 4);
 
-    x = com::lil32(*(uint32_t*)(this->pin.data + this->pin.cur));
+    uint32_t x = com::lil32(*(uint32_t*)(this->pin.data + this->pin.cur));
     this->pin.cur += 4;
-    return this->pin.size - this->pin.cur;
+    return x;
   }
-  int sock_t::gets(const char*& str)
+  const char* sock_t::gets()
   {
-    str = this->pin.data + this->pin.cur;
+    const char* str = this->pin.data + this->pin.cur;
 
     for (; this->pin.data[this->pin.cur]; this->pin.cur++)
     {
@@ -73,19 +73,19 @@ namespace net
       if (this->pin.cur >= this->pin.size - 1)
       {
         this->pin.data[this->pin.cur] = 0;
-        return -1;
+        return nullptr;
       }
     }
 
     this->pin.cur++;
 
-    return this->pin.size - this->pin.cur;
+    return str;
   }
-  int sock_t::getb(const char*& data, int n)
+  const char* sock_t::getb(int n)
   {
-    data = this->pin.data + this->pin.cur;
+    const char* data = this->pin.data + this->pin.cur;
     this->pin.cur += n;
-    return this->pin.size - this->pin.cur;
+    return data;
   }
 
   int sock_t::gets_n()

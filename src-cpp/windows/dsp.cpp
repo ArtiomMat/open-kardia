@@ -40,14 +40,14 @@ namespace dsp
   } identitypalette_t;
 
   // The current ctx that run was called on, to identify in wndproc
-  static thread_local ctx_t* running_ctx = nullptr;
+  static thread_local context_t* running_ctx = nullptr;
 
   static const char* title = "No title";
 
   LRESULT CALLBACK 
   wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
   {
-    ctx_t::event_t e;
+    context_t::event_t e;
     switch (msg)
     {
       case WM_CLOSE:
@@ -100,7 +100,7 @@ namespace dsp
   }
 
 
-  ctx_t::ctx_t(short _vid_w, short _vid_h) : map(nullptr, _vid_w, _vid_h, 1)
+  context_t::context_t(short _vid_w, short _vid_h) : map(nullptr, _vid_w, _vid_h, 1)
   {
     sys = new system_data_t;
 
@@ -114,7 +114,7 @@ namespace dsp
     r.right = _vid_w;
     r.bottom = _vid_h;
     
-    AdjustWindowRect (&r, WSTYLE, 0);
+    AdjustWindowRect(&r, WSTYLE, 0);
     w = r.right - r.left;
     h = r.bottom - r.top;
 
@@ -162,7 +162,7 @@ namespace dsp
     }
   }
 
-  void ctx_t::run()
+  void context_t::run()
   {
     running_ctx = this;
 
@@ -173,7 +173,7 @@ namespace dsp
     }
   }
 
-  void ctx_t::realize_palette()
+  void context_t::realize_palette()
   {
     RGBQUAD rgbs[256];
 
@@ -188,18 +188,25 @@ namespace dsp
     SetDIBColorTable(sys->hdibdc, 0, 256, rgbs);
   }
 
-  void ctx_t::refresh()
+  void context_t::refresh()
   {
     BitBlt(sys->hdc, 0, 0, map.w, map.h, sys->hdibdc, 0, 0, SRCCOPY);
   }
 
-  ctx_t::~ctx_t()
+  context_t::~context_t()
   {
+    // if (sys == nullptr)
+    // {
+    //   return;
+    // }
+
     SelectObject(sys->hdc, sys->old_hdib);
     DeleteDC(sys->hdibdc);
     DeleteObject(sys->hdib);
     DestroyWindow(sys->hwnd);
 
     delete sys;
+    
+    map.p = nullptr; // This is the nastiest hack known to man, the reason we do this is because the data there was not allocated with new but rather with WINAPI's RtlAllocateHeap(), took a long time to debug this on fucking Linux, but I finally did. And this destructor is gonna call ~map_t with delete [] p; 
   }
 }

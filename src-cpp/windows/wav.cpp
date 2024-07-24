@@ -95,7 +95,7 @@ namespace wav
   void end_playback()
   {
     // Multiply each amplitude by master volume.
-    for (int i = 0; i < write_samples_n * CHANNELS_N; i++)
+    for (unsigned i = 0; i < write_samples_n * CHANNELS_N; i++)
     {
       INT16& amp16 = reinterpret_cast<INT16*>(samples)[i];
       amp16 = (INT32)amp16 * volume / 100;

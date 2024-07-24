@@ -8,11 +8,11 @@ BIN_DIR = ../bin
 INC_DIR = .
 
 # Binary name, more defined in the ifeqs
-BIN = $(BIN_DIR)/mal
+BIN = $(BIN_DIR)/xal
 
 # Compiler and flags
 CC = g++
-CFLAGS = -Wall -O3 -I$(INC_DIR) -D NOT_PARANOID -ggdb
+CFLAGS = -Wall -O3 -I$(INC_DIR) -D NOT_PARANOID -g
 LIBS =
 
 # Compiling for Linux

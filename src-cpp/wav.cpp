@@ -12,7 +12,7 @@ namespace wav
   char volume = 50;
 
   unsigned char* samples;
-  int write_samples_n;
+  unsigned write_samples_n;
 
   void initialize()
   {
@@ -28,7 +28,7 @@ namespace wav
   }
 
   // Scales x from old_bits bits, to new_bits bits. For instance it's used to scale 8 bit number to 16 bit, 1 becomes 16.
-  static int scale_bits(int x, int old_bits, int new_bits)
+  /*static int scale_bits(int x, int old_bits, int new_bits)
   {
     if (new_bits > old_bits)
     {
@@ -38,9 +38,9 @@ namespace wav
     {
       return x >> (old_bits - new_bits);
     }
-  }
+  }*/
 
-  file_t::file_t(const char* fp)
+  void file_t::open(const char* fp)
   {
     FILE* f = fopen(fp, "rb");
     if (!f) {
@@ -126,7 +126,6 @@ namespace wav
 
     // If we do, then well shit time to convert
     char* old_samples = samples;
-    int old_samples_n = samples_n;
 
     // How many samples in the old audio there are per single sample in the converted audio.
     double rate_ratio = 1.0 * sample_rate / SAMPLE_RATE;
@@ -168,7 +167,7 @@ namespace wav
       }
       else // Channels are eqaul and we just copy it
       {
-        for (int c = 0; c < CHANNELS_N; c++)
+        for (unsigned c = 0; c < CHANNELS_N; c++)
         {
           int16_t& old = reinterpret_cast<int16_t*>(old_samples)[old_sample_i * CHANNELS_N + c];
           reinterpret_cast<int16_t*>(samples)[sample_i * CHANNELS_N + c] = old;
@@ -184,14 +183,14 @@ namespace wav
     delete [] samples;
   }
 
-  source_t::source_t(file_t& f) : file(f)
+  player_t::player_t(file_t& f) : file(f)
   { }
 
-  void source_t::play()
+  void player_t::play()
   {
-    uint32_t j = sample_i * CHANNELS_N;
+    unsigned j = sample_i * CHANNELS_N;
 
-    for (uint32_t i = 0; i < write_samples_n * CHANNELS_N; i++, j++)
+    for (unsigned i = 0; i < write_samples_n * CHANNELS_N; i++, j++)
     {
       if (j >= this->file.samples_n * CHANNELS_N)
       {
