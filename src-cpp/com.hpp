@@ -274,13 +274,6 @@ namespace com
     int find(const char* substr, int from, int to);
   };
 
-  enum
-  {
-    SEEK_SET,
-    SEEK_CUR,
-    SEEK_END,
-  };
-
   // If you are dealing with big files, and want to load memory, this is your pal.
   // Instead of loading the entire buffer like a simpleton, you use this big boy, and it deals with the nasty space optimization itself, while giving you the free
   struct big_read_t
@@ -294,8 +287,9 @@ namespace com
     big_read_t(int max_read);
 
     void read(int n);
-    void seek(int x, int type);
-    void rewind() { seek(0, SEEK_SET); }
+    void seek_set(int x);
+    void seek_cur(int x);
+    void seek_end(int x);
   };
 
   static inline constexpr long long

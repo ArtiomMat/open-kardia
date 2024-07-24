@@ -40,7 +40,7 @@ namespace com
 
     puts(
       "Common module initialized, "
-      #ifdef LILE
+      #ifdef COM_LILE
         "lil"
       #else
         "big"

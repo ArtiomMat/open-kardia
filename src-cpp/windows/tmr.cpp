@@ -20,7 +20,6 @@ namespace tmr
     target_tick_time = initial_tick_time;
 
     timeGetDevCaps(&tc, sizeof (tc));
-
     timeBeginPeriod(tc.wPeriodMin);
 
     t0 = GetTickCount64();
@@ -29,12 +28,7 @@ namespace tmr
 
     initialized = true;
   }
-
-  void wait(ms_t milis)
-  {
-    Sleep(milis);
-  }
-
+  
   void shutdown()
   {
     if (!initialized)
@@ -44,6 +38,12 @@ namespace tmr
     timeEndPeriod(tc.wPeriodMin);
     initialized = false;
   }
+
+  void wait(ms_t milis)
+  {
+    Sleep(milis);
+  }
+
 
   ms_t now()
   {
