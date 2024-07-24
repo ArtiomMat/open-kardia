@@ -16,6 +16,9 @@ namespace xal
 
   psf::file_t* font_f = nullptr;
 
+  server_t* server = nullptr;
+  client_t* client = nullptr;
+
   void dsp_context_t::handler(dsp::context_t::event_t& e)
   {
     switch (e.type)
@@ -31,12 +34,27 @@ namespace xal
     }
   }
 
+  void server_t::handler(net::server_t::event_t& e)
+  {
+    if (e.type == net::E_DISJOIN)
+    {
+      puts("Client disjoined");
+    }
+  }
+
+  void client_t::handler(net::client_t::event_t& e)
+  {
+    
+  }
+
   void initialize()
   {
     if (initialized)
     {
       return;
     }
+
+    tmr::target_tick_time = 30;
     
     // net::sock_t sock(true);
     
@@ -46,6 +64,10 @@ namespace xal
     context = new dsp_context_t(640, 400);
 
     font_f = new psf::file_t(com::relfp("roman.psf"));
+
+    client = new client_t(net::host_name);
+    // client->sock.set_addr(net::host_addr, server->sock.bound_port);
+    client->join();
 
     context->palette[0][0] = 0;
     context->palette[0][1] = 0;
@@ -57,6 +79,7 @@ namespace xal
 
     context->realize_palette();
 
+    puts("Xalartia module initialized.");
     initialized = true;
   }
   
@@ -74,6 +97,10 @@ namespace xal
 
     delete font_f;
 
+    delete client;
+    delete server;
+
+    puts("Xalartia module shutdown.");
     initialized = false;
   }
   
@@ -86,6 +113,15 @@ namespace xal
     wav::end_playback();
 
     context->run();
+
+    if (server != nullptr)
+    {
+      server->run();
+    }
+    if (client != nullptr)
+    {
+      client->run();
+    }
     
     context->map.clear(0);
     context->map.put(*font_f, 'G', 10, 15, 1, 0);

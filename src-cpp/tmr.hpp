@@ -13,13 +13,13 @@ namespace tmr
   // The target tick time that we want, may not always be able to fufil this time, depending on the performance of the program and how high it is. Check tick_time.
   // In seconds, the module uses this to decide how much it must wait at the end of the tick to fufil the time.
   // Can be modified in real time.
-  extern ms_t target_tick_time;
+  extern thread_local ms_t target_tick_time;
 
   // The true time that took the tick is stored here, it will most likely be equal to target_tick_time, but it may not if the tick took too long.
-  extern ms_t tick_time;
+  extern thread_local ms_t tick_time;
 
-  // Updated as now() the moment you call begin_tick
-  extern ms_t begin_time;
+  // value of now() when begin_tick() is called, this is mostly for internal use
+  extern thread_local ms_t begin_time;
 
   extern bool initialized;
 

@@ -19,8 +19,8 @@ namespace tmr
 
     target_tick_time = initial_tick_time;
 
-    timeGetDevCaps(&tc, sizeof (tc));
-    timeBeginPeriod(tc.wPeriodMin);
+    // timeGetDevCaps(&tc, sizeof (tc));
+    // timeBeginPeriod(tc.wPeriodMin);
 
     t0 = GetTickCount64();
     
@@ -35,7 +35,9 @@ namespace tmr
     {
       return;
     }
-    timeEndPeriod(tc.wPeriodMin);
+    // timeEndPeriod(tc.wPeriodMin);
+
+    puts("Timer module shutdown.");
     initialized = false;
   }
 

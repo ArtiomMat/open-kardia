@@ -135,7 +135,7 @@ namespace net
   constexpr unsigned MAX_SERVER_CLIENTS = 24;
 
   // How much time between server ticks, can be set to 0 to disable server ticks if the game doesn't need it.
-  constexpr tmr::ms_t SERVER_TICK_RATE = 32;
+  constexpr tmr::ms_t SERVER_TICK_RATE = 0;
 
   constexpr unsigned MAX_CLIENT_ALIAS = 24;
 
@@ -155,7 +155,7 @@ namespace net
     CLIENT_B_JOIN, // for join
     CLIENT_B_GOT_ACCEPT,
     CLIENT_B_REQUEST,
-    CLIENT_B_EXIT,
+    CLIENT_B_DISJOIN,
   };
 
   enum
@@ -178,7 +178,7 @@ namespace net
     
     E_INFO, // The client asked for info about the server, can net_put custom extra info now, if cursor exceeds 0 info is sent.
     
-    E_CLIENT_EXIT, // Client is exiting. Just note it.
+    E_DISJOIN, // Client is exiting. Just note it.
 
     E_REPLY, // For client only
   };
@@ -251,7 +251,7 @@ namespace net
       {
         struct
         {
-          char accepted;
+          bool accepted;
         } join;
 
         struct
@@ -288,7 +288,7 @@ namespace net
     // Call net_set_addr() first to setup who we connect to, calls cli_exit() if already joined.
     // Returns if the join was sent, from our end.
     void join();
-    void exit();
+    void disjoin();
     // Uses cli_sock->pout.addr and port, so call net_set_addr() first
     // Returns if the info request was sent from our end, if already waiting for info, returns 0.
     // as_client 1 means that you receive the info as a client(only if connected, otherwise ignored), otherwise you receive this as a non client, which includes more info, read README for more documentation on what you receive.

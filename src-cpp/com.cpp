@@ -52,6 +52,11 @@ namespace com
 
   void shutdown()
   {
+    if (!initialized)
+    {
+      return;
+    }
+    puts("Common module shutdown.");
     initialized = false;
   }
 

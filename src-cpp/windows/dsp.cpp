@@ -96,6 +96,8 @@ namespace dsp
     }
 
     UnregisterClass(DSP_CLASS, GetModuleHandle(NULL));
+
+    puts("Display module shutdown.");
     initialized = false;
   }
 

@@ -32,12 +32,12 @@ namespace net
     want_join = false;
     my_index = -1;
 
-    puts("Opened client socket.");
+    puts("CLIENT: Opened socket.");
   }
 
   client_t::~client_t()
   {
-    exit(); // Be a nice guy and notify server.
+    disjoin(); // Be a nice guy and notify server.
 
     if (alias_allocated)
     {
@@ -86,14 +86,14 @@ namespace net
 
         if (!sock.can_get8())
         {
-          puts("CLIENT: Bad server.");
+          // puts("CLIENT: Bad server.");
           return;
         }
         my_index = sock.get8();
 
         if (my_index >= 0) // ACCEPTED :D
         {
-          e.join.accepted = 1;
+          e.join.accepted = true;
 
           // Notify server that we got it
           sock.rewind();
@@ -101,11 +101,11 @@ namespace net
           sock.put8(my_index);
           sock.flush();
 
-          printf("CLIENT: Joined at index %hhi.\n", my_index);
+          // printf("CLIENT: Joined at index %hhi.\n", my_index);
         }
         else // REJECTED :(
         {
-          e.join.accepted = 0;
+          e.join.accepted = false;
         }
         
         e.type = E_JOIN;
@@ -169,7 +169,7 @@ namespace net
 
   void client_t::join()
   {
-    exit(); // Exit first any server we are in
+    disjoin(); // Exit first any server we are in
 
     sock.rewind();
     
@@ -200,7 +200,7 @@ namespace net
     sock.flush();
   }
 
-  void client_t::exit()
+  void client_t::disjoin()
   {
     if (is_disjoined())
     {
@@ -208,7 +208,7 @@ namespace net
     }
 
     sock.rewind();
-    sock.put8(CLIENT_B_EXIT);
+    sock.put8(CLIENT_B_DISJOIN);
     sock.put8(my_index);
 
     want_reply = false;

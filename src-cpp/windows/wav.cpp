@@ -120,6 +120,7 @@ namespace wav
 
     CoUninitialize();
 
+    puts("Wave module shutdown.");
     initialized = false;
   }
 }

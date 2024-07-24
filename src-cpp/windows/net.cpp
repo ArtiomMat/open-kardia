@@ -67,6 +67,8 @@ namespace net
     }
     delete [] host_name;
     WSACleanup();
+
+    puts("Networking module shutdown.");
     initialized = false;
   }
 

@@ -4,10 +4,10 @@
 
 namespace tmr
 {
-  ms_t target_tick_time;
-  ms_t tick_time;
+  thread_local ms_t target_tick_time = 16;
+  thread_local ms_t tick_time = 0;
 
-  ms_t begin_time = 0;
+  thread_local ms_t begin_time = 0;
 
   bool initialized = false;
 

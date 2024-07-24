@@ -15,13 +15,15 @@ namespace net
     clients_n = 0;
     last_tick_ms = tmr::now();
 
+    // TODO: Limit alias and desc.
+
     for (unsigned i = 0; i < MAX_SERVER_CLIENTS; i++)
     {
       clients[i].status = STATUS_FREE;
     }
 
     int x = com::big16(sock.bound_port);
-    printf("Opened server socket, port %i.\n", x);
+    printf("SERVER: Opened socket, port %i.\n", x);
   }
 
   void server_t::_live_client(int i)
@@ -255,8 +257,8 @@ namespace net
         do_flush = sock.pout.cur > 1;
         break;
 
-        case CLIENT_B_EXIT:
-        e.type = E_CLIENT_EXIT;
+        case CLIENT_B_DISJOIN:
+        e.type = E_DISJOIN;
         handler(e);
         _free_client(ci);
         break;
