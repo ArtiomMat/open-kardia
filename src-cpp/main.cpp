@@ -4,6 +4,17 @@
 
 #include "xal.hpp"
 
+void main_shutdown_all()
+{
+  puts("\nSHUTTING DOWN...\n");
+  xal::shutdown();
+  wav::shutdown();
+  dsp::shutdown();
+  net::shutdown();
+  com::shutdown();
+  tmr::shutdown();
+}
+
 static void main_terminate()
 {
   // fputs("Terminate called.\n", stderr);
@@ -16,14 +27,9 @@ static void main_terminate()
   {
     fprintf(stderr, "Exception was uncaught: '%s'.\n", e.str);
   }
-   
-  xal::shutdown();
-  wav::shutdown();
-  dsp::shutdown();
-  net::shutdown();
-  com::shutdown();
-  tmr::shutdown();
-  
+
+  main_shutdown_all();
+
   std::abort();
 }
 
@@ -47,15 +53,8 @@ int main(int args_n, const char** args)
     xal::run();
   }
 
-  puts("\nSHUTTING DOWN...\n");
-  
-  xal::shutdown();
-  wav::shutdown();
-  dsp::shutdown();
-  net::shutdown();
-  com::shutdown();
-  tmr::shutdown();
-  
+  main_shutdown_all();
+
   return 0;
 }
 

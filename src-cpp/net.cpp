@@ -88,9 +88,9 @@ namespace net
     return data;
   }
 
-  int sock_t::gets_n()
+  unsigned sock_t::gets_n()
   {
-    int i;
+    unsigned i;
 
     for (i = this->pin.cur; this->pin.data[i] && i < this->pin.size; i++)
     {}

@@ -14,9 +14,10 @@ namespace net
 
       // Handle this shit gracefully
       alias_allocated = true;
+
       char* _alias = new char[MAX_CLIENT_ALIAS];
       
-      int i;
+      unsigned i;
       for (i = 0; i < MAX_CLIENT_ALIAS-1; i++)
       {
         _alias[i] = alias[i];
@@ -26,7 +27,9 @@ namespace net
       alias = _alias;
     }
 
-    want_reply = want_info = want_join = 0;
+    want_reply = false;
+    want_info = 0;
+    want_join = false;
     my_index = -1;
 
     puts("Opened client socket.");
@@ -52,7 +55,7 @@ namespace net
 
     event_t e;
 
-    for (int _refresh_i = 0; _refresh_i < MAX_CLIENT_REFRESHES_PER_RUN && sock.refresh(); _refresh_i++)
+    for (unsigned _refresh_i = 0; _refresh_i < MAX_CLIENT_REFRESHES_PER_RUN && sock.refresh(); _refresh_i++)
     {
       // YOU PICKED THE WRONG HOUSE FOOOOL
       if (
@@ -65,7 +68,7 @@ namespace net
       }
 
       // All good, this is the server talking
-      uint8_t first_byte;
+      int8_t first_byte;
       if (!sock.can_get8())
       {
         continue;
@@ -83,7 +86,6 @@ namespace net
 
         if (!sock.can_get8())
         {
-          _bad_server:
           puts("CLIENT: Bad server.");
           return;
         }
@@ -209,8 +211,10 @@ namespace net
     sock.put8(CLIENT_B_EXIT);
     sock.put8(my_index);
 
+    want_reply = false;
+    want_info = 0;
+    want_join = false;
     my_index = -1;
-    want_reply = want_info = want_join = 0;
 
     sock.flush();
   }

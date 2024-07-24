@@ -1,5 +1,9 @@
 #include "xal.hpp"
 
+#include <cstdlib>
+
+extern void main_shutdown_all();
+
 namespace xal
 {
   bool initialized = false;
@@ -17,7 +21,8 @@ namespace xal
     switch (e.type)
     {
       case dsp::E_CLOSE:
-      shutdown();
+      main_shutdown_all();
+      exit(0);
       break;
 
       case dsp::E_RELEASE:

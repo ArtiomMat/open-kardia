@@ -42,7 +42,7 @@ namespace net
   struct sock_t
   {
     unsigned long long fd;
-    port_t bound_port; // The port to which we are bound. Always considered big endian/network order, so always must be stored as such.
+    port_t bound_port; // The port to which we are bound. Always interpeted as big endian/network order, so always must be stored as such.
     pack_t pin, pout; // In and out packs
     
     sock_t();
@@ -93,7 +93,7 @@ namespace net
 
     // Get how big the string is(including null terminator), if reaches end without null terminator will return the size measured from the cursor to the end, exactly the way str would work.
     // After this you should use getb because you know n.
-    int gets_n();
+    unsigned gets_n();
 
     // Return same as put8. Puts pointer, doesn't copy data, advances the cursor n bytes.
     const char* getb(int n);
@@ -224,7 +224,7 @@ namespace net
 
     client_t clients[MAX_SERVER_CLIENTS];
     // Live clients, does not include clients with wait status
-    int clients_n;
+    unsigned clients_n;
 
     virtual void handler(event_t& e) = 0;
 

@@ -15,7 +15,7 @@ namespace net
     clients_n = 0;
     last_tick_ms = tmr::now();
 
-    for (int i = 0; i < MAX_SERVER_CLIENTS; i++)
+    for (unsigned i = 0; i < MAX_SERVER_CLIENTS; i++)
     {
       clients[i].status = STATUS_FREE;
     }
@@ -54,7 +54,7 @@ namespace net
     }
     else if (now - clients[i].last_pack_ms >= MAX_WAIT_MS/2) // Last chance to confirm the accept, we resend it.
     {
-      char data[2] = {SERVER_B_JOIN, i};
+      char data[2] = {SERVER_B_JOIN, static_cast<char>(i)};
       sock.sendto(data, 2);
     }
   }
@@ -76,7 +76,7 @@ namespace net
       
       if (sock.pout.cur > 1) // If a tick was written handle both sending it and the wait clients.
       {
-        for (int i = 0; i < MAX_SERVER_CLIENTS; i++)
+        for (unsigned i = 0; i < MAX_SERVER_CLIENTS; i++)
         {
           switch (clients[i].status)
           {
@@ -100,7 +100,7 @@ namespace net
       }
       else // Only handle waits
       {
-        for (int i = 0; i < MAX_SERVER_CLIENTS; i++)
+        for (unsigned i = 0; i < MAX_SERVER_CLIENTS; i++)
         {
           if (clients[i].status == STATUS_WAIT)
           {
@@ -113,9 +113,9 @@ namespace net
     }
 
     // Now requests
-    for (int _refresh_i = 0; _refresh_i < MAX_SERVER_REFRESHES_PER_RUN && sock.refresh(); _refresh_i++)
+    for (unsigned _refresh_i = 0; _refresh_i < MAX_SERVER_REFRESHES_PER_RUN && sock.refresh(); _refresh_i++)
     {
-      uint8_t first_byte;
+      int8_t first_byte;
       if (!sock.can_get8())
       {
         continue;
@@ -132,7 +132,7 @@ namespace net
       // Join request
       if (first_byte == CLIENT_B_JOIN)
       {
-        int c_alias_n = sock.gets_n();
+        unsigned c_alias_n = sock.gets_n();
 
         if (c_alias_n <= MAX_CLIENT_ALIAS) // Everything is fine, can technically accept
         {
@@ -153,7 +153,6 @@ namespace net
             {
               goto _reject_client;
             }
-
             // Find a free slot
             unsigned char ci;
             for (ci = 0; ci < MAX_SERVER_CLIENTS; ci++)
@@ -213,7 +212,7 @@ namespace net
       // So far we handled stuff for disjoined clients, if we got to here the client MUST have sent a message as a joined client.
       
       // Invalid index?
-      if (ci < 0 || ci >= MAX_SERVER_CLIENTS || clients[ci].status == STATUS_FREE)
+      if (ci < 0 || ci >= (int)MAX_SERVER_CLIENTS || clients[ci].status == STATUS_FREE)
       {
         continue;
       }
